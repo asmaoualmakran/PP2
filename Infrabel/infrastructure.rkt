@@ -4,14 +4,14 @@
 
 (require racket/class)
 
-(provide DriveableObject%)
+(provide Infrastructure%)
 ;---------------------------------------------------
-; Class: DriveableObject%
+; Class: Infrastructure%Object%
 ; Parameters: n/a 
 ; Use: This is the super class used by track and switch.
 ;---------------------------------------------------
 
-(define DriveableObject%
+(define Infrastructure%
   (class object%
     (super-new)
     (field [ID          'uninitialised]
@@ -20,7 +20,7 @@
            [y           'uninitialised]
            [available   'uninitialised]
            [speedlimit  'uninitialised]
-           [maximalConnections 'uninitialised])    ;TODO write getter and setter
+           [maximalConnections 'uninitialised])    
 
 ;-------------------------------------------------------
 ; Function: initialised?
@@ -30,43 +30,44 @@
 ;-------------------------------------------------------
 
     (define/public (initialised?)
-      (if (and (eq? ID 'uninitialised)
-               (eq? connections 'uninitialised)
-               (eq? x 'uninitialised)
-               (eq? y 'uninitialised)
-               (eq? available 'uninitialised)
-               (eq? maximalConnections 'uninitialised)
-               (eq? speedlimit 'uninitialised))  ; if one is not initialised #f is returned and warining is displayed
-          (begin #f
-                 (display "DriveableObject% initialised?: not all fields are initialised"))
-        #t))
+      (and (not(eq? ID 'uninitialised))
+           (not(eq? connections 'uninitialised))
+           (not(eq? x 'uninitialised))
+           (not(eq? y 'uninitialised))
+           (not(eq? available 'uninitialised))
+           (not(eq? speedlimit 'uninitialised))
+           (not(eq? maximalConnections 'uninitialised))))
 
+
+       
     ;TODO: write initialiser
 ;-----------------------------------------------------------
 ; Function: setID! 
 ; Parameters:
 ;      id: symbol
-;        Use: The identifiaction of the driveableObject.
+;        Use: The identifiaction of the Infrastructure object.
 ; Output: n/a
-; Use: Initialise the id of the driveableObject.
+; Use: Initialise the id of the Infrastructure object.
 ;----------------------------------------------------------
     
     (define/public (setID! id)
-      (if (eq? ID 'uninitialised)
+      (if (not(initialised?))      ;ID can only be set at initialisation
       (set! ID id)
-      (error "DriveableObject% setID!: ID is already initialised" ID)))
+      (error "Infrastructure% setID!: ID is already initialised" ID)))
     
 ;--------------------------------------------------------
 ; Function: getID
 ; Parameters: n/a
 ; Output:
 ;      ID: symbol
-;        Use: The identification of the driveableObject.
-; Use: Retreive the ID of the driveableObject.
+;        Use: The identification of the Infrastructure object.
+; Use: Retreive the ID of the Infrastructure object.
 ;--------------------------------------------------------
 
     (define/public (getID)
-      ID)
+      (if (initialised?)
+          ID
+          (error "Infrastructure% getID: object is not initialised, please initialise before use")))
     
 ;-------------------------------------------------------------
 ; Function: setMaximalConnections!
@@ -81,7 +82,7 @@
       (if (and (number? number)
                (<= 1 number))     ; minimal number for a track is 1, this enables to set dead ends.
           (set! maximalConnections number)
-          (error "DriveableObject% setMaximalConnections!: number of connections need to be at least 1 given" number)))
+          (error "Infrastructure% setMaximalConnections!: number of connections need to be at least 1 given" number)))
 
 ;-------------------------------------------------------------
 ; Function: getMaximalConnections!
@@ -93,7 +94,9 @@
 ;-------------------------------------------------------------
 
     (define/public (getMaximalConnections)
-      maximalConnections)
+      (if (initialised?)
+      maximalConnections
+      (error "Infrastructure% getMaximalConnections: object is not initialised, please initialise before use")))
 
 ;-----------------------------------------------------
 ; Function: SetConnectionID!
@@ -105,25 +108,25 @@
 ;-----------------------------------------------------
     
     (define/public (setConnectionID! id)
-      (cond ((not(symbol? id))(error "DriveableObject% setConnectionID!: symbol expected received" id ID))
-            ((<= (length connections) maximalConnections)(error "DriveabelObject% setConnectionID!: no locations free, please delete one before adding" ID))  ;length of correct list is longer than 2 when full
+      (cond ((not(symbol? id))(error "Infrastructure%% setConnectionID!: symbol expected received" id ID))
+            ((>= (length connections) maximalConnections)(error "Infrastructure% setConnectionID!: no locations free, please delete one before adding" ID))  ;length of correct list is longer than 2 when full
             (else
-             (if (symbol? connections)
+             (if (symbol? connections)   ;if the field is not initialised a list gets created
                  (set! connections (list id))
-             (set! connections (append id connections))))))
+             (set! connections (append id connections))))))  
     
 ;-----------------------------------------------------
 ; Function: getConnections
 ; Parameters: n/a
 ; Output:
-;      connections: list<symbol,symbol>
+;      connections: list<symbol,symbol,...>
 ;         Use: The connections of the track.
 ; Use: Get the connections with an other track.
 ;-----------------------------------------------------
 
     (define/public (getConnections)
-      (if (or (symbol? connections)(null? connections))            ; is connections is a symbol or null, it needs to be initialised
-          (print "DriveabelObject% getConnections: no connections are set, please add connections" ID)
+      (if (or (not (initialised?))(null? connections))            ; is connections is a symbol or null, it needs to be initialised
+          (print "Infrastructure% getConnections: no connections are set, please add connections" ID)
           (connections)))
     
 ;--------------------------------------------------------------------    
@@ -136,11 +139,11 @@
 ;--------------------------------------------------------------------
 
     (define/public (deleteConnection! id)
-      (cond ((not (symbol? id))(error "DriveableObject% deleteConnection!: contract violation, expected symbol given" id ID))
-            ((or(null? connections)
-                (eq? connections 'uninitialised))(error "DriveableObject deleteConnection!: there is no connection to be deleted" connections ID))
+      (cond ((not(initialised?))(error "Infrastructure% deleteConnection!: object not initialised please initialise before use"))
+            ((not (symbol? id))(error "Infrastructure% deleteConnection!: contract violation, expected symbol given" id ID))
+            ((null? connections)(error "Infrastructure% deleteConnection!: there is no connection to be deleted" connections ID))
             ((memq id connections)(set! connections (remove id connections)))
-            (else (error "DriveableObject% deleteConnection!: the given connection is not connected to this track" id ID))))
+            (else (error "Infrastructure% deleteConnection!: the given connection is not connected to this track" id ID))))
       
 
 ;------------------------------------------------------------------
@@ -155,7 +158,7 @@
     (define/public (setLocation! coordinate)
       (if (or (null? coordinate)
               (not (pair? coordinate)))
-          (error "DriveableObject% setLocation!: contract violation expected pair, given" coordinate ID)
+          (error "Infrastructure% setLocation!: contract violation expected pair, given" coordinate ID)
           (begin (set! x (car coordinate))
                  (set! y (cdr coordinate))
                  (display "location set to" coordinate))))
@@ -170,25 +173,25 @@
 ;-------------------------------------------------
 
     (define/public (getLocation)
-      (if (or (eq? x 'uninitialised)
-                 (eq? y 'uninitialised))
-          (error "DriveableObject% getLocation: Location is not initialised, please initialise" ID)
-          ((cons x y))))
+      (if (initialised?)
+          (cons x y)
+          (error "Infrastructure% getLocation: object not initialised please initialise before use")))
     
 
 ;-----------------------------------------------
 ; Function: setAvailable!
 ; Parameters:
-;     boolean: boolean
+;     av: boolean or symbol
 ;       Use: The availability of the track.
 ; Output: n/a
 ; Use: Set the availability of the track.
 ;-----------------------------------------------
 
-    (define/public (setAvailable! boolean)
-      (if (boolean? boolean)
-          (set! available boolean)
-          (error "DriveableObject% setAvailable!: contract violation, boolean expected, given" boolean ID)))
+    (define/public (setAvailable! av)
+      (if (or(boolean? av)
+             (symbol? av))
+          (set! available av)
+          (error "Infrastructure% setAvailable!: contract violation, boolean or symbol expected, received" av ID)))
 
 ;-----------------------------------------------------------------
 ; Function: getAvailable
@@ -200,9 +203,9 @@
 ;-----------------------------------------------------------------
 
     (define/public (getAvailable)
-      (if (eq? available 'uninitialised)
-          (error "DriveableObect% getAvailable: available is not initialised please initialise before use" ID)
-           available))
+      (if (initialised?)
+          available
+          (error "DriveableObect% getAvailable: available is not initialised please initialise before use" ID)))
 
 ;-------------------------------------------------------------
 ; Function: setSpeedlimit!
@@ -217,7 +220,7 @@
       (if (and(number? speed)
               (<= 0 speed))         ;speedlimit needs to be positive
           (set! speedlimit speed)
-          (error "DriveableObject% setSpeedlimit!: contract violation, expected number received" speed ID)))
+          (error "Infrastructure% setSpeedlimit!: contract violation, expected positive number received" speed ID)))
 
 ;----------------------------------------
 ; Function: getSpeedlimit
@@ -229,11 +232,11 @@
 ;----------------------------------------
 
     (define/public (getSpeedlimit)
-      (if (eq? speedlimit 'uninitialised)
-          (error "DriveableObject% getSpeedlimit available is not initialised please initialise before use" ID)
-           speedlimit))
+      (if (initialised?)
+          speedlimit
+          (error "Infrastructure% getSpeedlimit available is not initialised please initialise before use" ID)))
     ))
 ;----------------------------------------------------------------------
 ;test code
 ;----------------------------------------------------------------------
-(define test (new DriveableObject%))
+(define test (new Infrastructure%))

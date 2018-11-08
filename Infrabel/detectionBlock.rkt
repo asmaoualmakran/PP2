@@ -3,7 +3,7 @@
 (require racket/class data/heap)
 
 ; NOTE operations on binary heaps are not thread-safe
-
+; NOTE overerven van infrastructure
 (provide Detectionblock%)
 
 (define Detectionblock%
@@ -149,7 +149,7 @@
     ;          (reservations 
 
   ;  (define/public (removeReservation id)
-      
+      ;TODO resizen is niet altijd groter dit kan ook kleiner ->test
     (define/private (resizeReservations! number)  ;interne procedure om vector te resizen en te moven van de interne data
       (if (and (initialised?)
                (eq? null (freeLocation reservations)))
