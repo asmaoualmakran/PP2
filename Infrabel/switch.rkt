@@ -1,7 +1,7 @@
 #lang racket
 
 (require racket/class)
-(require "driveableObject.rkt")
+(require "infrastructure.rkt")
 
 (provide Switch%)
 
@@ -12,7 +12,7 @@
 ;------------------------------------------------
 
 (define Switch%
-  (class DriveableObject%
+  (class Infrastructure%
     (super-new)
 
     (field 

@@ -1,7 +1,7 @@
 #lang racket
 
 (require racket/class)
-(require "driveableObject.rkt")
+(require "infrastructure.rkt")
 
 (provide Track%)
 ;------------------------------------------------
@@ -11,12 +11,14 @@
 ;------------------------------------------------
 
 (define Track%
-  (class DriveableObject%
+  (class Infrastructure%
     (super-new)
     
     (field
            [length      'uninitialised]
            [curve       'uninitialised])
+    (inherit-field connections
+                   maximalConnections)
 
 ;-------------------------------------------------------
 ; Variable: connections : list
@@ -26,8 +28,8 @@
 
   ;  (define connections (get-field connections DriveableObject%))
     ;super form
-     (define connections (generic DriveableObject% getConnections))
-    (define maximalConnections (generic DriveableObject% getMaximalConnections))
+;     (define connections (generic Infrastructure% getConnections))
+ ;   (define maximalConnections (generic Infrastructure% getMaximalConnections))
 
 ;-----------------------------------------------------------------
 ; Function: initialised?
@@ -40,7 +42,7 @@
     (define/public (initialised?)
       (and (not (eq? length 'uninitialised))
            (not (eq? curve  'uninitialised))
-           (send DriveableObject% initialised?)))    ;make sure that all the fields of the super class are set too
+           (send Infrastructure% initialised?)))    ;make sure that all the fields of the super class are set too
     
 ;-----------------------------------------------------
 ; Function: setConnectionID!
