@@ -22,8 +22,9 @@
 ; Use: Determine wheter the object is initialised.
 ;-------------------------------------------------------
 
-    (define/public (initialised?)
+    (define (initialised?)
       (not(eq? capacity 'uninitialised)))
+    (augment initialised?)
 
     (define/public (setCapacity! number)
       (if (and (number? number)

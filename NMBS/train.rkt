@@ -12,6 +12,8 @@
 
     (super-new)
 
+    (init-field manager)
+
     (field
 
     [ID 'uninitialised]
@@ -47,12 +49,29 @@
            (not(eq? currentNode 'uninitialised))
            (not(eq? nextNode 'uninitialised))))
 
+    ;--------------------------------------------
+    ; Function: setID!
+    ; Parameters:
+    ;    id: symbol
+    ;     Use: The identification of the train.
+    ; Output: n/a
+    ; Use: Set the identification of the train.
+    ;--------------------------------------------
 
     (define/public (setID! id)
       (if (and (symbol? id)
                (eq? ID 'uninitialised))
           (set! ID id)
           (error "Train% setID!: ID already initialised or contract violation expected symbol received" id ID)))
+
+    ;--------------------------------------------------
+    ; Function: getID
+    ; Parameters: n/a
+    ; Output:
+    ;     ID: symbol
+    ;      Use: The identification of the train.
+    ; Use: Retrieve the identification of the train.
+    ;--------------------------------------------------
 
     (define/public (getID)
       (if (initialised?)

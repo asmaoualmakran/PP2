@@ -7,7 +7,7 @@
 (define TrainManager%
   (class object%
 
-    (super-new)
+    
 
 
     ))

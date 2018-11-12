@@ -21,8 +21,11 @@
 ; Use: Determine wheter the object is initialised.
 ;-------------------------------------------------------
 
-    (define/public (initialised?)
+    (define (initialised?)
       (not (eq? direction 'uninitialised)))
+    (augment initialised?)
+      
+    
 
 ;-----------------------------------------------------------------------------------------------
 ; Function: getDirection

@@ -32,13 +32,11 @@
     (struct reservation (id [priority #:mutable]))  ; a struct defineing a reservation
 
    (define (initialised?)
-     (super initialised?)                     ;useing the initialised? predicate from the super class
      (and (not(eq? trackID 'uninitialised))
           (not(eq? reservations 'uninitialised))
           (not(eq? maxReservations 'uninitialised))
-          (not(eq? length 'uninitialised)))
-     (inner (false) initialised?))
-    (overment initialised?)          ;both the current as the superclass implementation needs to be used.
+          (not(eq? length 'uninitialised))))
+    (augment initialised?)         
 
 
 ;-----------------------------------------------------------------------------------

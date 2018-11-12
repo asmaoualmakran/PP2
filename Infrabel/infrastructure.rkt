@@ -29,7 +29,7 @@
 ; Use: Determine if the object is completly initialised.
 ;-------------------------------------------------------
 
-    (define/public (initialised?)
+    (define/pubment (initialised?)     ;using pubment to enable augmenting the method in the subclasses
       (and (not(eq? ID 'uninitialised))
            (not(eq? connections 'uninitialised))
            (not(eq? x 'uninitialised))
