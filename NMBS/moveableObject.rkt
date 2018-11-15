@@ -173,31 +173,5 @@
       (if (initialised?)
           trainID
           (error "MoveableObject% getTrainID: object is not initialised, please initialise before use" ID)))
-
-    ;------------------------------------------------------------------------------------------------
-    ; Function: couple!
-    ; Parameters:
-    ;    train: symbol
-    ;      Use: The identification of the associating train. This can not be 'none
-    ;    pre: symbol
-    ;     Use: The identification of the predecessing moveable object.
-    ;    succ: symbol
-    ;     Use: The identificationf of the successing movable object.
-    ; Use: Connecting a movable object to a train, and potentionally a successor and predecessor.
-    ;      if there isn't a successor and predecessor this can be set to the symbol 'none. 
-    ;------------------------------------------------------------------------------------------------
-
-    ;   (define/public (couple! train pre succ)
-    ;    (if (initialised?)
-    ;       (if (and (and (symbol? train)(not (eq? train 'none)))   ; A moveable object must be connected to a train, this can't be none
-    ;               (symbol? pre)
-    ;              (symbol? succ))
-    ;        (begin
-    ;         (set! trainID train)
-    ;        (set! predecessorID pre)
-    ;       (set! successorID succ))
-    ;    (error "MoveableObject% couple!: contract violation symbol expected received" train pre succ))
-    ;(error "MoveableObject couple!: object not initialised, please initialise before use.")))
-
    
     ))

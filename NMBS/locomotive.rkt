@@ -57,6 +57,4 @@
           (set! direction direct)
           (error "Locomotive% setDirection!: no correct direction given expected symbol 'left 'right received" direct)))
     
-          
-    
     ))

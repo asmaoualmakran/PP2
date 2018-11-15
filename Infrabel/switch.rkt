@@ -93,11 +93,11 @@
 ;--------------------------------------------------------
     
     (define/public (setDirection! dir)
-      (if (and (number? dir)
-               (or (= 1 dir)
-                   (= 2 dir)))    ;For the direction, numbers 1 and 2 are used.
+      (if (and (symbol? dir)
+               (or (eq? 'left dir)
+                   (eq? 'right dir)))    ;For the direction, numbers 1 and 2 are used.
           (set! direction dir)
-          (error "Switch% setDirection!: contract violation, numbers 1 or 2 expected give" dir)))
+          (error "Switch% setDirection!: contract violation, symbol 'left or 'right expected received" dir)))
 
 ;----------------------------------------------------------
 ; Function: getDirection
