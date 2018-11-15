@@ -50,10 +50,16 @@
           (error "TrainManager% getLocomotive: locomotive is not a member received:" id)))
     
     (define/public (createRailcar id)
-      'test)
+      (if (hash-has-key? railcarTable id)
+          (error "TrainManager% createRailcar: ID is already in use, received:"id)
+          (let ([railcar (new Railcar%)])
+            (send railcar setID! id)
+            (hash-set! railcarTable id railcar))))
 
     (define/public (deleteRailcar id)
-      'test)
+      (if (hash-has-key? railcarTable id)
+          (hash-remove! railcarTable id)
+          (error "TrainManager% deleteRailcar: ID is not a member can not be deleted, received:"id)))
 
     (define/public (getRailcar id)
       (if (hash-has-key? railcarTable id)
