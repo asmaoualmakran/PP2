@@ -23,18 +23,19 @@
     (field
 
      [ID 'uninitialised]
-     [trainBuild 'uninitialised]
-     [traject 'uninitialised]
-     [trajectID 'uninitialised]
+     [trainBuild         'uninitialised]
+     [traject            'uninitialised]
+     [trajectID          'uninitialised]
+     [active             'uninitialised]
      [masterLocomotiveID 'uninitialised]
-     [rearLocomotiveID 'uninitialised]
-     [length 'uninitialised]
-     [currentPosition 'uninitialised]
-     [lastPosition 'uninitialised]
-     [direction 'uninitialised]
-     [speed 'uninitialised]
-     [currentNode 'uninitialised]
-     [nextNode 'uninitialised])
+     [rearLocomotiveID   'uninitialised]
+     [length             'uninitialised]
+     [currentPosition    'uninitialised]
+     [lastPosition       'uninitialised]
+     [direction          'uninitialised]
+     [speed              'uninitialised]
+     [currentNode        'uninitialised]
+     [nextNode           'uninitialised])
     ;NOTE: node<>position, position is the physical location of the train this can only be a detectionblock.
     ;                      node is the logical position in the traject.
 
@@ -56,6 +57,7 @@
            (not(eq? trainBuild 'uninitialised))
            (not(eq? traject 'uninitialised))
            (not(eq? trajectID 'uninitialised))
+           (not(eq? active 'unitialised))
            (not(eq? masterLocomotiveID 'uninitialised))
            (not(eq? rearLocomotiveID 'uninitialised))
            (not(eq? length 'uninitialised))
@@ -79,6 +81,16 @@
               (eq? null trainBuild))
           (error "Train% initBuild: build is alreadt initialised")
           (set! trainBuild (list))))
+
+    ;--------------------------------------
+    ; Function: initActive
+    ; Parameters: n/a
+    ; Output: n/a
+    ; Use: Initialise the active field.
+    ;--------------------------------------
+
+    (define/public (initActive)
+      (set! active false))
 
     ;--------------------------------------------
     ; Function: setID!
@@ -109,8 +121,31 @@
           ID
           (error "Train% getID: object not initialised please initialise before use.")))
 
+    ;-----------------------------------------------------------------------
+    ; Function: getActive
+    ; Parameters: n/a
+    ; Output:
+    ;    active: boolean
+    ;      Use: Determine whether or not a train is active.
+    ; Use: Retrieve the boolean determine whether or not a train is active.
+    ;-----------------------------------------------------------------------
+
+    (define/public (getActive)
+      (if (initialised?)
+          active
+          (error "Train% getActive: object is not initialised please initialise before use.")))
+
+    ;----------------
+    ; Function: switchActive
+    
+
+    (define/public (switchActive)
+      (if (initialised?)
+          (set! active (not active))
+          (error "Train% switchActive: object is not initialised please initialise before use.")))
+
     ;------------------------------------------------------------
-    ; Function: valid?define/private
+    ; Function: valid?
     ; Parameters: n/a
     ; Output:
     ;   boolean: boolean

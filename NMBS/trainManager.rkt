@@ -17,17 +17,32 @@
   (class object%
 
     ;TODO make initialisers for each type of object.
-
+    ;TODO When deleting a locomotive or a railcar, check whether they are connected to a train
+    ;     It needs to be decoupled first before deleteing. more checks needed at delete!
+    ;TODO When deleting a train, make sure it's not active. Provide an active field in Train%
+    ; TODO check whether or not to use the valid? predicate.
+    
     ; Hashtables for each type of objects, these are mutable, initial needed size is unknown.
+    ; The elements are hashed useing their id's as key, the values are the objects self.
+    
     (define trainTable (make-hash))
     (define locomotiveTable (make-hash))
     (define railcarTable (make-hash))
 
     ; These are variables to enable easier checking of the object types.
+    
     (define trainType 'object:Train%)
     (define locomotiveType 'object:Locomotive%)
     (define railcarType 'object:Railcar%)
 
+    ;------------------------------------------------------------------------------------------
+    ; Function: createTrain
+    ; Parameters:
+    ;      id: symbol
+    ;       Use: The identification of the train.
+    ; Output: n/a
+    ; Use: Create a train with an unique identification and safe it in the correct hashtable.
+    ;------------------------------------------------------------------------------------------
     
     (define/public (createTrain id)   
       (if (hash-has-key? trainTable id)  ;check whether a id is already used.
@@ -37,18 +52,58 @@
             (send train initBuild)
             (hash-set! trainTable id train))))
 
+    ;-------------------------------------------------------------
+    ; Function: deleteTrain
+    ; Parameters:
+    ;     id: symbol
+    ;      Use: The identification of the to be deleted train.
+    ; Output: n/a
+    ; Use: Delete an existing train from the hashtable.
+    ;-------------------------------------------------------------
+
     (define/public (deleteTrain id)
       (if (hash-has-key? trainTable id)
           (hash-remove! trainTable id)
           (error "TrainManager% deleteTrain: train is not a member, can't be deleted, received." id)))
+
+    ;---------------------------------------------------------------------
+    ; Function: getTrain
+    ; Parameters:
+    ;      id: symbol
+    ;       Use: The identification of the train.
+    ; Output:
+    ;    train: object:Train%
+    ;      Use: The train object that needs to be retrieved.
+    ; Use: Retrieving a train object from the hashtable useing it's id.
+    ;---------------------------------------------------------------------
 
     (define/public (getTrain id)
       (if (hash-has-key? trainTable id)
           (hash-ref trainTable id)
           (error "TrainManager% getTrain: train is not a member." id)))
 
+    ;--------------------------------------------------------------------------------
+    ; Function: isTrain?
+    ; Parameters:
+    ;      id: symbol
+    ;       Use: The identifiaction of train that needs to be checked.
+    ; Output:
+    ;     boolean: boolean
+    ;        Use: Determine whether or not a given id is from an excisting train.
+    ; Use: Determine whether or not the given id is from an excisting train.
+    ;--------------------------------------------------------------------------------
+
     (define/public (isTrain? id)
       (hash-has-key? trainTable id))
+
+    ;-----------------------------------------------------------
+    ; Function: createLocomotive
+    ; Parameters:
+    ;     id: symbol
+    ;      Use: The identification of the locomotive.
+    ; Output: n/a
+    ; Use: Create a locomotive with an unique identification.
+    ;-----------------------------------------------------------
 
     (define/public (createLocomotive id)
       (if (hash-has-key? locomotiveTable id)
@@ -57,18 +112,58 @@
             (send locomotive setID! id)
             (hash-set! locomotiveTable id locomotive))))
 
+    ;------------------------------------------------------------------------------------------
+    ; Funcion: deleteLocomotive
+    ; Parameters:
+    ;     id: symbol
+    ;      Use: The identification of the to be removed locomotive
+    ; Output: n/a
+    ; Use: Delete a locomotive from the hashtable and decouple it from the corresponding train.
+    ;-------------------------------------------------------------------------------------------
+
     (define/public (deleteLocomotive id)
       (if (hash-has-key? locomotiveTable id)
           (hash-remove! locomotiveTable id)
           (error "TrainManager% deleteLocomotive: locomotive is not a member, can't be deleted, received." id)))
 
+    ;----------------------------------------------------------------------------------
+    ; Function: getLocomotive
+    ; Parameters:
+    ;       id: symbol
+    ;        Use: The identification of the locomotive that needs to be retreived.
+    ; Output:
+    ;     locomotive: object:Locomotive%
+    ;        Use: The locmotive object that needed to be retrieved.
+    ; Use: Retrieve an excisting locomotive object from the hashtable.
+    ;-----------------------------------------------------------------------------------
+    
     (define/public (getLocomotive id)
       (if (hash-has-key? locomotiveTable id)
           (hash-ref locomotiveTable id)
           (error "TrainManager% getLocomotive: locomotive is not a member received:" id)))
 
+    ;---------------------------------------------------------------------------------------------
+    ; Function: isLocomotive?
+    ; Parameters:
+    ;      id: symbol
+    ;       Use: The identification of the locomotive that needs to be checked.
+    ; Output:
+    ;   boolean: boolean
+    ;      Use: Determine whether or not the locomotive excists in the hashtables.
+    ; Use: Check whether or not there excists a locomotive with the corresponding identification.
+    ;----------------------------------------------------------------------------------------------
+
     (define/public (isLocomotive? id)
       (hash-has-key? locomotiveTable id))
+
+    ;--------------------------------------------------------------------------------------------
+    ; Function: createRailcar
+    ; Parameters:
+    ;       id: symbol
+    ;        Use: The identification of the to be created railcar object.
+    ; Output: n/a
+    ; Use: Create a railcar with an unique identification and save it in the correct hashtable.
+    ;--------------------------------------------------------------------------------------------
     
     (define/public (createRailcar id)
       (if (hash-has-key? railcarTable id)
@@ -77,24 +172,76 @@
             (send railcar setID! id)
             (hash-set! railcarTable id railcar))))
 
+    ;--------------------------------------------------------------
+    ; Function: deleteRailcar
+    ; Parameters:
+    ;      id: symbol
+    ;       Use: The identification of the to be deleted railcar.
+    ; Output: n/a
+    ; Use: Delete and excisting railcar from the hashtable.
+    ;--------------------------------------------------------------
+
     (define/public (deleteRailcar id)
       (if (hash-has-key? railcarTable id)
           (hash-remove! railcarTable id)
           (error "TrainManager% deleteRailcar: ID is not a member can not be deleted, received:"id)))
 
+    ;-----------------------------------------------------------------
+    ; Function: getRailcar
+    ; Parameters:
+    ;      id: symbol
+    ;       Use: The identification of the to be retrieved railcar.
+    ; Output:
+    ;    railcar: object:Railcar%
+    ;      Use: The railcar object that needed to be retrieved.
+    ; Use: Retrieve an excisting railcar object from the hashtable.
+    ;-----------------------------------------------------------------
+    
     (define/public (getRailcar id)
       (if (hash-has-key? railcarTable id)
           (hash-ref railcarTable id)
           (error "TrainManager% getRailcar: railcar is not a member received:" id)))
 
+    ;----------------------------------------------------------------------------
+    ; Function: isRailcar?
+    ; Parameters:
+    ;        id: symbol
+    ;         Use: The identification of the railcar that needs to be checked.
+    ; Output:
+    ;    boolean: boolean
+    ;     Use: Determine whether or not the railcar excists.
+    ; Use: Determine wheter or not a given railcar excists in the hashtable.
+    ;----------------------------------------------------------------------------
+
     (define/public (isRailcar? id)
       (hash-has-key? railcarTable id))
+
+    ;-----------------------------------------------------------------------
+    ; Function: findObject
+    ; Parameters:
+    ;      id: symbol
+    ;       Use: The identification of the object that needs to be found.
+    ; Output:
+    ;    object: object:Train% || object:Locomotive% || object:railcar%
+    ;      Use: The retrieved object if it excists.
+    ; Use: Retrieve the object from the hashtables.
+    ;-----------------------------------------------------------------------
 
     (define (findObject id)
       (cond ((hash-has-key? trainTable id)(hash-ref trainTable id))
             ((hash-has-key? locomotiveTable id)(hash-ref locomotiveTable id))
             ((hash-has-key? railcarTable id)(hash-ref railcarTable id))
             (else (error "TrainManager% findObject: id is unknown, object is not created, received"id))))
+
+    ;-----------------------------------------------------------------------------------------------------------------
+    ; Function: couple!
+    ; Parameters:
+    ;      train: symbol
+    ;        Use: The train's id where a locomotive or railcar will be connected.
+    ;      object: symbol
+    ;        Use: The object's id that gets connected to the train. This will be either a railcar or a locomotive.
+    ; Use: Conneting a railcar or a locomotive to a train.
+    ;-----------------------------------------------------------------------------------------------------------------
 
     (define/public (couple! train object)
       (if (and (isTrain? train)
@@ -120,11 +267,20 @@
                   (error "TrainManager% couple!: train or object are not initialised, please initialise before use."))
               ))
           (error "TrainManager% couple!: contract violation train or object don't have an existing id")))
-     
+
+    ;----------------------------------------------------------------------------------------------------------------
+    ; Function: decouple!
+    ; Parameters:
+    ;      train: symbol
+    ;        Use: The train's id where a locomotive or railcar will be disconected.
+    ;      object: symbol
+    ;        Use: The object's id that gets disconected to the train. This will be either a railcar or a locomotive.
+    ; Use: Disconect a locomotive or railcar from the train.
+    ;-----------------------------------------------------------------------------------------------------------------
 
     (define/public (decouple! train object)
       'test)
-
+   ; bij decouplen wel checken dat als het een locomotief is, dat het niet de master is
     
 
 
