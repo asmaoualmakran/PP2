@@ -8,6 +8,13 @@
 
 (provide Train%)
 
+;---------------------------------------------------
+; Class: Train%
+; Parameters: n/a
+; Output: Train% object
+; Use: Creating an object that represents a train.
+;---------------------------------------------------
+
 (define Train%
   (class object%
 
@@ -31,9 +38,18 @@
     ;NOTE: node<>position, position is the physical location of the train this can only be a detectionblock.
     ;                      node is the logical position in the traject.
 
+    ; These are variables to enable easier checking of the object types.
     (define locomotiveType 'object:Locomotive%)
     (define railcarType 'object:Railcar%)
 
+    ;------------------------------------------------------------------------
+    ; Function: initialised?
+    ; Parameters: n/a
+    ; Output:
+    ;    boolean: boolean
+    ;      Use: A boolean determine whether a object is initialised or not.
+    ; Use: Determine whether a object is initialised or not.
+    ;------------------------------------------------------------------------
     
     (define/public (initialised?)
       (and (not(eq? ID 'uninitialised))
@@ -51,7 +67,13 @@
            (not(eq? nextNode 'uninitialised))))
 
 
-    ;TODO
+    ;-----------------------------------------------------
+    ; Funtion: initBuild
+    ; Parameters: n/a
+    ; Output: n/a
+    ; Use: Initialise the trainBuild to the empty list.
+    ;-----------------------------------------------------
+    
     (define/public (initBuild)
       (if (or (initialised?)
               (eq? null trainBuild))
@@ -167,12 +189,12 @@
           (error "Train% getRearLocomotiveID: object not initialised please initialise before use")))
 
     ;---------------------------------------------------------------------------------------------------
-    ; Fucntion: deleteMember!
+    ; Function: deleteMember!
     ; Parameters:
     ;    id: symbol
     ;     Use: The identification of the to be deleted object.
     ; Output: n/a
-    ; Use: Delete a identification of an object from the train build. The references are not adjusted.
+    ; Use: Delete an identification of an object from the train build. The references are not adjusted.
     ;---------------------------------------------------------------------------------------------------
 
     (define/public (deleteMember! id)
@@ -182,19 +204,49 @@
               (error "Train% deleteMember!: object is not member of the train, it can not be deleted"))
           (error "Train% deleteMember!: object is not initialised, please initialise before use.")))
 
-    ;TODO
+    ;--------------------------------------------------------------
+    ; Function: addMember!
+    ; Parameters:
+    ;     id: symbol
+    ;       Use: The identification of the to be added object.
+    ; Ouput: n/a
+    ; Use: Add an identification of an object to the train build.
+    ;--------------------------------------------------------------
 
     (define/public (addMember! id)
       (if (initialised?)
           (set! trainBuild (append trainBuild id))
           (error "Train% addMember!: object is not initialised, please initialise before use.")))
 
-    ;TODO
+    ;--------------------------------------------------------------------
+    ; Function: getBuild
+    ; Parameters: n/a
+    ; Output:
+    ;    build: list
+    ;      Use: The list containing the id's of the connected objects.
+    ; Use: Retrieving the list of id's that make part of the train.
+    ;--------------------------------------------------------------------
+    
     (define/public (getBuild)
       (if (initialised?)
           trainBuild
           (error "Train% getBuild: object is not initialised please initialise before use.")))
-      
+
+    ;--------------------------------------------------------------
+    ; Function: getLastID
+    ; Parameters: n/a
+    ; Output:
+    ;     id: symbol
+    ;      Use: The id of the last object conneted to the train.
+    ; Use: Retrieve the id of the last connected object.
+    ;--------------------------------------------------------------
+    
+    (define/public (getLastID)
+      (let get ([lst trainBuild])
+        (if (null? (cdr lst))
+            (car lst)
+            (get (cdr lst)))))
+        
     ;---------------------------------------------------------------
     ; Function: setTraject!
     ; Parameters:
@@ -327,18 +379,46 @@
               (error "Train% initPosition: traject is not initialised, please initialise before use."))
           (error "Train% initPosition: contract violation, expected two symbols, received" pos node)))
 
+    ;--------------------------------------------------------
+    ; Function: initDirection!
+    ; Parameters:
+    ;       newdirection: symbol
+    ;          Use: The direction of the train to be set.
+    ; Output: n/a
+    ; Use: Setting the initial direction of the train.
+    ;--------------------------------------------------------
+    
     (define/public (initDirection! newdirection)
-      (if (symbol? newdirection)
+      (if (and(symbol? newdirection)
+              (not (initialised?))) 
           (if (or (eq? newdirection 'left)
                   (eq? newdirection 'right))
               (set! direction newdirection)
               (error "Train% setDirection!: expected symbols 'left or 'right" newdirection))
-          (error "Train% setDirection!: contract violation expected number received" newdirection)))
+          (error "Train% setDirection!: contract violation direction already initialised or wrong parameter, expected symbol received" newdirection)))
 
+    ;-------------------------------------------------------------
+    ; Function: getDirection
+    ; Parameters: n/a
+    ; Output:
+    ;   direction: symbol
+    ;     Use: The symbol that provides the train's direction.
+    ; Use: Retrieving the train's direction.
+    ;-------------------------------------------------------------
+    
     (define/public (getDirection)
       (if (initialised?)
           direction
           (error "Train% getDirection: object not initialised, please initialise before use")))
+
+    ;--------------------------------------------------------------------
+    ; Function: switchDirection!
+    ; Parameters: n/a
+    ; Output:
+    ;    direction: symbol
+    ;      Use: The direction of the train.
+    ; Use: Switching the train's direction, to the opposite direction.
+    ;--------------------------------------------------------------------
 
     (define/public (switchDirection!)
       (if (initialised?)
@@ -347,28 +427,32 @@
               (set! direction 'left))
           (error "Train% switchDirection!: object is not initialised, please initialise before use")))
 
+    ;-----------------------------------------
+    ; Function: setSpeed!
+    ; Parameters:
+    ;    number: number
+    ;      Use: The speed of the train.
+    ; Output: n/a
+    ; Use: Setting the speed of the train.
+    ;-----------------------------------------
+    
     (define/public (setSpeed! number)
       (if (and(number? number)
               (<= 0 number))
           (set! speed number)
           (error "Train% setSpeed!: contract violation positive number expected received" number)))
 
+    ;------------------------------------------
+    ; Function: getSpeed
+    ; Parameters: n/a
+    ; Output:
+    ;    speed: number
+    ;      Use: Retrieve the train's speed.
+    ;------------------------------------------
+    
     (define/public (getSpeed)
       (if (initialised?)
           speed
           (error "Train% getSpeed: object is not initialised, please initialise before use")))
-
-;    (define/public (couple! object)
-;      (if (null? trainBuild)               ;the build is empty
-;          (if (eq? (object-name object) locomotiveType)   ;object can only be added if it is a locomotive
-;              (set! trainBuild (append (send object getID)))  
-;              (error "Train% couple!: only a locomotive can be head of the train"))
-;          (if (or (eq? (object-name object) locomotiveType)
-;                  (eq? (object-name object) railcarType))
-;              (set! trainBuild (append (send object getID)))
-;              (error "Train% couple!: contract violation, expected locomotive or railcar object received" object))))
-
-;               (define/public (decouple! object)
-;                 'test)
 
                ))
