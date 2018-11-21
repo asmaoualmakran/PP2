@@ -173,5 +173,17 @@
       (if (initialised?)
           trainID
           (error "MoveableObject% getTrainID: object is not initialised, please initialise before use" ID)))
+
+    ;-------------------------------------------------------------------------
+    ; Function: deleteTrainID!
+    ; Parameters: n/a
+    ; Output: n/a
+    ; Use: Remove the train id where the moveable object is associated with.
+    ;-------------------------------------------------------------------------
+    
+    (define/public (deleteTrainID!)
+      (if (initialised?)
+          (setTrainID! 'none)
+          (error "MoveableObject% deleteTrainID!: object is not initialised, please initialise before use" ID)))
    
     ))

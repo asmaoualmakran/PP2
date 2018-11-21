@@ -19,8 +19,8 @@
     ;TODO make initialisers for each type of object.
     ;TODO When deleting a locomotive or a railcar, check whether they are connected to a train
     ;     It needs to be decoupled first before deleteing. more checks needed at delete!
-    ;TODO When deleting a train, make sure it's not active. Provide an active field in Train%
-    ; TODO check whether or not to use the valid? predicate.
+
+   
     
     ; Hashtables for each type of objects, these are mutable, initial needed size is unknown.
     ; The elements are hashed useing their id's as key, the values are the objects self.
@@ -271,7 +271,8 @@
             (let([trainObj (findObject trainID)] ;double lets needed to use the above variables
                  [obj (findObject objID)])
               (if (and (send trainObj initialised?) ;check if the objects are initialised
-                       (send obj initialised?))
+                       (send obj initialised?)
+                       (eq? 'none (send obj getTrainID)))  ;The object can not be coupled to an other train before coupling.
                   (if (null? (send trainObj getBuild)) ;check if the train build is empty if so, the added object must be a locomotive
                       (if (eq? (object-name obj) locomotiveType)
                           (begin (send trainObj addMember! objID)  ; if the object is a locomotive, connect
@@ -301,15 +302,26 @@
       (if (and (isTrain? train)
                (or (isLocomotive? object)
                    (isRailcar? object)))
-          (let ([trainID train]
+          (let ([trainID train]        ;nesting let's to enable direct use of the variables
                 [objID object])
             (let ([trainObj (findObject trainID)]
                   [obj (findObject objID)])
-                  'test
+              (if (send trainObj isMember? objID)  ;check if the object is part of the train
+                  (if (eq? objID (send trainObj getMasterLocomotive))  ; if the to be deleted object is a masterLocomotive, error is raised
+                      (error "TrainManager% decouple!: object is a master locomotive it can't be deleted")
+                      (begin (let ([succID (send obj getSuccessor)]    ;start deleting all references to the train
+                                   [predID (send obj getPredecessor)])  ;getting the successor and predecessor of the to be deleted object
+                               (let ([succObj (findObject succID)]      
+                                     [predObj (findObject predID)])
+                                 (send obj deleteTrainID!)
+                                 (send succObj setPredecessorID predID)   ;Setting the successor id's and the predecessor id's of the objects to the correct one
+                                 (send predID setSuccessorID succID)
+                                 (send trainObj deleteMember! objID)
+                                 (send obj deletePredecessorID!)
+                                 (send obj deleteSuccessorID!)
+                                 ))))
+                  (error "TrainManager% decouple!: object is not a member of the train"objID))
               ))
           (error "TrainManager% decouple!: Contract violation expected train object id and locomotive or railcar id object expected received." train object)))
-    ; bij decouplen wel checken dat als het een locomotief is, dat het niet de master is
-    
-
 
     ))

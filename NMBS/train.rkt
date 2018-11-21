@@ -135,8 +135,12 @@
           active
           (error "Train% getActive: object is not initialised please initialise before use.")))
 
-    ;----------------
+    ;---------------------------------
     ; Function: switchActive
+    ; Parameters: n/a
+    ; Output: n/a
+    ; Use: Switch the active status.
+    ;---------------------------------
     
 
     (define/public (switchActive)
@@ -252,6 +256,20 @@
       (if (initialised?)
           (set! trainBuild (append trainBuild id))
           (error "Train% addMember!: object is not initialised, please initialise before use.")))
+
+    ;----------------------------------------------------------------------
+    ; Function: isMember?
+    ; Parameters:
+    ;    id: symbol
+    ;     Use: The identification of the member that needs to be checked.
+    ; Use: Check whether or not an object is a member of the train.
+    ;----------------------------------------------------------------------
+
+    (define/public (isMember? id)
+      (if (and (symbol? id)
+               (initialised?))
+      (member id trainBuild)
+      (error "Train% isMember?: object is not initialised or contract violation, symbol expected received:"id)))
 
     ;--------------------------------------------------------------------
     ; Function: getBuild
