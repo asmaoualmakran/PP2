@@ -69,7 +69,7 @@
     ; Use: Check if a symbol is already in use.
     ;----------------------------------------------------------------------------
     
-    (define/public (isUnique? id)
+    (define/private (isUnique? id)
       (if (symbol? id)
           (and(not(hash-has-key? trainTable id))
               (not(hash-has-key? locomotiveTable id))
@@ -149,10 +149,10 @@
 
     (define/public (createLocomotive id)
       (if (isUnique? id)
-          (error "TrainManager% createLocomotive: ID is already in use, received" id)
           (let ([locomotive (new Locomotive%)])
             (send locomotive setID! id)
-            (hash-set! locomotiveTable id locomotive))))
+            (hash-set! locomotiveTable id locomotive))
+          (error "TrainManager% createLocomotive: ID is already in use, received" id)))
 
     ;------------------------------------------------------------------------------------------
     ; Funcion: deleteLocomotive
@@ -209,10 +209,10 @@
     
     (define/public (createRailcar id)
       (if (isUnique? id)
-          (error "TrainManager% createRailcar: ID is already in use, received:"id)
           (let ([railcar (new Railcar%)])
             (send railcar setID! id)
-            (hash-set! railcarTable id railcar))))
+            (hash-set! railcarTable id railcar))
+          (error "TrainManager% createRailcar: ID is already in use, received:"id)))
 
     ;--------------------------------------------------------------
     ; Function: deleteRailcar
