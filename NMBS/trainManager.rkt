@@ -6,6 +6,8 @@
 (require "locomotive.rkt")
 (require "railcar.rkt")
 
+(provide TrainManager%)
+
 ;----------------------------------------------------
 ; Class: TrainManager%
 ; Parameters: n/a
@@ -16,12 +18,12 @@
 (define TrainManager%
   (class object%
 
-    ;TODO make initialisers for each type of object.
-    ;TODO When deleting a locomotive or a railcar, check whether they are connected to a train
-    ;     It needs to be decoupled first before deleteing. more checks needed at delete!
+    (super-new)
 
-   
+    ;TODO make initialisers for each type of object.
+    ;TODO enable changing directions and setting speed of trains 
     
+
     ; Hashtables for each type of objects, these are mutable, initial needed size is unknown.
     ; The elements are hashed useing their id's as key, the values are the objects self.
     
@@ -35,6 +37,27 @@
     (define locomotiveType 'object:Locomotive%)
     (define railcarType 'object:Railcar%)
 
+    (define/public (initTrain id traject trajectID currentPos direction speed currentNode)   ;currentNode should be set automatically to the fist location of the traject.
+      (if (isTrain? id)
+          (let ([train (getTrain id)])
+            (if (send train initialsed?)
+                (error "TrainManager initTrain%: Train is already initialised."id)
+                (begin
+                  (send train initBuild)
+                  (send train initActive)
+                  (send train setTraject! traject)
+                  (send train setTrajectID! trajectID)
+                  (send train setCurrentPosition! currentPos)
+                  (send train setDirection! direction)
+                  (send train setSpeed! speed)
+                  (send train currentNode! currentNode)
+                  (send train setMasterLocomotive! 'none)
+                  (send train setRearLocomotive! 'none)
+                  (send train setLastPosition! 'none)
+                  (send train setNextNode! 'none))));start initialisation
+          (error "TrainManager% initTrain: id does not exist or is not from a train."id)))
+                             
+
     ;-----------------------------------------------------------------------------
     ; Function: isUnique?
     ; Parameters:
@@ -46,7 +69,7 @@
     ; Use: Check if a symbol is already in use.
     ;----------------------------------------------------------------------------
     
-    (define (isUnique? id)
+    (define/public (isUnique? id)
       (if (symbol? id)
           (and(not(hash-has-key? trainTable id))
               (not(hash-has-key? locomotiveTable id))
@@ -64,11 +87,11 @@
     
     (define/public (createTrain id)   
       (if (isUnique? id)  ;check whether a id is already used.
-          (error "TrainManager% createTrain: ID is already in use, received" id)
-          (let ([train (new Train%)])   ; If it's not in use, the train can be added.
+          (let ([train (make-object Train%)])   ; If it's not in use, the train can be added.
             (send train setID! id)
             (send train initBuild)
-            (hash-set! trainTable id train))))
+            (hash-set! trainTable id train))
+          (error "TrainManager% createTrain: ID is already in use, received" id)))
 
     ;-------------------------------------------------------------
     ; Function: deleteTrain
@@ -79,7 +102,7 @@
     ; Use: Delete an existing train from the hashtable.
     ;-------------------------------------------------------------
 
-    (define/public (deleteTrain id)
+    (define/public (deleteTrain! id)
       (if (and(isTrain? id)     ;check if there is a train with this id
               (not (send(findObject id) getActive)))  ; check whether the train is active
           (hash-remove! trainTable id)

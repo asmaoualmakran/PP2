@@ -80,7 +80,8 @@
       (if (or (initialised?)
               (eq? null trainBuild))
           (error "Train% initBuild: build is alreadt initialised")
-          (set! trainBuild (list))))
+          (begin (set! trainBuild (list))
+                  (setLength! 0))))
 
     ;--------------------------------------
     ; Function: initActive
@@ -91,6 +92,18 @@
 
     (define/public (initActive)
       (set! active false))
+
+    ;---------------------------------------------------
+    ; Function: setlength!
+    ; Parameters:
+    ;    number: number
+    ;      Use: The length where it needs to be set to.
+    ; Use: adjust the train's length.
+    ;----------------------------------------------------
+    
+    (define/private (setLength! number)
+      (set! length number))
+      
 
     ;--------------------------------------------
     ; Function: setID!
@@ -239,7 +252,8 @@
     (define/public (deleteMember! id)
       (if (initialised?)
           (if (member id trainBuild)
-              (set! trainBuild (remove id trainBuild))
+              (begin(set! trainBuild (remove id trainBuild))
+                    (setLength! (- 1 length)))
               (error "Train% deleteMember!: object is not member of the train, it can not be deleted"))
           (error "Train% deleteMember!: object is not initialised, please initialise before use.")))
 
@@ -254,7 +268,8 @@
 
     (define/public (addMember! id)
       (if (initialised?)
-          (set! trainBuild (append trainBuild id))
+          (begin(set! trainBuild (append trainBuild id))
+                (setLength! (- length 1)))
           (error "Train% addMember!: object is not initialised, please initialise before use.")))
 
     ;----------------------------------------------------------------------
