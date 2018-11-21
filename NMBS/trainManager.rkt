@@ -35,6 +35,24 @@
     (define locomotiveType 'object:Locomotive%)
     (define railcarType 'object:Railcar%)
 
+    ;-----------------------------------------------------------------------------
+    ; Function: isUnique?
+    ; Parameters:
+    ;      id: symbol
+    ;       Use: The id that needs to be checked on uniqueness.
+    ; Output:
+    ;     boolean: boolean
+    ;       Use: Boolean to determine whether or not an id is already in use.
+    ; Use: Check if a symbol is already in use.
+    ;----------------------------------------------------------------------------
+    
+    (define (isUnique? id)
+      (if (symbol? id)
+          (and(not(hash-has-key? trainTable id))
+              (not(hash-has-key? locomotiveTable id))
+              (not(hash-has-key? railcarTable id)))
+          (error "TrainManager% isUnique?: contract violation, expected symbol received" id)))
+
     ;------------------------------------------------------------------------------------------
     ; Function: createTrain
     ; Parameters:
@@ -45,7 +63,7 @@
     ;------------------------------------------------------------------------------------------
     
     (define/public (createTrain id)   
-      (if (hash-has-key? trainTable id)  ;check whether a id is already used.
+      (if (isUnique? id)  ;check whether a id is already used.
           (error "TrainManager% createTrain: ID is already in use, received" id)
           (let ([train (new Train%)])   ; If it's not in use, the train can be added.
             (send train setID! id)
@@ -62,7 +80,8 @@
     ;-------------------------------------------------------------
 
     (define/public (deleteTrain id)
-      (if (hash-has-key? trainTable id)
+      (if (and(isTrain? id)     ;check if there is a train with this id
+              (not (send(findObject id) getActive)))  ; check whether the train is active
           (hash-remove! trainTable id)
           (error "TrainManager% deleteTrain: train is not a member, can't be deleted, received." id)))
 
@@ -106,7 +125,7 @@
     ;-----------------------------------------------------------
 
     (define/public (createLocomotive id)
-      (if (hash-has-key? locomotiveTable id)
+      (if (isUnique? id)
           (error "TrainManager% createLocomotive: ID is already in use, received" id)
           (let ([locomotive (new Locomotive%)])
             (send locomotive setID! id)
@@ -166,7 +185,7 @@
     ;--------------------------------------------------------------------------------------------
     
     (define/public (createRailcar id)
-      (if (hash-has-key? railcarTable id)
+      (if (isUnique? id)
           (error "TrainManager% createRailcar: ID is already in use, received:"id)
           (let ([railcar (new Railcar%)])
             (send railcar setID! id)
@@ -216,7 +235,7 @@
     (define/public (isRailcar? id)
       (hash-has-key? railcarTable id))
 
-    ;-----------------------------------------------------------------------
+    ;----------------------------------------------------------------------------------
     ; Function: findObject
     ; Parameters:
     ;      id: symbol
@@ -224,8 +243,8 @@
     ; Output:
     ;    object: object:Train% || object:Locomotive% || object:railcar%
     ;      Use: The retrieved object if it excists.
-    ; Use: Retrieve the object from the hashtables.
-    ;-----------------------------------------------------------------------
+    ; Use: Retrieve the object from the hashtables, if the type of object is unknown.
+    ;---------------------------------------------------------------------------------
 
     (define (findObject id)
       (cond ((hash-has-key? trainTable id)(hash-ref trainTable id))
@@ -279,8 +298,17 @@
     ;-----------------------------------------------------------------------------------------------------------------
 
     (define/public (decouple! train object)
-      'test)
-   ; bij decouplen wel checken dat als het een locomotief is, dat het niet de master is
+      (if (and (isTrain? train)
+               (or (isLocomotive? object)
+                   (isRailcar? object)))
+          (let ([trainID train]
+                [objID object])
+            (let ([trainObj (findObject trainID)]
+                  [obj (findObject objID)])
+                  'test
+              ))
+          (error "TrainManager% decouple!: Contract violation expected train object id and locomotive or railcar id object expected received." train object)))
+    ; bij decouplen wel checken dat als het een locomotief is, dat het niet de master is
     
 
 
