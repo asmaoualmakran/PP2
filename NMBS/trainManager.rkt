@@ -77,7 +77,7 @@
           (error "TrainManager% isUnique?: contract violation, expected symbol received" id)))
 
     ;------------------------------------------------------------------------------------------
-    ; Function: createTrain
+    ; Function: createTrain!
     ; Parameters:
     ;      id: symbol
     ;       Use: The identification of the train.
@@ -85,7 +85,7 @@
     ; Use: Create a train with an unique identification and safe it in the correct hashtable.
     ;------------------------------------------------------------------------------------------
     
-    (define/public (createTrain id)   
+    (define/public (createTrain! id)   
       (if (isUnique? id)  ;check whether a id is already used.
           (let ([train (make-object Train%)])   ; If it's not in use, the train can be added.
             (send train setID! id)
@@ -94,7 +94,7 @@
           (error "TrainManager% createTrain: ID is already in use, received" id)))
 
     ;-------------------------------------------------------------
-    ; Function: deleteTrain
+    ; Function: deleteTrain!
     ; Parameters:
     ;     id: symbol
     ;      Use: The identification of the to be deleted train.
@@ -104,7 +104,7 @@
 
     (define/public (deleteTrain! id)
       (if (and(isTrain? id)     ;check if there is a train with this id
-              (not (send(findObject id) getActive)))  ; check whether the train is active
+              (not (send(getTrain id) getActive)))  ; check whether the train is active
           (hash-remove! trainTable id)
           (error "TrainManager% deleteTrain: train is not a member, can't be deleted, received." id)))
 
@@ -120,7 +120,7 @@
     ;---------------------------------------------------------------------
 
     (define/public (getTrain id)
-      (if (hash-has-key? trainTable id)
+      (if (isTrain? id)
           (hash-ref trainTable id)
           (error "TrainManager% getTrain: train is not a member." id)))
 
@@ -136,10 +136,12 @@
     ;--------------------------------------------------------------------------------
 
     (define/public (isTrain? id)
-      (hash-has-key? trainTable id))
+      (if (symbol? id)
+          (hash-has-key? trainTable id)
+          (error "TrainManager% isTrain?: contract violation expected symbol received"id)))
 
     ;-----------------------------------------------------------
-    ; Function: createLocomotive
+    ; Function: createLocomotive!
     ; Parameters:
     ;     id: symbol
     ;      Use: The identification of the locomotive.
@@ -147,7 +149,7 @@
     ; Use: Create a locomotive with an unique identification.
     ;-----------------------------------------------------------
 
-    (define/public (createLocomotive id)
+    (define/public (createLocomotive! id)
       (if (isUnique? id)
           (let ([locomotive (new Locomotive%)])
             (send locomotive setID! id)
@@ -155,7 +157,7 @@
           (error "TrainManager% createLocomotive: ID is already in use, received" id)))
 
     ;------------------------------------------------------------------------------------------
-    ; Funcion: deleteLocomotive
+    ; Funcion: deleteLocomotive!
     ; Parameters:
     ;     id: symbol
     ;      Use: The identification of the to be removed locomotive
@@ -163,8 +165,8 @@
     ; Use: Delete a locomotive from the hashtable and decouple it from the corresponding train.
     ;-------------------------------------------------------------------------------------------
 
-    (define/public (deleteLocomotive id)
-      (if (hash-has-key? locomotiveTable id)
+    (define/public (deleteLocomotive! id)
+      (if (isLocomotive? id)
           (hash-remove! locomotiveTable id)
           (error "TrainManager% deleteLocomotive: locomotive is not a member, can't be deleted, received." id)))
 
@@ -180,7 +182,7 @@
     ;-----------------------------------------------------------------------------------
     
     (define/public (getLocomotive id)
-      (if (hash-has-key? locomotiveTable id)
+      (if (isLocomotive? id)
           (hash-ref locomotiveTable id)
           (error "TrainManager% getLocomotive: locomotive is not a member received:" id)))
 
@@ -196,10 +198,12 @@
     ;----------------------------------------------------------------------------------------------
 
     (define/public (isLocomotive? id)
-      (hash-has-key? locomotiveTable id))
+      (if (symbol? id)
+          (hash-has-key? locomotiveTable id)
+          (error "TrainManager% isLocomotive: contract violation expected symbol received" id)))
 
     ;--------------------------------------------------------------------------------------------
-    ; Function: createRailcar
+    ; Function: createRailcar!
     ; Parameters:
     ;       id: symbol
     ;        Use: The identification of the to be created railcar object.
@@ -207,7 +211,7 @@
     ; Use: Create a railcar with an unique identification and save it in the correct hashtable.
     ;--------------------------------------------------------------------------------------------
     
-    (define/public (createRailcar id)
+    (define/public (createRailcar! id)
       (if (isUnique? id)
           (let ([railcar (new Railcar%)])
             (send railcar setID! id)
@@ -215,7 +219,7 @@
           (error "TrainManager% createRailcar: ID is already in use, received:"id)))
 
     ;--------------------------------------------------------------
-    ; Function: deleteRailcar
+    ; Function: deleteRailcar!
     ; Parameters:
     ;      id: symbol
     ;       Use: The identification of the to be deleted railcar.
@@ -223,8 +227,8 @@
     ; Use: Delete and excisting railcar from the hashtable.
     ;--------------------------------------------------------------
 
-    (define/public (deleteRailcar id)
-      (if (hash-has-key? railcarTable id)
+    (define/public (deleteRailcar! id)
+      (if (isRailcar? id)
           (hash-remove! railcarTable id)
           (error "TrainManager% deleteRailcar: ID is not a member can not be deleted, received:"id)))
 
@@ -240,7 +244,7 @@
     ;-----------------------------------------------------------------
     
     (define/public (getRailcar id)
-      (if (hash-has-key? railcarTable id)
+      (if (isRailcar? id)
           (hash-ref railcarTable id)
           (error "TrainManager% getRailcar: railcar is not a member received:" id)))
 
@@ -256,7 +260,9 @@
     ;----------------------------------------------------------------------------
 
     (define/public (isRailcar? id)
-      (hash-has-key? railcarTable id))
+      (if (symbol? id)
+          (hash-has-key? railcarTable id)
+          (error "TrainManager% isRailcar?: contract violation symbol expected, received" id)))
 
     ;----------------------------------------------------------------------------------
     ; Function: findObject
@@ -270,9 +276,9 @@
     ;---------------------------------------------------------------------------------
 
     (define (findObject id)
-      (cond ((hash-has-key? trainTable id)(hash-ref trainTable id))
-            ((hash-has-key? locomotiveTable id)(hash-ref locomotiveTable id))
-            ((hash-has-key? railcarTable id)(hash-ref railcarTable id))
+      (cond ((hash-has-key? trainTable id)(getTrain id))
+            ((hash-has-key? locomotiveTable id)(getLocomotive id))
+            ((hash-has-key? railcarTable id)(getRailcar id))
             (else (error "TrainManager% findObject: id is unknown, object is not created, received"id))))
 
     ;-----------------------------------------------------------------------------------------------------------------
