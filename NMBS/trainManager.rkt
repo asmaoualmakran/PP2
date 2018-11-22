@@ -276,10 +276,11 @@
     ;---------------------------------------------------------------------------------
 
     (define (findObject id)
-      (cond ((hash-has-key? trainTable id)(getTrain id))
-            ((hash-has-key? locomotiveTable id)(getLocomotive id))
-            ((hash-has-key? railcarTable id)(getRailcar id))
-            (else (error "TrainManager% findObject: id is unknown, object is not created, received"id))))
+      (cond ((isTrain? id)(getTrain id))
+            ((isLocomotive? id)(getLocomotive id))
+            ((isRailcar? id)(getRailcar id))
+            (else
+             (error "TrainManager% findObject: id is unknown, object is not created, received"id))))
 
     ;-----------------------------------------------------------------------------------------------------------------
     ; Function: couple!
