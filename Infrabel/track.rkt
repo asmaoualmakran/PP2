@@ -39,10 +39,10 @@
 ; Use: Predicate to determine wheter all fields are initialised.
 ;-----------------------------------------------------------------
 
-    (define/public (initialised?)
+    (define (initialised?)
       (and (not (eq? length 'uninitialised))
-           (not (eq? curve  'uninitialised))
-           (send Infrastructure% initialised?)))    ;make sure that all the fields of the super class are set too
+           (not (eq? curve  'uninitialised))))
+           (augment initialised?)   
     
 ;-----------------------------------------------------
 ; Function: setConnectionID!
