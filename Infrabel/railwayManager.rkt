@@ -14,6 +14,10 @@
     (define switchTable (make-hash))
     (define detectionblockTable (make-hash))
 
+    (define trackType 'object:Track%)
+    (define switchType 'object:Switch%)
+    (define detectionblockType 'object:Detectionblock%)
+
     ;----------------------------------------------------------------------
     ; Function: isUnique?
     ; Parameters:
@@ -141,6 +145,10 @@
           (hash-ref switchTable id)
           (error "RailwayManager% getSwitch: id is not a member of the switchTable, recieved"id)))
 
+    ;-------------
+    ; TODO
+    ;-------------
+
     (define/public (deleteSwitch! id)
       (if (isSwitch? id)
           (hash-remove! switchTable id)
@@ -162,6 +170,16 @@
             (hash-set! detectionblockTable id block))
           (error "RailwayManager% createDetectionBlock: id is not unique, received" id)))
 
+    ;----------------------------------------------------------------------
+    ; Function: isDetectionblock?
+    ; Parameters:
+    ;    id: symbol
+    ;     Use: The identification of the object that needs checking.
+    ; Output:
+    ;     boolean: boolean
+    ;       Use: Determine whether or not the object is a detectionblock
+    ;----------------------------------------------------------------------
+
     (define/public (isDetectionblock? id)
       (if (symbol? id)
           (hash-has-key? detectionblockTable id)
@@ -177,7 +195,11 @@
           (hash-remove! detectionblockTable id)
           (error "RailwayManager% deleteDetectionbolck!: id is not a member of the detectionblockTable recieved" id)))
 
-    ; (define (findObject id)
-    ;  (cond ((hash-has-key? trackTable id)(
+     (define (findObject id)
+      (cond ((isTrack? id)(getTrack id))
+            ((isSwitch? id)(getSwitch id))
+            ((isDetectionblock? id)(getDetectionblock id))
+            (else
+             (error "RailwayManager% findObject: id is not a member of one of the tables recieved" id))))
       
     ))
