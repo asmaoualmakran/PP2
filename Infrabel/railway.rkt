@@ -6,4 +6,12 @@
   (class object%
     (super-new)
 
+    (init-field railwayManager)
+
+    (define/public (init)
+      'test)
+
+    (define/public (update!)
+      'test)
+
     ))

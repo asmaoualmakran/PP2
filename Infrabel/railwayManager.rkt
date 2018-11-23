@@ -8,6 +8,9 @@
   (class object%
     (super-new)
 
+    ;TODO create connectors and disconnectors between the objects
+    ;TODO create initialisers for each of the objects
+
     ; The hashtables where the objects are saved.
     ; The keys are the id's and values, the objects.
     (define trackTable (make-hash))
@@ -195,11 +198,40 @@
           (hash-remove! detectionblockTable id)
           (error "RailwayManager% deleteDetectionbolck!: id is not a member of the detectionblockTable recieved" id)))
 
-     (define (findObject id)
+    (define (findObject id)
       (cond ((isTrack? id)(getTrack id))
             ((isSwitch? id)(getSwitch id))
             ((isDetectionblock? id)(getDetectionblock id))
             (else
              (error "RailwayManager% findObject: id is not a member of one of the tables recieved" id))))
+
+    (define/public (connect! id1 id2)
+      (if (and (symbol? id1)
+               (symbol? id2))
+          (if (not (or (and (isDetectionblock? id1)  ;check if the not allowed construct is not the case
+                            (isSwitch? id2))
+                       (and (isSwitch? id1)
+                            (isDetectionblock? id2))))
+              (let ([obj1 (findObject id1)]
+                    [obj2 (findObject id2)])
+                (if (and (send obj1 initialised?)
+                         (send obj2 initialised?))
+                    (if (isDetectionblock? id1)
+                        (if (not(send obj1 isPlaced?))  ;The block is not placed on the track
+                            (send obj1 setTrackID! id2)
+                            (error "RailwayManager% connect!: cannot place an already placed detectionblock"))
+                        (if (isDetectionblock? id2)
+                            (send obj2 setTrackID! id1)
+                            (if (and (send obj1 connectionAvailable?)
+                                     (send obj2 connectionAvailable?))
+                                (begin (send obj1 addConnectionID! id2)
+                                       (send obj2 addConnectionID! id1))
+                                (error "RailwayManager% connect!: there is no connection available"))))
+                    (error "RailwayManager% connect!: objects are not initialised please initialise before use")))
+              (error "RailwayManager% connect!: cannot connects a switch and a detectionblock"))        
+          (error "RailwayManager% connect!: contract violation, expected a symbol recieved" id1 id2)))
+
+    (define/public (disconnect! obj1 obj2)
+      'test)
       
     ))
