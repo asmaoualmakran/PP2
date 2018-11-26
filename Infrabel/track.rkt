@@ -5,7 +5,6 @@
 
 (provide Track%)
 
-;TODO Look at the connections methods
 ;------------------------------------------------
 ; Class: Track%
 ; Parameters: n/a 
@@ -38,18 +37,40 @@
            (not (eq? detectionID 'uninitialised))))
     (augment initialised?)
 
-    ;---------
-    ;TODO
-    ;---------
+    ;--------------------------------------------------------------------
+    ; Function: getDetectionblockID
+    ; Parameters: n/a
+    ; Output:
+    ;     id: symbol
+    ;      Use: The identification of the connected detectionblock.
+    ; Use: Retrieve the identification of the connected detectionblock.
+    ;--------------------------------------------------------------------
 
-    (define/public (setDetectionblock! id)
+    (define/public (getDetectionblockID)
+      (if (initialised?)
+          detectionID
+          (error "Track% getDetectionblock: object is not initialised please initialise before use")))
+    
+    ;----------------------------------------------------------------------------
+    ; Function: setDetectionblockID!
+    ; Parameters:
+    ;       id: symbol
+    ;        Use: The identification of the detectionblock that need to be set.
+    ; Output: n/a
+    ; Use: Set the identification of the relationg detectionblock.
+    ;----------------------------------------------------------------------------
+
+    (define/public (setDetectionblockID! id)
       (if (initialised?)
           (set! detectionID id)
           (error "Track% setDetectionblock!: object is not initialised please initialise before use")))
 
-    ;-------
-    ;TODO
-    ;-------
+    ;----------------------------------------------------------------
+    ; Function: deleteDetectionblock!
+    ; Parameters: n/a
+    ; Output: n/a
+    ; Use: Delete the identification of the relating detectionblock.
+    ;----------------------------------------------------------------
     
     (define/public (deleteDetectionblock!)
       (if (initialised?)

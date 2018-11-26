@@ -96,9 +96,28 @@
           maximalConnections
           (error "Infrastructure% getMaximalConnections: object is not initialised, please initialise before use")))
 
-    ;----------
-    ;TODO
-    ;----------
+    ;--------------------------------------------------------------------------------------
+    ; Function: isConnected?
+    ; Parameters:
+    ;      id: symbol
+    ;       Use: The identifiaction of the object who's connection needs to be checked.
+    ; Output:
+    ;      boolean: boolean
+    ;       Use: Boolean to determine if an object is connected.
+    ; Use: Check if the object with the given id is connected to the current object.
+    ;--------------------------------------------------------------------------------------
+    
+    (define/public (isConnected? id)
+      (memq (getConnections) id))
+
+    ;---------------------------------------------------------------------
+    ; Function: connectionAvailable?
+    ; Parameters: n/a
+    ; Output:
+    ;     boolean: boolean
+    ;       Use: Boolean to determine if there is a connection available.
+    ; Use: Check if there is a connection available.
+    ;---------------------------------------------------------------------
     
     (define/public (connectionAvailable?)
       (if (initialised?)
@@ -149,7 +168,7 @@
       (cond ((not(initialised?))(error "Infrastructure% deleteConnection!: object not initialised please initialise before use"))
             ((not (symbol? id))(error "Infrastructure% deleteConnection!: contract violation, expected symbol given" id ID))
             ((null? connections)(error "Infrastructure% deleteConnection!: there is no connection to be deleted" connections ID))
-            ((memq id connections)(set! connections (remove id connections)))
+            ((isConnected? id)(set! connections (remove id connections)))
             (else (error "Infrastructure% deleteConnection!: the given connection is not connected to this track" id ID))))
       
 
