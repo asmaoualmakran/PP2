@@ -8,7 +8,6 @@
   (class object%
     (super-new)
 
-    ;TODO create connectors and disconnectors between the objects
     ;TODO create initialisers for each of the objects
 
     ; The hashtables where the objects are saved.
@@ -148,9 +147,14 @@
           (hash-ref switchTable id)
           (error "RailwayManager% getSwitch: id is not a member of the switchTable, recieved"id)))
 
-    ;-------------
-    ; TODO
-    ;-------------
+    ;-----------------------------------------------------------
+    ; Function: deleteSwitch!
+    ; Parameters:
+    ;    id: symbol
+    ;     Use: The identification of the to be deleted switch.
+    ; Output: n/a
+    ; Use: Delete a switch useing it's id.
+    ;-----------------------------------------------------------
 
     (define/public (deleteSwitch! id)
       (if (isSwitch? id)
@@ -188,6 +192,17 @@
           (hash-has-key? detectionblockTable id)
           (error "RailwayManager% isDetectionblock?: contract violation, expected symbol received" id)))
 
+    ;---------------------------------------------------------------------
+    ; Function: getDetectionblock
+    ; Parameters:
+    ;    id: symbol
+    ;     Use: The identification of the to be retrieved detectionblock.
+    ; Output:
+    ;    detectionblock: object:Detectionblock%
+    ;       Use: The retrieved detectonblock.
+    ; Use: Retrieve a detectionblock useing it's id.
+    ;---------------------------------------------------------------------
+
     (define/public (getDetectionblock id)
       (if (isDetectionblock? id)
           (hash-ref detectionblockTable id)
@@ -205,6 +220,27 @@
             (else
              (error "RailwayManager% findObject: id is not a member of one of the tables recieved" id))))
 
+    (define (isMember? id)
+      (or (isTrack? id)
+          (isSwitch? id)
+          (isDetectionblock? id)))
+
+    (define/public (isConnected? id1 id2)
+      (if (and (symbol? id1)
+               (symbol? id2))
+          (if (and (isMember? id1)
+                   (isMember? id2))
+              (if (isDetectionblock? id1)
+                  (begin (and (eq? (send (getDetectionblock id1) getTrackID) id2)
+                              (eq? (send (getTrack id2) getDetectionblockID) id1)))
+                  (if (isDetectionblock? id2)
+                      (begin (and (eq? (send (getDetectionblock id2) getTrackID) id1)
+                                  (eq? (send (getTrack id1) getDetectionblockID) id2)))
+                      (begin (and (send (findObject id1) isConnected? id2)
+                                  (send (findObject id2) isConnected? id1)))))
+              #f)
+          (error "RailwayManager% isConnected?: contract violation expected id's recieved" id1 id2)))
+
     (define/public (connect! id1 id2)
       (if (and (symbol? id1)
                (symbol? id2))
@@ -218,10 +254,12 @@
                          (send obj2 initialised?))
                     (if (isDetectionblock? id1)
                         (if (not(send obj1 isPlaced?))  ;The block is not placed on the track
-                            (send obj1 setTrackID! id2)
+                            (begin(send obj1 setTrackID! id2)
+                                  (send obj2 sentDetectionblockID! id1))
                             (error "RailwayManager% connect!: cannot place an already placed detectionblock"))
                         (if (isDetectionblock? id2)
-                            (send obj2 setTrackID! id1)
+                            (begin(send obj2 setTrackID! id1)
+                                  (send obj1 setDetectionblockID! id2))
                             (if (and (send obj1 connectionAvailable?)
                                      (send obj2 connectionAvailable?))
                                 (begin (send obj1 addConnectionID! id2)
@@ -229,9 +267,36 @@
                                 (error "RailwayManager% connect!: there is no connection available"))))
                     (error "RailwayManager% connect!: objects are not initialised please initialise before use")))
               (error "RailwayManager% connect!: cannot connects a switch and a detectionblock"))        
-          (error "RailwayManager% connect!: contract violation, expected a symbol recieved" id1 id2)))
+          (error "RailwayManager% connect!: contract violation, expected symbols recieved" id1 id2)))
 
-    (define/public (disconnect! obj1 obj2)
-      'test)
+    (define/public (disconnect! id1 id2)
+      (if (and (symbol? id1)
+               (symbol? id2))
+          (if (and (or (isDetectionblock? id1)  ; check if the id's belong to a detectionblock switch of track
+                       (isSwitch? id1)
+                       (isTrack? id1))
+                   (or (isDetectionblock? id2)
+                       (isSwitch? id2)
+                       (isTrack? id2)))
+              (let ([obj1 (findObject id1)]  ;If it is one of the types, retrieve the object
+                    [obj2 (findObject id2)])
+                (cond ((eq? (object-name obj1) detectionblockType)  ; One of the objects is a detection block, you know the other one is a track object
+                       (if (isConnected? id1 id2)    ; check if the track and the detectionblock are connected in both ways                                      
+                           (begin (send obj1 deleteTrackID!)
+                                  (send obj2 deleteDetectionblock!))
+                           (error "RailwayManager% disconnect: given objects are not connected" id1 id2)))
+                      ((eq? (object-name obj2) detectionblockType)
+                       (if (isConnected? id1 id2)
+                           (begin (send obj2 deleteTrackID!)
+                                  (send obj1 deleteDetectionblock!))
+                           (error "RailwayManager% disconnect: given objects are not connected" id1 id2)))
+                                                                        
+                      (else (if (isConnected? id1 id2) ; in this case, both objects are a combination of switches and tracks.     
+                                (begin(send obj1 deleteConnection! id2)  ; check if the objects are connected to each other
+                                      (send obj2 deleteConnection! id1))
+                                (error "RailwayManager% disconnect: given objects are not connected" id1 id2)))))
+                         
+              (error "RailwayManager% disconnect!: given objects are not a part of the railway" id1 id2))
+          (error "RailwayManager% disconnect!: contract violation, expected symbols recieved" id1 id2)))
       
     ))
