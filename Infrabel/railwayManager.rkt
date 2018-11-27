@@ -8,8 +8,6 @@
   (class object%
     (super-new)
 
-    ;TODO create initialisers for each of the objects
-
     ; The hashtables where the objects are saved.
     ; The keys are the id's and values, the objects.
     (define trackTable (make-hash))

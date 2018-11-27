@@ -151,6 +151,9 @@
           (set! reservations (make-vector maxReservations))
           (error "Detectionblock% initReservations!: maxReservations is not initialised, please initialse before use")))
 
+
+    ;TODO: enable resizing of the reservations
+    
     ;-------------------------------------------------------------------
     ; Function: freeLocation
     ; Parameter:

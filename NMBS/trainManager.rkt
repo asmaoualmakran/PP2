@@ -210,7 +210,27 @@
             (hash-set! locomotiveTable id locomotive))
           (error "TrainManager% createLocomotive: ID is already in use, received" id)))
 
-    ; (define/public (initLocomotive! id
+    ;-----------------------------------------------------------------------------------
+    ; Function: initLocomotive!
+    ; Parameters:
+    ;       id: symbol
+    ;        Use: The identification of the locomotive that needs to be initialised.
+    ;       direction: symbol
+    ;        Use: The driving direction of the locomotive.
+    ; Use: Initialise the given locomotive.
+    ;-----------------------------------------------------------------------------------
+
+     (define/public (initLocomotive! id direction)
+       (if (isLocomotive? id)
+           (let ([locomotive (getLocomotive id)])
+             (if (not(send locomotive initialised?))
+                 (begin
+                   (send locomotive setPredecessorID! 'none)
+                   (send locomotive setSuccessorID! 'none)
+                   (send locomotive setTrainID! 'none)
+                   (send locomotive setDirection! direction))
+                 (error "TrainManager% initLocomotive!: object is already initialised, cannot be reinitialised")))
+           (error "TrainManager% initLocomotive!: provided ID does not belong to an excisting locomotive" id)))         
 
     ;------------------------------------------------------------------------------------------
     ; Funcion: deleteLocomotive!
