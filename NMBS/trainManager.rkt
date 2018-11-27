@@ -294,6 +294,28 @@
             (hash-set! railcarTable id railcar))
           (error "TrainManager% createRailcar: ID is already in use, received:"id)))
 
+    ;-------------------------------------------------------------------------
+    ; Function: initRailcar!
+    ; Parameters:
+    ;        id: symbol
+    ;         Use: The identification of the to be initialised railcar.
+    ;        capacity: number
+    ;         Use: The capacity of the railcar.
+    ; Output: n/a
+    ; Use: Initialise the given id's railcar.
+    ;-------------------------------------------------------------------------
+
+    (define/public (initRailcar! id capacity)
+      (if (isRailcar? id)
+          (let ([railcar (getRailcar id)])
+            (if (not (send railcar initialsed?))
+               (begin (send railcar setPredecessorID! 'none)
+                (send railcar setSuccessorID! 'none)
+                (send railcar setTrainID! 'none)
+                (send railcar setCapacity! capacity))
+               (error "TrainManager% initRailcar!: object is already initialised, it cannot be reinitialised")))
+          (error "TrainManager% initRailcar!: identification does not belong to a excisting railcar" id)))
+
     ;--------------------------------------------------------------
     ; Function: deleteRailcar!
     ; Parameters:

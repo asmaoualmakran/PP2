@@ -324,6 +324,17 @@
           (hash-remove! detectionblockTable id)
           (error "RailwayManager% deleteDetectionbolck!: id is not a member of the detectionblockTable recieved" id)))
 
+    ;-----------------------------------------------------------------------
+    ; Function: findObject
+    ; Parameters:
+    ;       id: symbol
+    ;        Use: The identification of the to be find object.
+    ; Output:
+    ;     object: object:Track% ; object:Detectionblock%; object:Switch%
+    ;       Use: The to be found object.
+    ; Use: Retrieve an object useing it's ID.
+    ;-----------------------------------------------------------------------
+    
     (define (findObject id)
       (cond ((isTrack? id)(getTrack id))
             ((isSwitch? id)(getSwitch id))
@@ -331,10 +342,34 @@
             (else
              (error "RailwayManager% findObject: id is not a member of one of the tables recieved" id))))
 
+    ;----------------------------------------------------------------------------
+    ; Function: isMember?
+    ; Parameters:
+    ;       id: symbol
+    ;        Use: The identification of the object that needs to be checked.
+    ; Output:
+    ;     boolean: boolean
+    ;        Use: Determine if an object is part of the railway.
+    ; Use: Check if an object is part of the railway.
+    ;----------------------------------------------------------------------------
+    
     (define (isMember? id)
       (or (isTrack? id)
           (isSwitch? id)
           (isDetectionblock? id)))
+
+    ;---------------------------------------------------------------------------------
+    ; Function: isConnected?
+    ; Parameters:
+    ;       id1: symbol
+    ;        Use: The identification of a railway object.
+    ;       id2: symbol
+    ;        Use: The identification of a railway object.
+    ; Output:
+    ;       boolean: boolean
+    ;        Use: Boolean to determine if two objects are connected.
+    ; Use: Check if the object's who's id's are given are connected to each other.
+    ;---------------------------------------------------------------------------------
 
     (define/public (isConnected? id1 id2)
       (if (and (symbol? id1)
@@ -351,6 +386,17 @@
                                   (send (findObject id2) isConnected? id1)))))
               #f)
           (error "RailwayManager% isConnected?: contract violation expected id's recieved" id1 id2)))
+
+    ;-----------------------------------------------------------------------------------------------
+    ; Function: connect!
+    ; Parameters:
+    ;       id1: symbol
+    ;        Use: The identification of a railway object.
+    ;       id2: symbol
+    ;        Use: The identification of a railway object.
+    ; Output: n/a
+    ; Use: Connect two railway objects with each other and making sure the connections are valid.
+    ;-----------------------------------------------------------------------------------------------
 
     (define/public (connect! id1 id2)
       (if (and (symbol? id1)
@@ -384,6 +430,17 @@
               (error "RailwayManager% connect!: cannot connects a switch and a detectionblock"))        
           (error "RailwayManager% connect!: contract violation, expected symbols recieved" id1 id2)))
 
+    ;------------------------------------------------------------
+    ; Function: disconnect!
+    ; Parameters:
+    ;       id1: symbol
+    ;        Use: The identification of a railway object.
+    ;       id2: symbol
+    ;        Use: The identification of a railway object.
+    ; Output: n/a
+    ; Use: Disconnect two railway objects who are connected.
+    ;------------------------------------------------------------
+    
     (define/public (disconnect! id1 id2)
       (if (and (symbol? id1)
                (symbol? id2))
