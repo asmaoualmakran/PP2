@@ -95,14 +95,17 @@
                    (number? curve)
                    (number? speedlimit))
               (let ([track (getTrack id)])
-                (send track initConnections!)
-                (send track setLocation! location)
-                (send track setLength! length)
-                (send track setCurve! curve)
-                (send track setSpeedlimit! speedlimit)
-                (send track setAvailable! #t)
-                (send track setMaximalConnections! 2)
-                (send track setDetectionblockID! 'none))
+                (if (not (send track initialised?))
+                    (begin
+                      (send track initConnections!)
+                      (send track setLocation! location)
+                      (send track setLength! length)
+                      (send track setCurve! curve)
+                      (send track setSpeedlimit! speedlimit)
+                      (send track setAvailable! #t)
+                      (send track setMaximalConnections! 2)
+                      (send track setDetectionblockID! 'none))
+                    (error "RailwayManager% initTrack!: object is already initialsed cannot be reinitialised")))
               (error "RailwayManager% initTrack!: contract violation expected pair, number and number recieved" location curve speedlimit))
           (error "RailwayManager% initTrack!: given track is not a member of the table recieved" id)))
 
@@ -196,13 +199,16 @@
                    (number? speedlimit)
                    (number? maxConnect))
               (let ([switch (getSwitch id)])
-                (send switch initConnections!)
-                (send switch setLocation! location)
-                (send switch initState! state)
-                (send switch setSpeedlimit! speedlimit)
-                (send switch setAvailable! #t)
-                (send switch setMaxConnections! maxConnect)
-                (send switch setDirection! dir))
+                (if (not (send switch initialised?))
+                    (begin
+                      (send switch initConnections!)
+                      (send switch setLocation! location)
+                      (send switch initState! state)
+                      (send switch setSpeedlimit! speedlimit)
+                      (send switch setAvailable! #t)
+                      (send switch setMaxConnections! maxConnect)
+                      (send switch setDirection! dir))
+                    (error "RailwayManager% initSwitch: object is already initialised cannot be reinitialsed")))
               (error "RailwayManager% initSwitch!: contract violation expected symbol pair symbol number number recieved" id location state dir speedlimit maxConnect))
           (error "RailwayManager% initSwitch!: given ID does not belong to a switch" id)))
 
@@ -250,6 +256,30 @@
             (send block setID! id)
             (hash-set! detectionblockTable id block))
           (error "RailwayManager% createDetectionBlock: id is not unique, received" id)))
+
+    ;-----------------------------------------------------------------------------------
+    ; Function: initDetectionblock!
+    ; Parameters:
+    ;       id: symbol
+    ;        Use: The identification of the to be initialised detectionblock.
+    ;       maxRes: number
+    ;        Use: The maximum number of reservations that a detectionblock can take.
+    ;       length: number
+    ;        Use: The length of the reach of the detectionblock.
+    ; Output: n/a
+    ; Use: Initialise a detectionblock.
+    ;-----------------------------------------------------------------------------------
+
+    (define/public (initDetectionblock! id maxRes length)
+      (if (isDetectionblock? id)
+          (let ([detection (getDetectionblock id)])
+            (if (not (send detection initialised?))
+                (begin
+                  (send detection setTrackID! 'none)
+                  (send detection setMaxReservations! maxRes)
+                  (send detection setLength! length))
+            (error "RailwayManager% initDetectionblock!: Detectionblock is already initialised")))
+          (error "RailwayManager% initdetectionblock!: id does not belong to a detectionblock recieved" id)))
 
     ;----------------------------------------------------------------------
     ; Function: isDetectionblock?
@@ -331,15 +361,18 @@
                             (isSwitch? id2))
                        (and (isSwitch? id1)
                             (isDetectionblock? id2))))
+              
               (let ([obj1 (findObject id1)]
                     [obj2 (findObject id2)])
                 (if (and (send obj1 initialised?)
                          (send obj2 initialised?))
                     (if (isDetectionblock? id1)
+                        
                         (if (not(send obj1 isPlaced?))  ;The block is not placed on the track
                             (begin(send obj1 setTrackID! id2)
                                   (send obj2 sentDetectionblockID! id1))
                             (error "RailwayManager% connect!: cannot place an already placed detectionblock"))
+                        
                         (if (isDetectionblock? id2)
                             (begin(send obj2 setTrackID! id1)
                                   (send obj1 setDetectionblockID! id2))
@@ -347,6 +380,7 @@
                                      (send obj2 connectionAvailable?))
                                 (begin (send obj1 addConnectionID! id2)
                                        (send obj2 addConnectionID! id1))
+                                
                                 (error "RailwayManager% connect!: there is no connection available"))))
                     (error "RailwayManager% connect!: objects are not initialised please initialise before use")))
               (error "RailwayManager% connect!: cannot connects a switch and a detectionblock"))        
@@ -361,6 +395,7 @@
                    (or (isDetectionblock? id2)
                        (isSwitch? id2)
                        (isTrack? id2)))
+              
               (let ([obj1 (findObject id1)]  ;If it is one of the types, retrieve the object
                     [obj2 (findObject id2)])
                 (cond ((eq? (object-name obj1) detectionblockType)  ; One of the objects is a detection block, you know the other one is a track object
@@ -368,6 +403,7 @@
                            (begin (send obj1 deleteTrackID!)
                                   (send obj2 deleteDetectionblock!))
                            (error "RailwayManager% disconnect: given objects are not connected" id1 id2)))
+                      
                       ((eq? (object-name obj2) detectionblockType)
                        (if (isConnected? id1 id2)
                            (begin (send obj2 deleteTrackID!)
