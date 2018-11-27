@@ -8,6 +8,8 @@
 
 (provide TrainManager%)
 
+; NOTE: There needs to be checked if a train build is valid before use.
+
 ;----------------------------------------------------
 ; Class: TrainManager%
 ; Parameters: n/a
@@ -37,25 +39,6 @@
     (define locomotiveType 'object:Locomotive%)
     (define railcarType 'object:Railcar%)
 
-    (define/public (initTrain id traject trajectID currentPos direction speed currentNode)   ;currentNode should be set automatically to the fist location of the traject.
-      (if (isTrain? id)
-          (let ([train (getTrain id)])
-            (if (send train initialsed?)
-                (error "TrainManager initTrain%: Train is already initialised."id)
-                (begin
-                  (send train initBuild)
-                  (send train initActive)
-                  (send train setTraject! traject)
-                  (send train setTrajectID! trajectID)
-                  (send train setCurrentPosition! currentPos)
-                  (send train setDirection! direction)
-                  (send train setSpeed! speed)
-                  (send train currentNode! currentNode)
-                  (send train setMasterLocomotive! 'none)
-                  (send train setRearLocomotive! 'none)
-                  (send train setLastPosition! 'none)
-                  (send train setNextNode! 'none))));start initialisation
-          (error "TrainManager% initTrain: id does not exist or is not from a train."id)))
                              
 
     ;-----------------------------------------------------------------------------
@@ -92,6 +75,34 @@
             (send train initBuild)
             (hash-set! trainTable id train))
           (error "TrainManager% createTrain: ID is already in use, received" id)))
+
+    ;--------------------------------------------------------------------------------
+    ; Function: initTrain
+    ; Parameters:
+    ;     id: symbol
+    ;      Use: The identification of the train that needs to be initialised.
+    ; Use: Initialise the train.
+    ;-------------------------------------------------------------------------------
+    
+    (define/public (initTrain id)  
+      (if (isTrain? id)
+          (let ([train (getTrain id)])
+            (if (not(send train initialsed?))
+                (begin
+                  (send train initBuild)
+                  (send train initActive)
+                  (send train setTraject! 'none)
+                  (send train setTrajectID! 'none)
+                  (send train setCurrentPosition! 'none)
+                  (send train setDirection! 'none)
+                  (send train setSpeed! 0)
+                  (send train currentNode! 'none)
+                  (send train setMasterLocomotive! 'none)
+                  (send train setRearLocomotive! 'none)
+                  (send train setLastPosition! 'none)
+                  (send train setNextNode! 'none))
+            (error "TrainManager initTrain%: Train is already initialised."id)))
+          (error "TrainManager% initTrain: id does not exist or is not from a train."id)))
 
     ;-------------------------------------------------------------
     ; Function: deleteTrain!
@@ -139,7 +150,50 @@
       (if (symbol? id)
           (hash-has-key? trainTable id)
           (error "TrainManager% isTrain?: contract violation expected symbol received"id)))
+    
 
+    ;--------------------------------------------------------------------------------------
+    ; Function: initDirection!
+    ; Parameters:
+    ;      id: symbol
+    ;       Use: The train who's driving direction needs to be initialised.
+    ; Output: n/a
+    ; Use: Initialise the driving direction of the train, using it's master locomotive.
+    ;--------------------------------------------------------------------------------------
+    
+    (define (initDirection! id)   ; the initialisation happens automaticallly when building the train.
+      (if (isTrain? id)
+          (let ([train (getTrain id)])
+            (if (and(send train initialised?)
+                    (eq? (send train getDirection)))
+                (if (and(not (null? (send train getBuild)))
+                        (isLocomotive? (send train getMasterLocomotive)))
+                    (let ([locomotive (getLocomotive (send train getMasterLocomotive))])
+                      (send train initDirection! (send locomotive getDirection)))
+                    (error "TrainManager% initDirection!: train has no master locomotive, directions can not be initialised"))
+                (error "TrainManager% initDirection!: train object is not initialised, please initialise before use")))
+          (error "TrainManager% initDirection!: given object id is not a train")))
+
+    ;-------------------------------------------------------------------------------------
+    ; Function: switchDirection!
+    ; Parameters:
+    ;       id: symbol
+    ;        Use: The identification of the train who's direction needs to be changed.
+    ; Output: n/a
+    ; Use: Switch the direction of the train.
+    ;-------------------------------------------------------------------------------------
+
+    (define/public (switchDirection! id)  ;NOTE: this method needs extending, the master- and rear locomotives also need swapping!
+      (if (isTrain? id)
+          (let ([train (getTrain id)])
+            (if (and (not (eq? 'none (send train getMasterLocomotive)))
+                     (isLocomotive? (send train getMasterLocomotive)))
+                (let ([locomotive (getLocomotive (send train getMasterLocomotive))])
+                  (send train switchDirection!)
+                  (send locomotive switchDirection!))
+                (error "TrainManager% switchDirection!: given train has no excisting master locomotive")))
+          (error "TrainManager% switchDirection!: given id does not belong to a excisting train")))
+                
     ;-----------------------------------------------------------
     ; Function: createLocomotive!
     ; Parameters:
@@ -155,6 +209,8 @@
             (send locomotive setID! id)
             (hash-set! locomotiveTable id locomotive))
           (error "TrainManager% createLocomotive: ID is already in use, received" id)))
+
+    ; (define/public (initLocomotive! id
 
     ;------------------------------------------------------------------------------------------
     ; Funcion: deleteLocomotive!
@@ -292,7 +348,7 @@
     ; Use: Conneting a railcar or a locomotive to a train.
     ;-----------------------------------------------------------------------------------------------------------------
 
-    (define/public (couple! train object)
+    (define/public (couple! train object)   
       (if (and (isTrain? train)
                (or (isLocomotive? object)
                    (isRailcar? object)))
@@ -307,7 +363,8 @@
                       (if (eq? (object-name obj) locomotiveType)
                           (begin (send trainObj addMember! objID)  ; if the object is a locomotive, connect
                                  (send obj setTrainID! trainID)
-                                 (send trainObj setMasterLocomotiveID! objID))
+                                 (send trainObj setMasterLocomotiveID! objID)
+                                 (initDirection! trainID))
                           (error "TrainManager% couple!: Train build is null, only a locomotive can be added.")) 
                       (begin (send obj setTrainID! trainID)  ; if the build is not null, everything can be connected. (set the train of the object)
                              (send obj setPrecessorID! (send trainObj getLastID)) ; set the predecessor of the to be added object to the last element of the train
