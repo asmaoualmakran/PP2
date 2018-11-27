@@ -38,6 +38,18 @@
            (not(eq? speedlimit 'uninitialised))
            (not(eq? maximalConnections 'uninitialised))))
 
+    ;---------------------------------------------------
+    ; Functions: initConnections!
+    ; Parameters: n/a
+    ; Output: n/a
+    ; Use: Initialise the connections to an empty list.
+    ;---------------------------------------------------
+    
+    (define/public (initConnections!)
+      (if (not(initialised?))
+          (set! connections (list))
+          (error "Infrastructure% initConnections: object already initialised, can not initialise connections")))
+          
 
     ;-----------------------------------------------------------
     ; Function: setID! 

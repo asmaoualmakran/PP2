@@ -70,6 +70,42 @@
             (hash-set! trackTable id track))
           (error "RailwayManager% createRail: id is not unique, received" id)))
 
+    ;-------------------------------------------------------------------------------
+    ; Function: initTrack!
+    ; Parameters:
+    ;      id: symbol
+    ;       Use: The identification of the to be initialised object.
+    ;      location: pair
+    ;       Use: The location of the the piece track.
+    ;      length: number
+    ;       Use: The length of the piece of track.
+    ;      curve: number
+    ;       Use: The curve of the curve of the piece of track.
+    ;      speedlimit: number
+    ;       Use: The speedlimit on the piece of track.
+    ; Output: n/a
+    ; Use: Initialise the object of the given ID. The given parameters are set
+    ;      Other fields are set to symbol 'none. An initialised Track% object is
+    ;      automatically set to available.
+    ;--------------------------------------------------------------------------------
+    
+    (define/public (initTrack! id location length curve speedlimit)
+      (if (isTrack? id)
+          (if (and (pair? location)
+                   (number? curve)
+                   (number? speedlimit))
+              (let ([track (getTrack id)])
+                (send track initConnections!)
+                (send track setLocation! location)
+                (send track setLength! length)
+                (send track setCurve! curve)
+                (send track setSpeedlimit! speedlimit)
+                (send track setAvailable! #t)
+                (send track setMaximalConnections! 2)
+                (send track setDetectionblockID! 'none))
+              (error "RailwayManager% initTrack!: contract violation expected pair, number and number recieved" location curve speedlimit))
+          (error "RailwayManager% initTrack!: given track is not a member of the table recieved" id)))
+
     ;--------------------------------------------------------------------------
     ; Function: getTrack
     ; Parameters:
@@ -131,6 +167,44 @@
             (send switch setID! id)
             (hash-set! switchTable id switch))
           (error "RailwayManager% createSwitch: id is not unique, received" id)))
+
+    ;-------------------------------------------------------------------------------------------
+    ; Function: initSwitch!
+    ; Parameters:
+    ;      id: symbol
+    ;       Use: The identification of the switch that needs initialising.
+    ;      location: pair
+    ;       Use: The location where the switch needs to be set to.
+    ;      state: symbol
+    ;       Use: The state of the switch. This is either 'left or 'right.
+    ;      dir: symbol
+    ;       Use: The driving direction of the switch. This is either 'left or 'right.
+    ;      speedlimit: number
+    ;       Use: The speedlimit on the switch.
+    ;      maxConnect: number
+    ;       Use: The maximum number of switches or tracks that can be connected to the switch.
+    ; Use: Initialise an excisting Switch% object. 
+    ;--------------------------------------------------------------------------------------------
+    
+    (define/public (initSwitch! id location state dir speedlimit maxConnect)
+      (if (isSwitch? id)
+          (if (and (pair? location)
+                   (or (eq? state 'left)
+                       (eq? state 'right))
+                   (or (eq? dir 'left)
+                       (eq? dir 'right))
+                   (number? speedlimit)
+                   (number? maxConnect))
+              (let ([switch (getSwitch id)])
+                (send switch initConnections!)
+                (send switch setLocation! location)
+                (send switch initState! state)
+                (send switch setSpeedlimit! speedlimit)
+                (send switch setAvailable! #t)
+                (send switch setMaxConnections! maxConnect)
+                (send switch setDirection! dir))
+              (error "RailwayManager% initSwitch!: contract violation expected symbol pair symbol number number recieved" id location state dir speedlimit maxConnect))
+          (error "RailwayManager% initSwitch!: given ID does not belong to a switch" id)))
 
     ;----------------------------------------------------------------------------
     ; Function: getSwitch
@@ -207,6 +281,15 @@
       (if (isDetectionblock? id)
           (hash-ref detectionblockTable id)
           (error "RailwayManager% getDetectionblock: given id is not from a detectionblock recieved" id)))
+
+    ;-----------------------------------------------------------------------
+    ; Function: deleteDetectionblock!
+    ; Parameters:
+    ;       id: symbol
+    ;         Use: The id of the detectionblock that needs to be deleted.
+    ; Output: n/a
+    ; Use: Delete the detectionblock object from the hashtable.
+    ;-----------------------------------------------------------------------
 
     (define/public (deleteDetectionblock! id)
       (if (isDetectionblock? id)
