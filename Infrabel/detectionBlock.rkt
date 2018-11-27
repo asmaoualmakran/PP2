@@ -63,7 +63,9 @@
     
     (define/public (getID)
       (if (initialised?)
-          ID
+          (begin
+            ID
+            (display ID))
           (error "Detectionblock% getID: Object is not initialised please initialise before use")))
 
     ;-----------------------------------------------------------------------------------
@@ -157,8 +159,10 @@
     ;-----------------------------------------------------------------------
     
     (define/public (setMaxReservations! res)
-      (if (number? res)
-          (set! maxReservations res)
+      (if (and(number? res)
+              (eq? maxReservations 'uninitialised))
+          (begin (set! maxReservations res)
+                 (initReservations!))
           (error "Detectionblock% setMaxReservations!: contract violation expected number recieved" res)))
 
     ;------------------------------------------------------------------------------
