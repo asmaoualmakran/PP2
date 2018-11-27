@@ -21,14 +21,50 @@
    
     (struct reservation (id [priority #:mutable]))  ; a struct defineing a reservation
 
-    (define (initialised?)
+    ;-------------------------------------------------------
+    ; Function: initialised?
+    ; Parameters: n/a
+    ; Output:
+    ;     boolean: boolean
+    ;       Use: Determine if the object is initialised.
+    ; Use: Check if the object is initialised.
+    ;-------------------------------------------------------
+    
+    (define/public (initialised?)
       (and (not(eq? ID 'uninitialised))
            (not(eq? trackID 'uninitialised))
            (not(eq? reservations 'uninitialised))
            (not(eq? maxReservations 'uninitialised))
            (not(eq? length 'uninitialised))))
-         
 
+    ;-------------------------------------------------------------------------
+    ; Function: setID!
+    ; Parameters:
+    ;      symbol: symbol
+    ;         Use: The symbol where the identification needs to be set to.
+    ; Output: n/a
+    ; Use: Set the identification of the detectionblock object.
+    ;-------------------------------------------------------------------------
+
+    (define/public (setID! symbol)
+      (if (and (eq? ID 'uninitialised)
+               (symbol? symbol))
+          (set! ID symbol)
+          (error "Detectionblock% setID!: ID is already set or contract violation symbol expected recieved" symbol)))
+
+    ;------------------------------------------------
+    ; Function: getID
+    ; Parameters: n/a
+    ; Output:
+    ;      ID: symbol
+    ;       Use: The identification of the object.
+    ; Use: Retrieve the object's identification.
+    ;------------------------------------------------
+    
+    (define/public (getID)
+      (if (initialised?)
+          ID
+          (error "Detectionblock% getID: Object is not initialised please initialise before use")))
 
     ;-----------------------------------------------------------------------------------
     ; Function: setTrackID
