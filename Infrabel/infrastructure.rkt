@@ -1,6 +1,6 @@
 #lang racket
 
-;TODO: alle functies checken en testen + errors aanpassen
+;TODO: alle functies checken en testen 
 
 (require racket/class)
 

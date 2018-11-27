@@ -8,35 +8,26 @@
 (provide Detectionblock%)
 
 (define Detectionblock%
-  (class Infrastructure%
+  (class object%
     (super-new)
 
     (field
-     
+     [ID              'uninitialised]
      [trackID         'uninitialised]
      [reservations    'uninitialised]   ; functies voor schrijven
      [maxReservations 'uninitialised]   ;getters en setters voor schrijven
      [length          'uninitialised])
 
-    (inherit/super  setMaximalConnections!)
-    (inherit/super setSpeedlimit!)
-
-
-    ;private function to make sure all the fields are initialised.
-    (define (init)
-      (setSpeedlimit! 0)
-      (setMaximalConnections! 0))
-
-    (init)
    
     (struct reservation (id [priority #:mutable]))  ; a struct defineing a reservation
 
     (define (initialised?)
-      (and (not(eq? trackID 'uninitialised))
+      (and (not(eq? ID 'uninitialised))
+           (not(eq? trackID 'uninitialised))
            (not(eq? reservations 'uninitialised))
            (not(eq? maxReservations 'uninitialised))
            (not(eq? length 'uninitialised))))
-    (augment initialised?)         
+         
 
 
     ;-----------------------------------------------------------------------------------
@@ -67,9 +58,12 @@
           trackID
           (error "Detectionblock% getTrackID: object is not initialised")))
 
-    ;------------
-    ; TODO
-    ;------------
+    ;----------------------------------------------------------
+    ; Function: deleteTrackID!
+    ; parameters: n/a
+    ; output: n/a
+    ; Use: Delete the identification of the associated track.
+    ;----------------------------------------------------------
 
     (define/public (deleteTrackID!)
       (if (initialised?)
@@ -116,6 +110,34 @@
       (if (initialised?)
           length
           (error "Detectionblok% getLength: object is not initialised, initialise before use")))
+
+    ;-----------------------------------------------------------------------
+    ; Function: setMaxReservations!
+    ; Parameters:
+    ;       res: number
+    ;        Use: The number of reservations the detectionblok can take.
+    ; Output: n/a
+    ; Use: Set the number of reservations the detectionblok takes.
+    ;-----------------------------------------------------------------------
+    
+    (define/public (setMaxReservations! res)
+      (if (number? res)
+          (set! maxReservations res)
+          (error "Detectionblock% setMaxReservations!: contract violation expected number recieved" res)))
+
+    ;------------------------------------------------------------------------------
+    ; Function: getMaxReservations
+    ; Parameters: n/a
+    ; Output:
+    ;     maxReservations: number
+    ;         Use: The maximum reservations the detectionblock can take
+    ; Use: Retrieve the number of reservations that the detectionblock can take.
+    ;------------------------------------------------------------------------------
+    
+    (define/public (getMaxReservations)
+      (if (initialised?)
+          maxReservations
+          (error "Detectionblock% getMaxReservations: objects is not initialised please initialise before use")))
 
     ;---------------------------------------------------------------------------------
     ; Function: initReservations!
