@@ -79,16 +79,44 @@
               obj1)
               (error "CommunicationManager% getConnected: you are not connected")))
 
+    ;-------------------------------------------------------------------------
+    ; Function: receiveMessage
+    ; Parameters:
+    ;     recipient: object:*
+    ;       Use: The recieving object of the message.
+    ;     message: function
+    ;       Use: A function that the recipient supports.
+    ;     args: any
+    ;       Use: The optional parameters that a function expects.
+    ; Output:
+    ;     return: any
+    ;       Use: Any optional return value of an executed function.
+    ; Use: Let an object execute one of it's functions/ methods.
+    ;------------------------------------------------------------------------
+
     (define (receiveMessage recipient message . args)
       (if (null? args)
           (send recipient message)
           (send recipient message . args)))
-          
 
+    ;-----------------------------------------------------------------------
+    ; Function: sendMessage
+    ; Parameters:
+    ;     self: object:*
+    ;       Use: The sendig object of the message.
+    ;     message: function
+    ;       Use: A function that the recipient supports.
+    ;     args: any
+    ;       Use: The optional parameters that a function expects.
+    ; Output:
+    ;     return: any
+    ;       Use: Any optional return value of an executed function.
+    ; Use: Let a connected object execute one of it's supported functions.
+    ;-----------------------------------------------------------------------
+    
      (define/public (sendMessage self message . args)
      (if (connected?)
          (receiveMessage (getConnected self))
       (error "CommunicationManager% sendMessage: you are not connected")))
-
     
     ))
