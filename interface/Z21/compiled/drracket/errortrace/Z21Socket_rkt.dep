@@ -1,1 +1,0 @@
-("7.0" ("d0cb1a80b76d1279ba78b909be07ab6451204028" . "dad5da6c4e12d64c71f29b9c68f16626d36dcaf4") (collects #"data" #"queue.rkt") (collects #"errortrace" #"errortrace-key.rkt") (collects #"racket" #"main.rkt") (collects #"racket" #"runtime-config.rkt") (collects #"racket" #"udp.rkt"))

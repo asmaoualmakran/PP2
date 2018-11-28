@@ -4,9 +4,13 @@
 (require "switch.rkt")
 (require "detectionBlock.rkt")
 
+(provide RailwayManager%)
+
 (define RailwayManager%
   (class object%
     (super-new)
+
+    ;TODO the allID getters need to check is a member is initialised.
 
     ; The hashtables where the objects are saved.
     ; The keys are the id's and values, the objects.
@@ -123,6 +127,20 @@
           (hash-ref trackTable id)
           (error "RailwayManager% getTrack: given id is not a track member received" id)))
 
+    ;--------------------------------------------------------
+    ; Function: getAllTrackID
+    ; Parameters: n/a
+    ; Output:
+    ;      list: symbols
+    ;        Use: The identifications of all the tracks.
+    ; Use: Retrieve the identifications of all the tracks.
+    ;--------------------------------------------------------
+    
+    (define/public (getAllTrackID)
+      (if (hash-empty? trackTable)
+          '()
+          (hash-keys trackTable)))
+         
     ;-----------------------------------------------------------------
     ; Function: deleteTrack!
     ; Parameters:
@@ -225,6 +243,21 @@
           (hash-ref switchTable id)
           (error "RailwayManager% getSwitch: id is not a member of the switchTable, recieved"id)))
 
+    
+    ;--------------------------------------------------------
+    ; Function: getAllSwitchID
+    ; Parameters: n/a
+    ; Output:
+    ;      list: symbols
+    ;        Use: The identifications of all the switches.
+    ; Use: Retrieve the identifications of all the switches.
+    ;--------------------------------------------------------
+    
+    (define/public (getAllSwitchID)
+      (if (hash-empty? switchTable)
+          '()
+          (hash-keys switchTable)))
+    
     ;-----------------------------------------------------------
     ; Function: deleteSwitch!
     ; Parameters:
@@ -310,6 +343,21 @@
           (hash-ref detectionblockTable id)
           (error "RailwayManager% getDetectionblock: given id is not from a detectionblock recieved" id)))
 
+    
+    ;---------------------------------------------------------------
+    ; Function: getAllDetectionblockID
+    ; Parameters: n/a
+    ; Output:
+    ;      list: symbols
+    ;        Use: The identifications of all the detectionblocks.
+    ; Use: Retrieve the identifications of all the detectionblocks.
+    ;---------------------------------------------------------------
+    
+    (define/public (getAllDetectionblockID)
+      (if (hash-empty? detectionblockTable)
+          '()
+          (hash-keys detectionblockTable)))
+    
     ;-----------------------------------------------------------------------
     ; Function: deleteDetectionblock!
     ; Parameters:
