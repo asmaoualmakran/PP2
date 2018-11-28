@@ -1,13 +1,18 @@
 #lang racket
 
-(require "NMBS/trainManager.rkt")
-(require "Infrabel/railwayManager.rkt")
+(require "NMBS/nmbs.rkt")
+(require "Infrabel/infrabel.rkt")
 (require "GUI/gui.rkt")
+(require "communication/communicationManager.rkt")
 
 
+(define nmbs-infrabel (new CommunicationManager%))
+(send nmbs-infrabel connect! trainManager)
+(send nmbs-infrabel connect! railwayManager)
 
-(define trainManager (make-object TrainManager%))
+(define gui-nmbs (new CommunicationManager%))
 
-(define railwayManager (make-object RailwayManager%))
+(define gui (new GUI%))
 
-(define gui (make-object GUI%))
+(send gui-nmbs connect! trainManager)
+(send gui-nmbs connect! railwayManager)
