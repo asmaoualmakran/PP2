@@ -23,11 +23,17 @@
     (super-new)
 
     ;TODO make initialisers for each type of object.
-    ;TODO enable changing directions and setting speed of trains 
-    
+    ;TODO enable changing directions and setting speed of trains
+    ;TODO copy of the railway object must be handled differently
+
+    ; A vector keeping this objects connections
+    (define connections (make-vector 2))
+    (vector-set! connections 0 'none)
+    (vector-set! connections 1 'none)
 
     ; Hashtables for each type of objects, these are mutable, initial needed size is unknown.
     ; The elements are hashed useing their id's as key, the values are the objects self.
+
     
     (define trainTable (make-hash))
     (define locomotiveTable (make-hash))
@@ -38,9 +44,41 @@
     (define trainType 'object:Train%)
     (define locomotiveType 'object:Locomotive%)
     (define railcarType 'object:Railcar%)
+    (define railwayType 'object:RailwayManager%)
 
+     (define/public (connectGUI! gui)
+      (if (eq? (vector-ref connections 0)'none)
+          (vector-set! connections 0 gui)
+          (error "TrainManager% connectGUI!: there is already a GUI connection")))
+
+    (define/public (getGUIConnection)
+      (if (not (eq?(vector-ref connections 0) 'none))
+          (vector-ref connections 0)
+          (error "TrainManager% getGUIConnection: no GUI connection available")))
+
+    (define/public (connectInfrabel! infrabel)
+      (if (eq? (vector-ref connections 1)'none)
+          (vector-set! connections 1 infrabel)
+          (error "TrainManager% connectInfrabel!: there is already a infrabel connection")))
+
+     (define/public (getInfrabelConnection)
+      (if (not (eq?(vector-ref connections 1) 'none))
+          (vector-ref connections 1)
+          (error "TrainManager% getInfrabelConnection: no infrabel connection available")))
                              
 
+    (define railway 'none)
+
+    (define/public (getRailwayObj)
+      (if (not (eq? railway 'none))
+          railway
+          (error "TrainManager% getRailwayObj: railway object is not set")))
+    
+    (define/public (loadRailway! railObj)
+      (if (eq? (object-name railObj) railwayType)
+          (set! railway railObj)
+          (error "TrainManager% railway: Given object is not a railway")))
+    
     ;-----------------------------------------------------------------------------
     ; Function: isUnique?
     ; Parameters:
@@ -87,7 +125,7 @@
     (define/public (initTrain id)  
       (if (isTrain? id)
           (let ([train (getTrain id)])
-            (if (not(send train initialsed?))
+            (if (not(send train initialised?))
                 (begin
                   (send train initBuild)
                   (send train initActive)
@@ -101,7 +139,7 @@
                   (send train setRearLocomotive! 'none)
                   (send train setLastPosition! 'none)
                   (send train setNextNode! 'none))
-            (error "TrainManager initTrain%: Train is already initialised."id)))
+                (error "TrainManager initTrain%: Train is already initialised."id)))
           (error "TrainManager% initTrain: id does not exist or is not from a train."id)))
 
     ;-------------------------------------------------------------
@@ -134,6 +172,20 @@
       (if (isTrain? id)
           (hash-ref trainTable id)
           (error "TrainManager% getTrain: train is not a member." id)))
+
+    ;---------------------------------------------------------------
+    ; Function: getAllTrainID
+    ; Parameters: n/a
+    ; Output:
+    ;     list: list<symbol>
+    ;      Use: A list containing all the trains' identifications.
+    ; Use: Retrieve the identifiactions of all the trains.
+    ;---------------------------------------------------------------
+    
+    (define/public (getAllTrainID)
+      (if (hash-empty? trainTable)
+          '()
+          (hash-keys trainTable)))
 
     ;--------------------------------------------------------------------------------
     ; Function: isTrain?
@@ -220,17 +272,17 @@
     ; Use: Initialise the given locomotive.
     ;-----------------------------------------------------------------------------------
 
-     (define/public (initLocomotive! id direction)
-       (if (isLocomotive? id)
-           (let ([locomotive (getLocomotive id)])
-             (if (not(send locomotive initialised?))
-                 (begin
-                   (send locomotive setPredecessorID! 'none)
-                   (send locomotive setSuccessorID! 'none)
-                   (send locomotive setTrainID! 'none)
-                   (send locomotive setDirection! direction))
-                 (error "TrainManager% initLocomotive!: object is already initialised, cannot be reinitialised")))
-           (error "TrainManager% initLocomotive!: provided ID does not belong to an excisting locomotive" id)))         
+    (define/public (initLocomotive! id direction)
+      (if (isLocomotive? id)
+          (let ([locomotive (getLocomotive id)])
+            (if (not(send locomotive initialised?))
+                (begin
+                  (send locomotive setPredecessorID! 'none)
+                  (send locomotive setSuccessorID! 'none)
+                  (send locomotive setTrainID! 'none)
+                  (send locomotive setDirection! direction))
+                (error "TrainManager% initLocomotive!: object is already initialised, cannot be reinitialised")))
+          (error "TrainManager% initLocomotive!: provided ID does not belong to an excisting locomotive" id)))         
 
     ;------------------------------------------------------------------------------------------
     ; Funcion: deleteLocomotive!
@@ -261,6 +313,20 @@
       (if (isLocomotive? id)
           (hash-ref locomotiveTable id)
           (error "TrainManager% getLocomotive: locomotive is not a member received:" id)))
+
+    ;-------------------------------------------------------------------
+    ; Function: getAllLocomotiveID
+    ; Parameters: n/a
+    ; Output:
+    ;    list: list<symbol>
+    ;     Use: A list containing all the locomotives' identifications.
+    ; Use: Retrieve every locomotive's identification.
+    ;-------------------------------------------------------------------
+    
+   (define/public (getAllLocomotiveID)
+     (if (hash-empty? locomotiveTable)
+         '()
+         (hash-keys locomotiveTable)))
 
     ;---------------------------------------------------------------------------------------------
     ; Function: isLocomotive?
@@ -309,11 +375,11 @@
       (if (isRailcar? id)
           (let ([railcar (getRailcar id)])
             (if (not (send railcar initialsed?))
-               (begin (send railcar setPredecessorID! 'none)
-                (send railcar setSuccessorID! 'none)
-                (send railcar setTrainID! 'none)
-                (send railcar setCapacity! capacity))
-               (error "TrainManager% initRailcar!: object is already initialised, it cannot be reinitialised")))
+                (begin (send railcar setPredecessorID! 'none)
+                       (send railcar setSuccessorID! 'none)
+                       (send railcar setTrainID! 'none)
+                       (send railcar setCapacity! capacity))
+                (error "TrainManager% initRailcar!: object is already initialised, it cannot be reinitialised")))
           (error "TrainManager% initRailcar!: identification does not belong to a excisting railcar" id)))
 
     ;--------------------------------------------------------------
@@ -345,6 +411,20 @@
       (if (isRailcar? id)
           (hash-ref railcarTable id)
           (error "TrainManager% getRailcar: railcar is not a member received:" id)))
+
+    ;------------------------------------------------------------------
+    ; Function: getAllRailcarID
+    ; Parameters: n/a
+    ; Output:
+    ;    list: list<symbol>
+    ;     Use: A list containing all the railcars' identifications.
+    ; Use: Retrieve all the railcars' identifications.
+    ;------------------------------------------------------------------
+    
+    (define/public (getAllRailcarID)
+      (if (hash-empty? railcarTable)
+          '()
+          (hash-keys railcarTable)))
 
     ;----------------------------------------------------------------------------
     ; Function: isRailcar?

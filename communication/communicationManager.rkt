@@ -97,7 +97,7 @@
     (define (receiveMessage recipient message . args)
       (if (null? args)
           (send recipient message)
-          (send recipient message . args)))
+          (send recipient message args)))
 
     ;-----------------------------------------------------------------------
     ; Function: sendMessage
@@ -116,7 +116,7 @@
     
      (define/public (sendMessage self message . args)
      (if (connected?)
-         (receiveMessage (getConnected self))
+         (receiveMessage (getConnected self) message args)
       (error "CommunicationManager% sendMessage: you are not connected")))
     
     ))
