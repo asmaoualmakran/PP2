@@ -31,7 +31,7 @@
      [rearLocomotiveID   'uninitialised]
      [length             'uninitialised]
      [currentPosition    'uninitialised]
-     [lastPosition       'uninitialised]
+     [lastPosition       'none]
      [direction          'uninitialised]
      [speed              'uninitialised]
      [currentNode        'uninitialised]
@@ -65,8 +65,9 @@
            (not(eq? lastPosition 'uninitialised))
            (not(eq? direction 'uninitialised))
            (not(eq? speed 'uninitialised))
-           (not(eq? currentNode 'uninitialised))
-           (not(eq? nextNode 'uninitialised))))
+          ; (not(eq? currentNode 'uninitialised))
+          ; (not(eq? nextNode 'uninitialised)
+               ))
 
 
     ;-----------------------------------------------------
@@ -185,15 +186,22 @@
     ; Use: Setting a locomotive that is part of the train to master locomotive.
     ;-----------------------------------------------------------------------------
 
-    (define/public (setMasterLocomotiveID! object)
-      (if (object? object)
-          (if (eq? (object-name object) locomotiveType)   ; check the type of the object
-              (if (member (send object getID) trainBuild) ; check if the object is a member of the train
-                  (set! masterLocomotiveID (send object getID)) 
-                  (error "Train% setMasterLocomotive!: trainBuild does not contain the locomotive, please add before assigning"))
-              (error "Train% setMasterLocomotive!: contract violation object has not the type Locomotive% received" object))
-          (error "Train setMasterLocomotive!: contract violation expected Train% object received" object)))
+  ;  (define/public (setMasterLocomotiveID! object)
+   ;   (if (object? object)
+    ;      (if (eq? (object-name object) locomotiveType)   ; check the type of the object
+     ;         (if (member (send object getID) trainBuild) ; check if the object is a member of the train
+      ;            (set! masterLocomotiveID (send object getID)) 
+       ;           (error "Train% setMasterLocomotive!: trainBuild does not contain the locomotive, please add before assigning"))
+        ;      (error "Train% setMasterLocomotive!: contract violation object has not the type Locomotive% received" object))
+         ; (error "Train setMasterLocomotive!: contract violation expected Train% object received" object)))
 
+    (define/public (setMasterLocomotiveID! id)
+      (if (symbol? id)
+          (if (not(member id trainBuild))
+              (set! masterLocomotiveID id)
+              (error "Train% setMasterLocomotiveID!: locomotive is already part of the train"))
+          (error "Train% setMasterLocomotiveID!: contract violation expected symbol received")))
+              
     ;--------------------------------------------------------------
     ; Function: getMasterLocomotiveID
     ; Parameters: n/a
@@ -217,15 +225,21 @@
     ; Use: Setting a locomotive as rear locomotive.
     ;--------------------------------------------------------------
 
-    (define/public (setRearLocomotive! object)
-      (if (object? object)
-          (if (eq? (object-name object) locomotiveType)   ; check the type of the object
-              (if (member (send object getID) trainBuild) ; check if the object is a member of the train
-                  (set! rearLocomotiveID (send object getID)) 
-                  (error "Train% setRearLocomotiveID!: trainBuild does not contain the locomotive, please add before assigning"))
-              (error "Train% setRearLocomotiveID!: contract violation object has not the type Locomotive% received" object))
-          (error "Train setRearLocomotiveID!: contract violation expected Train% object received" object)))
+;    (define/public (setRearLocomotive! object)
+ ;     (if (object? object)
+  ;        (if (eq? (object-name object) locomotiveType)   ; check the type of the object
+   ;           (if (member (send object getID) trainBuild) ; check if the object is a member of the train
+    ;              (set! rearLocomotiveID (send object getID)) 
+     ;             (error "Train% setRearLocomotiveID!: trainBuild does not contain the locomotive, please add before assigning"))
+      ;        (error "Train% setRearLocomotiveID!: contract violation object has not the type Locomotive% received" object))
+       ;   (error "Train setRearLocomotiveID!: contract violation expected Train% object received" object)))
 
+    (define/public (setRearLocomotiveID! id)
+      (if (symbol? id)
+          (if (not (member id trainBuild))
+              (set! rearLocomotiveID id)
+              (error "Train% setRearLocomotiveID!: locomotive is already part of the train buid."))
+          (error "Train setRearLocomotiveID!: contract violation expected symbol recieved" id)))
     ;--------------------------------------------------------------
     ; Function: getRearLocomotiveID
     ; Parameters: n/a
@@ -401,15 +415,21 @@
     ;    pos: symbol
     ;     Use: A postion in the traject.
     ; Output: n/a
-    ; Use: Setting the currentPosition and update the lastPosition.
+    ; Use: Setting the currentPosition.
     ;----------------------------------------------------------------
 
     (define/public (setCurrentPosition! pos)
+                  (set! currentPosition pos))
+
+    ;----------
+    ;TODO
+    ;-----------
+    (define/public (updatePosition! pos)
       (if (initialised?)
           (begin  (set! lastPosition currentPosition)
                   (set! currentPosition pos))
-          (error "Train% setCurrentPosition!: object not initialised please initialise before use.")))
-      
+          (error "Train% updatePosition!: object not initialised please initialise before use.")))
+
     ;---------------------------------------------------------
     ; Function: setNextNode!
     ; Parameters:

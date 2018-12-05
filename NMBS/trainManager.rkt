@@ -46,7 +46,7 @@
     (define railcarType 'object:Railcar%)
     (define railwayType 'object:RailwayManager%)
 
-     (define/public (connectGUI! gui)
+    (define/public (connectGUI! gui)
       (if (eq? (vector-ref connections 0)'none)
           (vector-set! connections 0 gui)
           (error "TrainManager% connectGUI!: there is already a GUI connection")))
@@ -61,7 +61,7 @@
           (vector-set! connections 1 infrabel)
           (error "TrainManager% connectInfrabel!: there is already a infrabel connection")))
 
-     (define/public (getInfrabelConnection)
+    (define/public (getInfrabelConnection)
       (if (not (eq?(vector-ref connections 1) 'none))
           (vector-ref connections 1)
           (error "TrainManager% getInfrabelConnection: no infrabel connection available")))
@@ -110,8 +110,8 @@
       (if (isUnique? id)  ;check whether a id is already used.
           (let ([train (make-object Train%)])   ; If it's not in use, the train can be added.
             (send train setID! id)
-            (send train initBuild)
-            (hash-set! trainTable id train))
+            (hash-set! trainTable id train)
+            (initTrain id))
           (error "TrainManager% createTrain: ID is already in use, received" id)))
 
     ;--------------------------------------------------------------------------------
@@ -129,16 +129,16 @@
                 (begin
                   (send train initBuild)
                   (send train initActive)
-                  (send train setTraject! 'none)
+                  (send train setTraject! (make-vector 10))
                   (send train setTrajectID! 'none)
                   (send train setCurrentPosition! 'none)
-                  (send train setDirection! 'none)
+                  (send train initDirection! 'left)
                   (send train setSpeed! 0)
-                  (send train currentNode! 'none)
-                  (send train setMasterLocomotive! 'none)
-                  (send train setRearLocomotive! 'none)
-                  (send train setLastPosition! 'none)
-                  (send train setNextNode! 'none))
+               ;   (send train setcurrentNode! 'none)
+                  (send train setMasterLocomotiveID! 'none)
+                  (send train setRearLocomotiveID! 'none))
+               ;   (send train setLastPosition! 'none))
+               ;   (send train setNextNode! 'none))
                 (error "TrainManager initTrain%: Train is already initialised."id)))
           (error "TrainManager% initTrain: id does not exist or is not from a train."id)))
 
@@ -202,7 +202,32 @@
       (if (symbol? id)
           (hash-has-key? trainTable id)
           (error "TrainManager% isTrain?: contract violation expected symbol received"id)))
+
+    ;-------------------------------------------------------------------------------
+    ; Function: setTrainsSpeed!
+    ; Parameters:
+    ;      id: symbol
+    ;       Use: The identifiaction of the train who's speed needs to be adjusted.
+    ;      number: number
+    ;       Use: The speed that it needs to be set to.
+    ; Output: n/a
+    ; Use: Change the speed of the train.
+    ;--------------------------------------------------------------------------------
     
+    (define/public (setTrainSpeed! id number)
+      (if (and(symbol? id)
+              (number? number))
+          (if (isTrain? id)
+              (send (getTrain id) setSpeed! number)
+              (error "TrainManager% setTrainSpeed!: id does not belong to a train"))
+          (error "TrainManager% setTrainSpeed!: contract violation expected number and symbol")))
+          
+    (define/public (getTrainSpeed id)
+      (if (symbol? id)
+          (if (isTrain? id)
+              (send (getTrain id) getSpeed)
+              (error "TrainManager% getTrainSpeed: id does not belong to a train"))
+          (error "TrainManager% getTrainSpeed!: contract violation expected symbol recieved"id)))
 
     ;--------------------------------------------------------------------------------------
     ; Function: initDirection!
@@ -323,10 +348,10 @@
     ; Use: Retrieve every locomotive's identification.
     ;-------------------------------------------------------------------
     
-   (define/public (getAllLocomotiveID)
-     (if (hash-empty? locomotiveTable)
-         '()
-         (hash-keys locomotiveTable)))
+    (define/public (getAllLocomotiveID)
+      (if (hash-empty? locomotiveTable)
+          '()
+          (hash-keys locomotiveTable)))
 
     ;---------------------------------------------------------------------------------------------
     ; Function: isLocomotive?
