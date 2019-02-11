@@ -13,9 +13,9 @@
     ;TODO the allID getters need to check is a member is initialised.
 
     ; A vector keeping this objects connections
-    (define connections (make-vector 2))
-    (vector-set! connections 0 'none)
-    (vector-set! connections 1 'none)
+ ;   (define connections (make-vector 2))
+ ;   (vector-set! connections 0 'none)
+ ;   (vector-set! connections 1 'none)
     
     ; The hashtables where the objects are saved.
     ; The keys are the id's and values, the objects.
@@ -29,25 +29,25 @@
 
 
 
-    (define/public (connectNMBS! nmbs)
-      (if (eq? (vector-ref connections 0)'none)
-          (vector-set! connections 0 nmbs)
-          (error "RailwayManager% connectNMBS!: there is already a NMBS connection")))
+;    (define/public (connectNMBS! nmbs)
+;      (if (eq? (vector-ref connections 0)'none)
+;          (vector-set! connections 0 nmbs)
+;          (error "RailwayManager% connectNMBS!: there is already a NMBS connection")))
 
-    (define/public (getNMBSConnection)
-      (if (not (eq?(vector-ref connections 0) 'none))
-          (vector-ref connections 0)
-          (error "RailwayManager% getNMBSConnection: no nmbs connection available")))
+ ;   (define/public (getNMBSConnection)
+ ;     (if (not (eq?(vector-ref connections 0) 'none))
+ ;         (vector-ref connections 0)
+ ;         (error "RailwayManager% getNMBSConnection: no nmbs connection available")))
 
-    (define/public (connectInfra! infra)
-      (if (eq? (vector-ref connections 1)'none)
-          (vector-set! connections 1 infra)
-          (error "RailwayManager% connectInfra!: there is already a infrastructure connection")))
+ ;   (define/public (connectInfra! infra)
+ ;     (if (eq? (vector-ref connections 1)'none)
+ ;         (vector-set! connections 1 infra)
+ ;         (error "RailwayManager% connectInfra!: there is already a infrastructure connection")))
 
-     (define/public (getInfraConnection)
-      (if (not (eq?(vector-ref connections 1) 'none))
-          (vector-ref connections 1)
-          (error "RailwayManager% getInfraConnection: no infrastructure connection available")))
+  ;   (define/public (getInfraConnection)
+  ;    (if (not (eq?(vector-ref connections 1) 'none))
+  ;        (vector-ref connections 1)
+   ;       (error "RailwayManager% getInfraConnection: no infrastructure connection available")))
       
     ;----------------------------------------------------------------------
     ; Function: isUnique?
