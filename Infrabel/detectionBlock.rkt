@@ -188,86 +188,104 @@
 
     (define/private (initReservations!)
       (if (not (eq? maxReservations 'uninitialised))   ; not using initialised? this will be false if the reservations can't be initialised.
-          (set! reservations (make-vector maxReservations))
+          (set! reservations (make-heap order))
           (error "Detectionblock% initReservations!: maxReservations is not initialised, please initialse before use")))
 
 
-    ;TODO: enable resizing of the reservations
+    ;------------------------------------------------------------
+    ; Function: order
+    ; Parameters:
+    ;       pair1: pair
+    ;       pair2: pair
+    ; Output: boolean
+    ; Use: Boolean to define the order between two pairs.
+    ;------------------------------------------------------------
+
+    (define (order pair1 pair2)
+      (if (and(pair? pair1)
+              (pair? pair2))
+          (if (and (number? (car pair1))
+                   (number? (car pair2)))
+              (<= (car pair1)(car pair2))
+              (error "Detectionblock% order: contract violation car of pairs are not a number"))
+          (error "Detectionblock% order: contract violation given parameters are not a pair")))
+
+    ;-----------------------------------------------------
+    ; Function: makeNode
+    ; Parameters:
+    ;       number: number
+    ;       val   : symbol
+    ; Output: pair
+    ; Use: A pair consisting of a number and a symbol.
+    ;-----------------------------------------------------
     
-    ;-------------------------------------------------------------------
-    ; Function: freeLocation
-    ; Parameter:
-    ;    vector: vector
-    ;      Use: The vector where the reservations are kept.
+    (define/private (makeNode number val)
+      (if (and (number? number)
+               (symbol? val))
+          (cons number val)
+          (error "Detectionblock% makeNode: contract violation given parameters are not a number and a value")))
+
+    ;----------------------------------------------------
+    ; Function: heapEmpty?
+    ; Parameters: n/a
+    ; Output: boolean
+    ; Use: Determine if the reservations heap is empty.
+    ;----------------------------------------------------
+
+    (define/private (heapEmpty?)
+      (=(heap-count reservations)0))
+
+    ;------------------------------------------------------
+    ; Function: heapFull?
+    ; Parameters: n/a
+    ; Output: boolean
+    ; Use: Determine if the reservations heap is full.
+    ;------------------------------------------------------
+    (define/private (heapFull?)
+      (= (heap-count reservations) maxReservations))
+
+    ;----------------------------------------------
+    ; Function: reserve!
+    ; Parameters:
+    ;        number: number
+    ;        val   : symbol
+    ; Output: n/a
+    ; Use: Add a reservation to the heap.
+    ;----------------------------------------------
+      
+    (define/public (reserve! number val)
+      (if (and (number? number)
+               (symbol? val))
+          (if (not (heapFull?))
+              (heap-add! reservations (makeNode number val))
+              (error "Detectionblock% reserve!: can not add reservation, reservation has reached it's maxiumum"))
+          (error "Detectionblock% reserve!: contract violation given parameters are not a number and a value")))
+
+    ;----------------------------------------------------------------
+    ; Function: getTopReservation
+    ; Parameters: n/a
     ; Output:
-    ;    index: number
-    ;     Use: An index were there is a free location in the vector.
-    ; Use: Search for a free location in the vector.
-    ;-------------------------------------------------------------------
-   
-    ;helper function to find a free location in a vector
-    (define/private (freeLocation vector)
-      (let loop ([vec vector]
-                 [index 0])
-        (if (< index (vector-length vec))
-            (if (eq? null(vector-ref vec index))
-                index
-                (loop vec (+ index 1)))
-            null)))
+    ;    node: pair
+    ; Use: Get the top reservation of the heap without removing it.
+    ;----------------------------------------------------------------
 
-    ;helper function to execute a storeage move
-    (define/private (storageMove vector size)
-      (let ([new-vec (make-vector size)])
-        (vector-copy! new-vec 0 vector 0 (vector-length vector))
-        new-vec))   ;return the new vector
+    (define/public (getTopReservation)
+      (if (not (heapEmpty?))
+          (heap-min reservations)
+          (error "Detectionblock% getTopReservation: heap is empty can not get reservation")))
 
-    (define/private (resizeReservations! number)
-      (if (< maxReservations number)
-          (set! maxReservations number)
-          (error "DetectionBlock% resizeReservations! given parameter is smaller than the current maxReservations" number)))
+    ;----------------------------------------------------
+    ; Function: serverReservation
+    ; Parameters: n/a
+    ; Output:
+    ;    node: pair
+    ; Use: Remove the top node of the reservation heap
+    ;----------------------------------------------------
 
-    
-        
-
-    ;    (define/public (addReservation id priority)
-    ;     (if (initialised?)
-    ;        (if (and (symbol? id)
-    ;                (number? priority))
-    ;          (reservations 
-
-    ;  (define/public (removeReservation id)
-    ;TODO resizen is niet altijd groter dit kan ook kleiner ->test
-    ;   (define/private (resizeReservations! number)  ;interne procedure om vector te resizen en te moven van de interne data
-    ;    (if (and (initialised?)
-    ;            (eq? null (freeLocation reservations)))
-    ;     (begin (set! maxReservations (+ maxReservations number))
-    ;           (storageMove reservations maxReservations))
-    ;    (display "No resize needed enough space available")))
-
-    ;-------------------------------------------------------------------------------------------------
-    ;TODO check if you need to use a vector as datastructure and use heap sort to order it. (enables abuse of intern deleteing an element)
-
-    ;    (define/public (initReservations!)
-    ;     (struct node (name val))
-    ;    (let ((node<=? ((lambda (x y)         ;helper function to define the order between priorities
-    ;                      (<= (cdr x)(cdr y))))))
-    ;      (set! reservations (make-heap node<=?))))    ; initialing the reservations to a heap.
-
-
-    ;  (define/public (addReservation! id number)  ;reservation needs to be a struct of a symbol and a number.
-    ;    (if (and(symbol? id)
-    ;            (number? number))                 ; contract check
-          
-    ;        (if (initialised?)                    ; initialisation check 
-    ;            (heap-add! reservations (cons id number))
-    ;            (error "Detectionblock% addReservation!: reservations not initialised please init before use"))
-    ;        (error "Detectionblock% addReservation!: contract violation expected symbol and number received" id number)))
-
-    ;  (define/public (removeReservation! id number)
-    ;   (if (and (symbol? id)
-    ;           (number? number))
-    ;     (if (initialised?)
-    ;        (
-    ;--------------------------------------------------------------------------------------------------
+    (define/public (serveReservation)
+      (if (not (heapEmpty?))
+          (begin (heap-min reservations)
+                 (heap-remove-min! reservations))
+          (error "Detectionblock% serveReservation: heap is empty can not serve the reservations")))
 
     ))

@@ -3,6 +3,9 @@
 (require racket/class)
 (provide CommunicationManager%)
 
+
+; tussen GUI+NMBS en infrabel tcp
+; tussen infrabel en Z21 udp
 ;------------------------------------------------------------
 ; Class: CommunicationManager%
 ; Parameters: n/a
