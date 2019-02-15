@@ -27,28 +27,7 @@
     (define switchType 'object:Switch%)
     (define detectionblockType 'object:Detectionblock%)
 
-
-
-;    (define/public (connectNMBS! nmbs)
-;      (if (eq? (vector-ref connections 0)'none)
-;          (vector-set! connections 0 nmbs)
-;          (error "RailwayManager% connectNMBS!: there is already a NMBS connection")))
-
- ;   (define/public (getNMBSConnection)
- ;     (if (not (eq?(vector-ref connections 0) 'none))
- ;         (vector-ref connections 0)
- ;         (error "RailwayManager% getNMBSConnection: no nmbs connection available")))
-
- ;   (define/public (connectInfra! infra)
- ;     (if (eq? (vector-ref connections 1)'none)
- ;         (vector-set! connections 1 infra)
- ;         (error "RailwayManager% connectInfra!: there is already a infrastructure connection")))
-
-  ;   (define/public (getInfraConnection)
-  ;    (if (not (eq?(vector-ref connections 1) 'none))
-  ;        (vector-ref connections 1)
-   ;       (error "RailwayManager% getInfraConnection: no infrastructure connection available")))
-      
+    
     ;----------------------------------------------------------------------
     ; Function: isUnique?
     ; Parameters:
