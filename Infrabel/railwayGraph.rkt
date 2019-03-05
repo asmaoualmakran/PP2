@@ -80,7 +80,7 @@
 
     
         
-    (define/public (calculateRoute start end manager)
+    (define/public (calculateRoute start end manager)   ;needs to be moved to NMBS
       (if (initialised?)
           (if (and (send manager isDetectionblock? start)
                    (send manager isDetectionblock? end)

@@ -28,6 +28,7 @@
     (define connections (generic Infrastructure% getConnections))
     (define maximalConnections (generic Infrastructure% getMaximalConnections))
 
+
 ;----------------------------------------------------
 ; Funtion: initialised?
 ; Parameters: n/a
