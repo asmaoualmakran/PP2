@@ -46,6 +46,17 @@
                (not (hash-has-key? detectionblockTable id)))
           (error "RailwayManager% isUnique?: Contract violation symbol expected received" id)))
 
+    ;------------------------------------------------------------------------------
+    ; Function: getObject
+    ; Parameter:
+    ;       id:symbol
+    ;        Use: The identification of the object that needs to be fetched.
+    ; Output:
+    ;    railObject: object:Track% or object:Switch% or objecy:Detectionblock%
+    ;       Use: The fetched railway object.
+    ; Use: Get a railwayobject useing it's ID, no need to know the type up front.
+    ;-------------------------------------------------------------------------------
+
     (define/public (getObject id)
       (if (symbol? id)
           (cond ((isSwitch? id) (getSwitch id))
