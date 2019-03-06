@@ -31,7 +31,8 @@
       (if (or (eq? (object-name railObj) blockObj)
               (eq? (object-name railObj) switchObj)
               (eq? (object-name railObj) trackObj))
-          (if (not(send railObj getAvailable))    ;If the availability is #f, the section can be reserved.
+          (if (or(not(symbol? (send railObj getAvailable)))  ;If it is a symbol, it must be set on #f (not available)
+                 (send railObj getAvailble))                 ;If the boolean is #t  the obj is available             
               (send railObj setAvailable! trainID)
               (error "SecurityProtocol% reserve!: Railway object is already reserved, cannot reserve the section"))
           (error "SecurityProtocol% reserve!: Contract violation, given railway object is not a switch, detectionblock or track")))
@@ -60,19 +61,26 @@
           (if (not(empty? route))
               (if (and (memq startBlockObj route)
                        (memq endBlockObj route))
-                  (let ([connection 'none])
+         
+                  (let ([connection 'none]
+                        [interNode 'none])
                     (send startBlockObj setAvailable! trainID)  ;Block the two endpoints
                     (send endBlockObj setAvailable! trainID)
-                    (let ((loop(lambda (y x)
-                       (+ y x))))
-                      (loop 1 3)))
-                    
+                    (for ([node route]
+                          #:break (or (symbol? (send node getAvailable))
+                                      (not (send node getAvailable))))  ;if the availablity contains #f or a symbol, it needs to break
+                      (set! interNode node)        ;save the node you passed in the intration
+                      (send (send railway getObject node) setAvailable! trainID))
+                    interNode
+                    (if (eq? interNode endBlockObj) ;afther breaking or completing the loop, retrun the intermeadiate result
+                        (print "Route is completely reserved")
+                        (print "Warning route is not completely reserved, last node was" interNode)))
                   (error "SecurityProtocol% reserveSection!: Given route does not contain the start block and or end block"))
               (error "SecurityProtocol% reserveSection!: Given route is an empty list"))       
           (error "SecurityProtocol% reserveSection!: Given route is not a list")))
 
     (define/public (release! railObj)
-      'test
+      (send railObj setAvailable! #t)
       )
     
 

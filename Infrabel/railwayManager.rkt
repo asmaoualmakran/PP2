@@ -13,9 +13,9 @@
     ;TODO the allID getters need to check is a member is initialised.
 
     ; A vector keeping this objects connections
- ;   (define connections (make-vector 2))
- ;   (vector-set! connections 0 'none)
- ;   (vector-set! connections 1 'none)
+    ;   (define connections (make-vector 2))
+    ;   (vector-set! connections 0 'none)
+    ;   (vector-set! connections 1 'none)
     
     ; The hashtables where the objects are saved.
     ; The keys are the id's and values, the objects.
@@ -45,6 +45,15 @@
                (not (hash-has-key? switchTable id))
                (not (hash-has-key? detectionblockTable id)))
           (error "RailwayManager% isUnique?: Contract violation symbol expected received" id)))
+
+    (define/public (getObject id)
+      (if (symbol? id)
+          (cond ((isSwitch? id) (getSwitch id))
+                ((isTrack? id) (getTrack id))
+                ((isDetectionblock? id) (getDetectionblock id))
+                (else (error "RailwayManager% getObject: Given ID does not belong to a railobject" id)))
+          (error "RailwayManager% getObject: Contract violation symbol expected received" id)))
+      
 
     ;------------------------------------------------------------------
     ; Function: isTrack?
@@ -315,7 +324,7 @@
                   (send detection setTrackID! 'none)
                   (send detection setMaxReservations! maxRes)
                   (send detection setLength! length))
-            (error "RailwayManager% initDetectionblock!: Detectionblock is already initialised")))
+                (error "RailwayManager% initDetectionblock!: Detectionblock is already initialised")))
           (error "RailwayManager% initdetectionblock!: id does not belong to a detectionblock recieved" id)))
 
     ;----------------------------------------------------------------------
