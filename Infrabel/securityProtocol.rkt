@@ -1,6 +1,7 @@
 #lang racket
 
 (require racket/class)
+(require typed-stack)
 (require "switch.rkt")
 (require "detectionBlock.rkt")
 (require "infrastructure.rkt")
@@ -12,9 +13,10 @@
     (super-new)
     
 
-    (define blockObj 'object:DetectionBlock%)
-    (define switchObj 'object:Switch%)
-    (define trackObj 'object:Track%)
+    (define blockType 'object:DetectionBlock%)
+    (define switchType 'object:Switch%)
+    (define trackType 'object:Track%)
+    (define railManType 'object:RailwayManager%)
 
     ;-----------------------------------------------------------------------------------
     ; Function: reserve!
@@ -28,9 +30,9 @@
     ;-----------------------------------------------------------------------------------
     
     (define/private (reserve! railObj trainID)
-      (if (or (eq? (object-name railObj) blockObj)
-              (eq? (object-name railObj) switchObj)
-              (eq? (object-name railObj) trackObj))
+      (if (or (eq? (object-name railObj) blockType)
+              (eq? (object-name railObj) switchType)
+              (eq? (object-name railObj) trackType))
           (if (or(not(symbol? (send railObj getAvailable)))  ;If it is a symbol, it must be set on #f (not available)
                  (send railObj getAvailble))                 ;If the boolean is #t  the obj is available             
               (send railObj setAvailable! trainID)
@@ -40,48 +42,49 @@
     ;----------------------------------------------------------------------------------------
     ; Function: reserveSection!
     ; Parameters:
-    ;     startBlockObj: Detectionblock%
-    ;       Use: The detectionblock where the reservations start.
-    ;     endBlockObj: Detectionblock%
-    ;       Use: The detectionblock where the reservations end.
-    ;     route: list<symbol>
-    ;       Use: The route that needs to be followed
-    ;     trainID: symbol
-    ;       Use: The identifiaction of the train of which the reservation is needed for.
-    ;     railway: RailwayManager%
-    ;       Use: The railway manager that contains all the railway objects.
+    ;      startBlock: object: DetectionBlock%
+    ;         Use: The detectionblock where the traject starts.
+    ;      endBlock: object: DetectionBlock%
+    ;         Use: The detectionblock where the traject ends.
+    ;      route: list<symbol>
+    ;        Use: The list of identifications of the objects that need to be reserved.
+    ;      trainID: symbol
+    ;        Use: The identification of the train that needs the objects reserved.
+    ;      railManager: RailwayManager%
+    ;        Use: The manager that constains all the railway objects.
     ; Output: n/a
-    ; Use: Reserve successive railway objects for a given train on a given route.
+    ; Use: Reserve a sequense of railway objects for a specific train with a specific route.
     ;----------------------------------------------------------------------------------------
-    
 
-    (define/public (reserveSection! startBlockObj endBlockObj route trainID railway)
-      
-      (if (list? route)
-          (if (not(empty? route))
-              (if (and (memq startBlockObj route)
-                       (memq endBlockObj route))
-         
-                  (let ([connection 'none]
-                        [interNode 'none])
-                    (send startBlockObj setAvailable! trainID)  ;Block the two endpoints
-                    (send endBlockObj setAvailable! trainID)
-                    (for ([node route]
-                          #:break (or (symbol? (send node getAvailable))
-                                      (not (send node getAvailable))))  ;if the availablity contains #f or a symbol, it needs to break
-                      (set! interNode node)        ;save the node you passed in the intration
-                      (send (send railway getObject node) setAvailable! trainID))
-                    interNode
-                    (if (eq? interNode endBlockObj) ;afther breaking or completing the loop, retrun the intermeadiate result
-                        (print "Route is completely reserved")
-                        (print "Warning route is not completely reserved, last node was" interNode)))
-                  (error "SecurityProtocol% reserveSection!: Given route does not contain the start block and or end block"))
-              (error "SecurityProtocol% reserveSection!: Given route is an empty list"))       
-          (error "SecurityProtocol% reserveSection!: Given route is not a list")))
+    (define/public (reserveSection! startBlock endBlock route trainID railManager)
+      (if (and (eq? (object-name startBlock) blockType)
+               (eq? (object-name endBlock) blockType)
+               (list? route)
+               (symbol? trainID)
+               (eq? (object-name railManager) railManType))
+          
+          (if (not (null? list))
+              (let ([resStack (empty-stack)] ; create an empty stack
+                    [railObj 'none]) ; variable to save the railobject 
+                (for ([i route])     ;In this part build the stack to enable correct reservation
+                  (set! railObj (send railManager getObject i))
+                     #:break (or (symbol? (send railObj getAvailable))   ;When a non available railobject is reached, end the loop.
+                                 (not (send railObj getAvailable)))
 
-    (define/public (release! railObj)
-      (send railObj setAvailable! #t)
-      )
+                      (push! resStack railObj))
+                (if (eq? (send endBlock getID) (send (top resStack) getID)) ;compare the identification of the last pushed object with the end detectionblock
+                    (print "route is completely reserverd")
+                    (begin(for ([i resStack])
+                      #:break (eq? (object-name (top resStack)) blockType) ; when finding a detectionblock on the stack, stop the iteration
+                      (pop! resStack))
+                    (pop-all! resStack))))  ;clear the stack afther te operations
+              (error "SecurityProtocol% reserveSection: Cannot reserve section, route is empty"))
+          (error "SecurityProtocol% reserveSection!: Contract violation, expected detectionblock detecionblock list symbol RailwayManager% received" startBlock endBlock route trainID railManager)))
+
+   
+
+    (define/private (release! railObj)
+      (send railObj setAvailable! #t))
     
 
     ))
