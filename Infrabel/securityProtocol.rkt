@@ -109,8 +109,19 @@
     ; Use: Remove the reservation from the given object.
     ;---------------------------------------------------------------------
     
-    (define/private (release! railObj)
-      (send railObj setAvailable! #t))
+    (define/private (release! railObj railManager)
+      (let ([id (send railObj getID)])
+        (if (or (send railManager isDetectionblock? id)
+                (send railManager isTrack? id))
+            
+            (if (send railManager hasRelatedObject? id)
+                (begin (send railObj setAvailable! #t)
+                       (send (send railManager getRelatedObject id) setAvailable! #t))
+                (send railObj setAvailable! #t))
+            
+            (if (send railManager isSwitch? id)
+                (send railObj setAvailable! #t)
+                (error "SecurityProtocol% releaseSection!: Given id does not belong to a railway object."))))) 
 
     ;-----------------------------------------------------------------------------------------------
     ; Function: releaseSection!
@@ -125,13 +136,15 @@
     ; Use: Remove the reservations set for the train.
     ;-----------------------------------------------------------------------------------------------
 
-    ;TODO: make sure when you have a track, the detecionblock is also released
+   
 
-    (define/public (releaseSection! trainID route railmanager)
+    (define/public (releaseSection! trainID route railManager)
       (for ([i route])
-        (let ([object (send railmanager getObject i)])
-          (cond ((eq? (send object getAvailable ) trainID) (send object setAvailable! #t)) ;cond used instead of if, when condition is false nothing must happen.
-                ))))
-                   
+        (let ([current (send railManager getObject i)])
+        (if (eq? trainID(send current getAvailable))
+            (release! current railManager)
+            'couldNotRelease))))
+        
+                            
 
     ))
