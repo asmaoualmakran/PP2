@@ -92,9 +92,24 @@
     ;---------------------------------------------------------------------------------
 
     (define/public (getTrackID)
-      (if (initialised?)
+      (if (and(initialised?)
+          (hasTrack?))
           trackID
-          (error "Detectionblock% getTrackID: object is not initialised")))
+          (error "Detectionblock% getTrackID: object is not initialised" trackID)))
+
+    ;-----------------------------------------------------------
+    ; Function: hasTrack?
+    ; Parameters: n/a
+    ; Output:
+    ;     boolean: boolean
+    ;       Use: Determine if a detectionblock is on a track.
+    ; Use: Deterimine if a detectionblock is on a track.
+    ;-----------------------------------------------------------
+   
+    (define/public (hasTrack?)
+      (and(initialised?)
+          (not (eq? trackID 'none))))
+         
 
     ;----------------------------------------------------------
     ; Function: deleteTrackID!

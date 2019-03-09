@@ -37,7 +37,7 @@
                (send manager isDetectionblock? end)
                (eq? (object-name manager) managerType)
                (graph? railGraph))
-          (let ([startTrack (send (send manager getDetectionblock start) getTrackID)]
+          (let ([startTrack (send (send manager getDetectionblock start) getTrackID)]  ;The detectionblocks itself are not in the graph, the connecting rails are
                 [destinationTrack (send (send manager getDetectionblock start) getTrackID)]
                 [route '()])
             (let-values ([(costs path) (dijkstra railGraph start)])

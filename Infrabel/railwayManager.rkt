@@ -52,7 +52,7 @@
     ;       id:symbol
     ;        Use: The identification of the object that needs to be fetched.
     ; Output:
-    ;    railObject: object:Track% or object:Switch% or objecy:Detectionblock%
+    ;    railObject: object:Track% or object:Switch% or object:Detectionblock%
     ;       Use: The fetched railway object.
     ; Use: Get a railwayobject useing it's ID, no need to know the type up front.
     ;-------------------------------------------------------------------------------
@@ -64,8 +64,49 @@
                 ((isDetectionblock? id) (getDetectionblock id))
                 (else (error "RailwayManager% getObject: Given ID does not belong to a railobject" id)))
           (error "RailwayManager% getObject: Contract violation symbol expected received" id)))
-      
 
+    ;------------------------------------------------------------------------------------------
+    ; Function: getRelatedObject
+    ; Parameter:
+    ;       id:symbol
+    ;        Use: The identification of the object who's related object needs to be fetched.
+    ; Output:
+    ;       railObject: object:Track% object:Detectionblock%
+    ;         Use: The related object that needs to be fetched.
+    ; Use: Retrieve the related object of a railway object.
+    ;------------------------------------------------------------------------------------------
+
+    (define/public (getRelatedObject id)
+      (if (isMember? id)
+          (if (isTrack? id)
+              (getDetectionblock(send (getTrack id) getDetectionblockID))
+              (if (isDetectionblock? id)
+                  (getTrack(send (getDetectionblock id) getTrackID))
+                  (error "RailwayManager% getRelatedObject?: object has no related object" id)))  
+          (error "RailwayManager% getRelatedObject: Given id does not belong to railway object" id)))
+
+    ;------------------------------------------------------------------------------------
+    ; Function: hasRelatedObject?
+    ; Parameters:
+    ;      id:symbol
+    ;       Use: The id of the object of which the related object needs to be checked.
+    ; Output:
+    ;     boolean: boolean
+    ;       Use: Determing if the object has a related object.
+    ; Use: Determine if the object has a related object.
+    ;------------------------------------------------------------------------------------
+    
+    (define/public (hasRelatedObject? id)
+      (if (isMember? id)
+          (if (isTrack? id)
+              (send (getTrack id) hasDetectionblock? )
+
+              (if (isDetectionblock? id)
+                  (send (getDetectionblock id) hasTrack?)
+
+                  (error "RailwayManager% hasRelatedObject?: Object has no related object" id)))
+                  (error "RailwayManager$ hasRelatedObject?: Object id does not belong to a railway object" id)))
+ 
     ;------------------------------------------------------------------
     ; Function: isTrack?
     ; Parameters:

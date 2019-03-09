@@ -47,9 +47,10 @@
     ;--------------------------------------------------------------------
 
     (define/public (getDetectionblockID)
-      (if (initialised?)
+      (if (and (initialised?)
+               (hasDetectionblock?))
           detectionID
-          (error "Track% getDetectionblock: object is not initialised please initialise before use")))
+          (error "Track% getDetectionblock: object is not initialised please initialise before use" detectionID)))
     
     ;----------------------------------------------------------------------------
     ; Function: setDetectionblockID!
@@ -62,7 +63,9 @@
 
     (define/public (setDetectionblockID! id)
       (if (initialised?)
-          (set! detectionID id)
+          (if (not (eq? id 'none))     
+              (set! detectionID id)
+              (error "Track% setDetectionblock!: Invalid name id, must be different from 'none given" id))
           (error "Track% setDetectionblock!: object is not initialised please initialise before use")))
 
     ;----------------------------------------------------------------
@@ -78,8 +81,22 @@
           (error "Track% deleteDetectionblock!: object is not initialised please initialise before use")))
 
 
+    ;--------------------------------------------------------
+    ; Function: hasDetectionblock?
+    ; Parameters: n/a
+    ; Output
+    ;    boolean: boolean
+    ;      Use: Determine if a track has a detectionblock.
+    ; Use: Determine if a track has a detectionblock.
+    ;-------------------------------------------------------
+
+    (define/public (hasDetectionblock?)
+      (and (initialised?)
+           (not (eq? detectionID 'none))))
+          
+          
     ;--------------------------------------
-    ; Functie: setLength!
+    ; Function: setLength!
     ; Parameters:
     ;     numb: number
     ;       Use: The length of the track. 
