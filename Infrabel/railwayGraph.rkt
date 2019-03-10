@@ -56,7 +56,7 @@
 
         (for ([obj railObjs])
           (add-between adjList #:after-last (convert obj manager))) ;building the adj list
-        (set! railGraph ((unweighted-graph/undirected adjList)))))
+        (set! railGraph ((unweighted-graph/directed adjList)))))
 
     ;---------------------------------------------------------------------------------
     ; Function: convert
@@ -78,26 +78,4 @@
                   (error "RailwayGraph% convert: Contract violation given obj is not a switch or a track.")))
           (error "RailwayGraph% convert: Contract violation given manager is not of the type RailwayManager%")))
 
-    
-        
-    (define/public (calculateRoute start end manager)   ;needs to be moved to NMBS
-      (if (initialised?)
-          (if (and (send manager isDetectionblock? start)
-                   (send manager isDetectionblock? end)
-                   (eq? (object-name manager) managerType))
-              (let ([startTrack (send (send manager getDetectionblock start) getTrackID)]
-                    [destinationTrack (send (send manager getDetectionblock start) getTrackID)])
-          (let-values ([(costs path) (dijkstra railGraph start)])
-            (constructPath path start end)))
-              (error "RailwayGraph% calculateRoute: Contract violation given parameters are not detecionblock and manager"))
-          
-          (error "RailwayGraph% calculateRoute: Object is not initialised, please initialise before use"))
-      )
-
-    
-    (define/private (constructPath list start end)
-      'test)
-
- 
-  
     ))

@@ -450,7 +450,7 @@
     ; Use: Retrieve an object useing it's ID.
     ;-----------------------------------------------------------------------
     
-    (define (findObject id)
+    (define/public (findObject id)
       (cond ((isTrack? id)(getTrack id))
             ((isSwitch? id)(getSwitch id))
             ((isDetectionblock? id)(getDetectionblock id))
@@ -468,7 +468,7 @@
     ; Use: Check if an object is part of the railway.
     ;----------------------------------------------------------------------------
     
-    (define (isMember? id)
+    (define/public (isMember? id)
       (or (isTrack? id)
           (isSwitch? id)
           (isDetectionblock? id)))

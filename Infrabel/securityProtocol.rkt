@@ -41,8 +41,9 @@
               (if (and (not (send railManager isSwitch? (send railObj getID)))
                        (send railManager hasRelatedObject? (send railObj getID))) ;if it does not have a related object, no extra fetching needed
 
-                  (begin(send (send railManager getRelatedObject (send railObj getID)) setAvailable! trainID) ;if it is a detectionblock
-                  (send railObj setAvailable! trainID))
+                  (begin
+                    (send (send railManager getRelatedObject (send railObj getID)) setAvailable! trainID) ;if it is a detectionblock
+                    (send railObj setAvailable! trainID))
 
                   (send railObj setAvailable! trainID))
               
@@ -76,24 +77,24 @@
           (if (not (null? list))
               (let ([resStack (empty-stack)] ; create an empty stack
                     [railObj 'none]) ; variable to save the railobject 
-                (for ([i route])     ;In this part build the stack to enable correct reservation
+                (for ([i route])     ; In this part build the stack to enable correct reservation
                   (set! railObj (send railManager getObject i))
-                  #:break (or (symbol? (send railObj getAvailable))   ;When a non available railobject is reached, end the loop.
+                  #:break (or (symbol? (send railObj getAvailable))   ; When a non available railobject is reached, end the loop.
                               (not (send railObj getAvailable)))
 
                   (push! resStack railObj))
                 
-                (if (eq? (send endBlock getID) (send (top resStack) getID)) ;compare the identification of the last pushed object with the end detectionblock
-                    (print "route is completely reserverd")
+                (if (eq? (send endBlock getID) (send (top resStack) getID)) ; compare the identification of the last pushed object with the end detectionblock
+                    (print "route is completely reserved")
                     
                     (begin(for ([i resStack])
-                            #:break  (and (eq? (object-name (send railManager getObject i)) trackType) ;in this case a detectionblock has been found.
+                            #:break  (and (eq? (object-name (send railManager getObject i)) trackType) ; in this case a detectionblock has been found.
                                           (send (send railManager getObject i) hasDetectionblock?))
-                            (pop! resStack)) ;if it is not a detection block remove it form the stack
+                            (pop! resStack)) ; if it is not a detection block remove it form the stack
                           
-                          (for ([e resStack])    ;The available elements are in the stack (between two detectionblocks)
+                          (for ([e resStack])    ; The available elements are in the stack (between two detectionblocks)
                             (reserve!(send railManager getObject e)))
-                          )))  ;clear the stack afther te operations
+                          )))  ; clear the stack afther te operations
               
               (error "SecurityProtocol% reserveSection: Cannot reserve section, route is empty"))
           (error "SecurityProtocol% reserveSection!: Contract violation, expected detectionblock detecionblock list symbol RailwayManager% received" startBlock endBlock route trainID railManager)))
@@ -141,9 +142,9 @@
     (define/public (releaseSection! trainID route railManager)
       (for ([i route])
         (let ([current (send railManager getObject i)])
-        (if (eq? trainID(send current getAvailable))
-            (release! current railManager)
-            'couldNotRelease))))
+          (if (eq? trainID(send current getAvailable))
+              (release! current railManager)
+              'couldNotRelease))))
         
                             
 

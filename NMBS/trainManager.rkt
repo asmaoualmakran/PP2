@@ -46,28 +46,14 @@
     (define railcarType 'object:Railcar%)
     (define railwayType 'object:RailwayManager%)
 
-    (define/public (connectGUI! gui)
-      (if (eq? (vector-ref connections 0)'none)
-          (vector-set! connections 0 gui)
-          (error "TrainManager% connectGUI!: there is already a GUI connection")))
+   (field [railway 'none])
 
-    (define/public (getGUIConnection)
-      (if (not (eq?(vector-ref connections 0) 'none))
-          (vector-ref connections 0)
-          (error "TrainManager% getGUIConnection: no GUI connection available")))
-
-    (define/public (connectInfrabel! infrabel)
-      (if (eq? (vector-ref connections 1)'none)
-          (vector-set! connections 1 infrabel)
-          (error "TrainManager% connectInfrabel!: there is already a infrabel connection")))
-
-    (define/public (getInfrabelConnection)
-      (if (not (eq?(vector-ref connections 1) 'none))
-          (vector-ref connections 1)
-          (error "TrainManager% getInfrabelConnection: no infrabel connection available")))
-                             
-
-    (define railway 'none)
+    ;--------------------------------------------------------------
+    ; Function: getRailwayObj
+    ; Parameters: n/a
+    ; Output: object: RailwayManager%
+    ; Use: Retrieve the railway manager used by the trainManager.
+    ;--------------------------------------------------------------
 
     (define/public (getRailwayObj)
       (if (not (eq? railway 'none))
@@ -221,6 +207,17 @@
               (send (getTrain id) setSpeed! number)
               (error "TrainManager% setTrainSpeed!: id does not belong to a train"))
           (error "TrainManager% setTrainSpeed!: contract violation expected number and symbol")))
+
+    ;----------------------------------------------------------------------
+    ; Function: getTrainSpeed
+    ; Parameters: 
+    ;      id: symbol
+    ;       Use: The id of the train who's speed needs to be retrieved.
+    ; Ouput:
+    ;      speed: number
+    ;        Use: The current speed of the train.
+    ; Use: Retrieve the speed of the train.
+    ;----------------------------------------------------------------------
           
     (define/public (getTrainSpeed id)
       (if (symbol? id)
