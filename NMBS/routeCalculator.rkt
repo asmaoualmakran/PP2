@@ -23,27 +23,20 @@
     ;    end: symbol
     ;     Use: The ending location of the path.
     ;    railGraph: graph
-    ;     Use: The graph representing the railwaysystem.
-    ;    manager: object:RailwayManager%
-    ;     Use: The railway manager managing the railwaymanager
+    ;     Use: The graph representing the railwaysystem.    
     ; Output:
     ;    list: list<symbol>
     ;      Use: List containing the path.
     ; Use: Calculate a path between two nodes in the graph
     ;--------------------------------------------------------------
     
-    (define/public (calculateRoute start end railGraph manager)   
-      (if (and (send manager isDetectionblock? start)
-               (send manager isDetectionblock? end)
-               (eq? (object-name manager) managerType)
-               (graph? railGraph))
-          (let ([startTrack (send (send manager getDetectionblock start) getTrackID)]  ;The detectionblocks itself are not in the graph, the connecting rails are
-                [destinationTrack (send (send manager getDetectionblock start) getTrackID)]
-                [route '()])
+    (define/public (calculateRoute start end railGraph)   
+
+          (let ([route '()])
             (let-values ([(costs path) (dijkstra railGraph start)])
               (set! route (constructPath path start end)))
             route)
-          (error "RailwayGraph% calculateRoute: Contract violation given parameters are not detecionblock,graph or manager")))
+          (error "RailwayGraph% calculateRoute: Contract violation given parameters are not detecionblock,graph or manager"))
 
     ;--------------------------------------------------------------------
     ; Function: constructPath

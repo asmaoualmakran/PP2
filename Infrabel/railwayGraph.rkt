@@ -2,6 +2,7 @@
 
 (require graph)
 (require math/matrix)
+
 (provide RailwayGraph%)
 
 (define RailwayGraph%

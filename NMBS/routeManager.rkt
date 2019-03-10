@@ -11,15 +11,17 @@
 
     (field [railwayManager 'none]
            [routeCalculator 'none]
-           [railGraph 'none]  ; object containing info
-           [Graph 'none])     ; the actual graph (using capital letter, racket conflict)
+           [railwayGraph 'none]  ; object containing info
+           [graph 'none]
+           [trainManager 'none])     
     
     (define routeTable (make-hash))
     (define activeRouteTable (make-hash))
     
     (define railType 'object:RailwayManager%)
     (define calcType 'object:RouteCalculator%)
-    (define graph 'object:RailwayGraph%)
+    (define graphType 'object:RailwayGraph%)
+    (define trainsType 'object:TrainManager%)
 
     ;----------------------------------------------------
     ; Function: initialised?
@@ -33,11 +35,22 @@
     (define/public (initialised?)
       (and(not (eq? railwayManager 'none))
           (not (eq? routeCalculator 'none))
-          (not (eq? railGraph 'none))))
+          (not (eq? railwayGraph 'none))
+          (not (eq? graph 'none))
+          (not (eq? trainManager 'none))))
     
 
-    (define/public (initialise!)
-      'test)
+    (define/public (initialise! rmanager tmanager calc railGraph)
+      (if (and (eq? (object-name rmanager) railType)
+               (eq? (object-name tmanager) trainsType)
+               (eq? (object-name calc) calcType)
+               (eq? (object-name railGraph) graphType))
+          (begin (setRailManager! rmanager)
+                 (setTrainManager! tmanager)
+                 (setRouteCalculator! calc)
+                 (setRailGraph! railGraph)                
+                 (setGraph! (send railGraph generateGraph rmanager)))
+          (error "RouteManager% initialise!: Contract violation ecpectes RailwayManager%, RouteCalculator% and RailwayGraph% received" rmanager calc railGraph)))
 
     ;---------------------------------------------------------
     ; Function: isUnique?
@@ -65,18 +78,30 @@
     ;----------------------------------------------------------
 
     (define/public (setRailManager! manager)
-      (if (not(initialised?))
-          (if (eq? (object-name manager) railType)
-              (set! railwayManager manager)
-              (error "RouteManager% setRailManager!: Contract violation RailwayManager% expected recieved" manager))
-          (error "RoutManager% setRailManager!: routeManager is already initialised")))
+      (if (eq? (object-name manager) railType)
+          (set! railwayManager manager)
+          (error "RouteManager% setRailManager!: Contract violation RailwayManager% expected recieved" manager)))
 
+
+    (define/public (setTrainManager! manager)
+      (if (eq? (object-name manager) trainsType)
+          (set! trainManager manager)
+          (error "RouteManager% setTrainManager!: Contract violation expected TrainManager% recieved" manager)))
 
     (define/public (setRouteCalculator! calculator)
-      'test)
+      (if (eq? (object-name calculator) calcType)
+          (set! routeCalculator calculator)
+          (error "RouteManager% setRouteCalculator!: Contract violation expected RouteCalculator% recieved" calculator)))
 
     (define/public (setRailGraph! graph)
-      'test)
+      (if (eq? (object-name graph) graphType)
+          (set! railwayGraph graph)
+          (error "RouteManager% setRailGraph!: Contract violation expected RailwayGraph% recieved" graph)))
+
+    (define/public (setGraph! g)
+      (if (graph? g)
+          (set! graph g)
+          (error "RouteManager% setGraph!: Contract violation expected graph recieved" g)))
     ;-------------------------------
     ; Function: saveRoute!
     ; Parameters:
@@ -124,15 +149,30 @@
       (hash-has-key? activeRouteTable id))
 
     (define/public (activateRoute! id trainID)
-      (if (isRoute? id)
-          (hash-set! activeRouteTable id (list id trainID))
-          (error "RouteManager% activateRoute!: Given id does not belong to a route" id)))
+      (if (initialised?)
+          (if (and (isRoute? id)
+                   (send trainManager isTrain? trainID))
+              (begin
+                (send  (send trainManager getObject trainID) setTraject! (list->vector(getRoute id)))  ;activate the route and train, send the traject to the train
+                (hash-set! activeRouteTable id (list id trainID)))
+              (error "RouteManager% activateRoute!: Given id does not belong to a route" id))
+          (error "RouteManager% activateRoute!: RouteManager% in not initialised, please initialise before use")))
+
+    (define/private (getActiveTrain routeID)
+      (if (isActiveRoute? routeID)
+          (cdr (hash-ref activeRouteTable routeID))
+          (error "RouteManager% getActiveTrain routeID given id does not belong to an active route")))
     
 
     (define/public (deactivateRoute! id)
-      (if (isActiveRoute? id)
-          (hash-remove! activeRouteTable id)
-          (error "RouteManager% deactivateRoute!: Given id does not belong to an active route" id)))
+      (if (initialised?)
+          (if (isActiveRoute? id)
+              (begin
+                (send (send trainManager getObject(getActiveTrain id)) detelteTraject!)  ;Deactivate the train driving the traject.
+          
+                (hash-remove! activeRouteTable id))
+              (error "RouteManager% deactivateRoute!: Given id does not belong to an active route." id))
+          (error "RouteManager% deactivateRoute!: RouteManager% is not initialised please initialise before use.")))
     
 
     (define/public (calculateRoute start end)
@@ -140,12 +180,12 @@
           (if (and (send railwayManager isDetectionblock? start)
                    (send railwayManager isDetectionblock? end))
 
-          (let ([startTrack (send (send railwayManager getDetectionblock start) getTrackID)]  ;The detectionblocks itself are not in the graph, the connecting rails are
-                [destinationTrack (send (send railwayManager getDetectionblock start) getTrackID)]
-                [route '()])
-           (set! route (send routeCalculator calculateRoute startTrack destinationTrack railGraph))
+              (let ([startTrack (send (send railwayManager getDetectionblock start) getTrackID)]  ;The detectionblocks itself are not in the graph, the connecting rails are
+                    [destinationTrack (send (send railwayManager getDetectionblock start) getTrackID)]
+                    [route '()])
+                (set! route (send routeCalculator calculateRoute startTrack destinationTrack railwayGraph))
             
-            route) ;return the constructed route
-          (error "RouteManager% calculateRoute: Contract violation two detectionblocks are expected, received" start end))
+                route) ;return the constructed route
+              (error "RouteManager% calculateRoute: Contract violation two detectionblocks are expected, received" start end))
           (error "RouteManager% calculateRoute: Route manager is not initialised, please initialise before use")))
     ))

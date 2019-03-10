@@ -65,9 +65,9 @@
            (not(eq? lastPosition 'uninitialised))
            (not(eq? direction 'uninitialised))
            (not(eq? speed 'uninitialised))
-          ; (not(eq? currentNode 'uninitialised))
-          ; (not(eq? nextNode 'uninitialised)
-               ))
+           ; (not(eq? currentNode 'uninitialised))
+           ; (not(eq? nextNode 'uninitialised)
+           ))
 
 
     ;-----------------------------------------------------
@@ -82,7 +82,7 @@
               (eq? null trainBuild))
           (error "Train% initBuild: build is alreadt initialised")
           (begin (set! trainBuild (list))
-                  (setLength! 0))))
+                 (setLength! 0))))
 
     ;--------------------------------------
     ; Function: initActive
@@ -150,14 +150,14 @@
           (error "Train% getActive: object is not initialised please initialise before use.")))
 
     ;---------------------------------
-    ; Function: switchActive
+    ; Function: switchActive!
     ; Parameters: n/a
     ; Output: n/a
     ; Use: Switch the active status.
     ;---------------------------------
     
 
-    (define/public (switchActive)
+    (define/public (switchActive!)
       (if (initialised?)
           (set! active (not active))
           (error "Train% switchActive: object is not initialised please initialise before use.")))
@@ -186,14 +186,14 @@
     ; Use: Setting a locomotive that is part of the train to master locomotive.
     ;-----------------------------------------------------------------------------
 
-  ;  (define/public (setMasterLocomotiveID! object)
-   ;   (if (object? object)
+    ;  (define/public (setMasterLocomotiveID! object)
+    ;   (if (object? object)
     ;      (if (eq? (object-name object) locomotiveType)   ; check the type of the object
-     ;         (if (member (send object getID) trainBuild) ; check if the object is a member of the train
-      ;            (set! masterLocomotiveID (send object getID)) 
-       ;           (error "Train% setMasterLocomotive!: trainBuild does not contain the locomotive, please add before assigning"))
-        ;      (error "Train% setMasterLocomotive!: contract violation object has not the type Locomotive% received" object))
-         ; (error "Train setMasterLocomotive!: contract violation expected Train% object received" object)))
+    ;         (if (member (send object getID) trainBuild) ; check if the object is a member of the train
+    ;            (set! masterLocomotiveID (send object getID)) 
+    ;           (error "Train% setMasterLocomotive!: trainBuild does not contain the locomotive, please add before assigning"))
+    ;      (error "Train% setMasterLocomotive!: contract violation object has not the type Locomotive% received" object))
+    ; (error "Train setMasterLocomotive!: contract violation expected Train% object received" object)))
 
     (define/public (setMasterLocomotiveID! id)
       (if (symbol? id)
@@ -225,14 +225,14 @@
     ; Use: Setting a locomotive as rear locomotive.
     ;--------------------------------------------------------------
 
-;    (define/public (setRearLocomotive! object)
- ;     (if (object? object)
-  ;        (if (eq? (object-name object) locomotiveType)   ; check the type of the object
-   ;           (if (member (send object getID) trainBuild) ; check if the object is a member of the train
+    ;    (define/public (setRearLocomotive! object)
+    ;     (if (object? object)
+    ;        (if (eq? (object-name object) locomotiveType)   ; check the type of the object
+    ;           (if (member (send object getID) trainBuild) ; check if the object is a member of the train
     ;              (set! rearLocomotiveID (send object getID)) 
-     ;             (error "Train% setRearLocomotiveID!: trainBuild does not contain the locomotive, please add before assigning"))
-      ;        (error "Train% setRearLocomotiveID!: contract violation object has not the type Locomotive% received" object))
-       ;   (error "Train setRearLocomotiveID!: contract violation expected Train% object received" object)))
+    ;             (error "Train% setRearLocomotiveID!: trainBuild does not contain the locomotive, please add before assigning"))
+    ;        (error "Train% setRearLocomotiveID!: contract violation object has not the type Locomotive% received" object))
+    ;   (error "Train setRearLocomotiveID!: contract violation expected Train% object received" object)))
 
     (define/public (setRearLocomotiveID! id)
       (if (symbol? id)
@@ -297,8 +297,8 @@
     (define/public (isMember? id)
       (if (and (symbol? id)
                (initialised?))
-      (member id trainBuild)
-      (error "Train% isMember?: object is not initialised or contract violation, symbol expected received:"id)))
+          (member id trainBuild)
+          (error "Train% isMember?: object is not initialised or contract violation, symbol expected received:"id)))
 
     ;--------------------------------------------------------------------
     ; Function: getBuild
@@ -340,7 +340,11 @@
 
     (define/public (setTraject! traj)
       (if (vector? traj)
-          (set! traject traj)
+          (if (not (getActive))
+              (begin
+                (set! traject traj)
+                (switchActive!))
+              (error "Train% setTraject: Train is already activated, cannot drive another traject."))
           (error "Train% setTraject: contract violation, expected vector received" traj)))
 
     ;------------------------------------------
@@ -352,7 +356,11 @@
 
     (define/public (deleteTraject!)
       (if (initialised?)
-          (set! traject 'none)
+          (if (getActive)
+              (begin
+                (switchActive!)
+                (setTraject! 'none))
+              #f)
           (error "Train% deleteTraject!: object is not initialised please initialise before use")))
 
     ;---------------------------------------------
@@ -419,7 +427,7 @@
     ;----------------------------------------------------------------
 
     (define/public (setCurrentPosition! pos)
-                  (set! currentPosition pos))
+      (set! currentPosition pos))
 
     ;----------
     ;TODO
@@ -543,4 +551,4 @@
           speed
           (error "Train% getSpeed: object is not initialised, please initialise before use")))
 
-               ))
+    ))

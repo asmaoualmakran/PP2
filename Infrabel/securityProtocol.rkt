@@ -2,10 +2,6 @@
 
 (require racket/class)
 (require typed-stack)
-(require "switch.rkt")
-(require "track.rkt")
-(require "detectionBlock.rkt")
-(require "infrastructure.rkt")
 
 (provide SecurityProtocol%)
 
@@ -18,9 +14,6 @@
     (define switchType 'object:Switch%)
     (define trackType 'object:Track%)
     (define railManType 'object:RailwayManager%)
-
-
-  
 
     ;-----------------------------------------------------------------------------------
     ; Function: reserve!
@@ -99,8 +92,6 @@
               (error "SecurityProtocol% reserveSection: Cannot reserve section, route is empty"))
           (error "SecurityProtocol% reserveSection!: Contract violation, expected detectionblock detecionblock list symbol RailwayManager% received" startBlock endBlock route trainID railManager)))
 
-   
-
     ;---------------------------------------------------------------------
     ; Function: release!
     ; Parameters:
@@ -136,8 +127,6 @@
     ; Output: n/a
     ; Use: Remove the reservations set for the train.
     ;-----------------------------------------------------------------------------------------------
-
-   
 
     (define/public (releaseSection! trainID route railManager)
       (for ([i route])
