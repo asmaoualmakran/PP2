@@ -10,6 +10,9 @@
 
 (define gui (new GUI%))
 
+(startInfrabel)
+(startNmbs railwayManager railwayGraph)
+
 
 
 (send trainManager loadRailway! railwayManager)

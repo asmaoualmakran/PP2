@@ -41,6 +41,20 @@
       (and (not (eq? railwayManager 'none))
            (not (eq? railGraph 'none))))
 
+    ;---------------------------------------------------------
+    ; Function: getGraph
+    ; Parameters: n/a
+    ; Output:
+    ;     graph: graph
+    ;       Use: The graph representing the railway system.
+    ; Use: Getting the graph representing the railway.
+    ;---------------------------------------------------------
+
+    (define/public (getGraph)
+      (if (initialised?)
+          railGraph
+          (error "RailwayGraph% getGraph: RaiwayGraph% is not initialised, please initialise before use")))
+
     ;--------------------------------------------------------------------
     ; Function: setRailManager!
     ; Parameters: 
@@ -65,14 +79,14 @@
     ;-----------------------------------------------------------
     
     (define/public (generateGraph!)
-      (if (initialised?)
+    
       (let ([railObjs (append (send railwayManager getAllTrackID) (send railwayManager getAllSwitchID))]
             [adjList '()])
 
         (for ([obj railObjs])
           (add-between adjList #:after-last (convert obj railwayManager))) ;building the adj list
-        (set! railGraph ((unweighted-graph/directed adjList))))
-      (error "RailwayGraph% generateGraph: RailwayGraph% is not initialised please initialise before use")))
+        (set! railGraph (unweighted-graph/directed adjList)))
+      )
 
     ;---------------------------------------------------------------------------------
     ; Function: convert

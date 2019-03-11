@@ -1,5 +1,5 @@
 #lang racket
-
+(require graph)
 (require "track.rkt")
 (require "switch.rkt")
 (require "detectionBlock.rkt")
@@ -26,6 +26,22 @@
     (define trackType 'object:Track%)
     (define switchType 'object:Switch%)
     (define detectionblockType 'object:Detectionblock%)
+
+    (field [graph 'none])
+
+    (define/public (setGraph! g)
+      (if (graph? g)
+          (set! graph g)
+          (error "RailwayManager% setGraph!: Contract violation expected graph received" g)))
+
+    (define/public (getGraph)
+      (if (initialised?)
+          graph
+          (error "RailwayManager% getGraph: railway manager is not initialised, please initialise before use")))
+    
+    (define/public (initialised?)
+      (not (eq? graph 'none)))
+      
 
     
     ;----------------------------------------------------------------------

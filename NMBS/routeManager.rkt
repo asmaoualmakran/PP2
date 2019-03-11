@@ -74,8 +74,8 @@
                  (setTrainManager! tmanager)
                  (setRouteCalculator! calc)
                  (setRailGraph! railGraph)                
-                 (setGraph! (send railGraph generateGraph rmanager)))
-          (error "RouteManager% initialise!: Contract violation ecpectes RailwayManager%, RouteCalculator% and RailwayGraph% received" rmanager calc railGraph)))
+                 (setGraph! (send railGraph generateGraph!)))
+          (error "RouteManager% initialise!: Contract violation expected RailwayManager%, RouteCalculator% and RailwayGraph% received" rmanager calc railGraph)))
 
     ;---------------------------------------------------------
     ; Function: isUnique?
