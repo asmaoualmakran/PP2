@@ -6,6 +6,8 @@
 
 ;---------------------------------------------------
 ; Class: RouteCalculator%
+; Parameters: n/a
+; Output: object:RouteCalculator%
 ; Use: Class containing route calculation methods.
 ;---------------------------------------------------
 
