@@ -5,6 +5,13 @@
 
 (provide RailwayGraph%)
 
+;----------------------------------------------
+; Class: RailwayGraph%
+; Parameters: n/a
+; Output: object:RailwayGraph%
+; Use: Graph constructor and manipulator.
+;----------------------------------------------
+
 (define RailwayGraph%
   (class object%
     (super-new)
@@ -14,6 +21,12 @@
      [railGraph 'none])
 
     (define managerType 'object:RailwayManager%)
+
+    (define/public (initialise! manager)
+      (if (eq? (object-name manager) managerType)
+          (begin (setRailManager! manager)
+                 (generateGraph!))
+          (error "RailwayGraph% initialse!: Contract violation expected railway manager recieved" manager)))
 
     ;-----------------------------------------------------
     ; Function: initialised?
@@ -43,7 +56,7 @@
           (error "RailwayGraph% setRailManager!: Contract violation, given manager is not of the type object:RailwayManager%.")))
 
     ;-----------------------------------------------------------
-    ; Function: genetrateGraph
+    ; Function: generateGraph!
     ; Parameters:
     ;     manager: object:RailwayManager%
     ;       Use: The manager that contains the railway objects
@@ -51,13 +64,15 @@
     ; Use: Generate the graph representing the railway system
     ;-----------------------------------------------------------
     
-    (define/public (generateGraph manager)
-      (let ([railObjs (append (send manager getAllTrackID) (send manager getAllSwitchID))]
+    (define/public (generateGraph!)
+      (if (initialised?)
+      (let ([railObjs (append (send railwayManager getAllTrackID) (send railwayManager getAllSwitchID))]
             [adjList '()])
 
         (for ([obj railObjs])
-          (add-between adjList #:after-last (convert obj manager))) ;building the adj list
-        (set! railGraph ((unweighted-graph/directed adjList)))))
+          (add-between adjList #:after-last (convert obj railwayManager))) ;building the adj list
+        (set! railGraph ((unweighted-graph/directed adjList))))
+      (error "RailwayGraph% generateGraph: RailwayGraph% is not initialised please initialise before use")))
 
     ;---------------------------------------------------------------------------------
     ; Function: convert
