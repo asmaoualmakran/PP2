@@ -19,7 +19,7 @@
      [length      'uninitialised]
      [curve       'uninitialised]
      [detectionID 'uninitialised])
-    (inherit-field connections
+     (inherit-field connections
                    maximalConnections)
 
 
@@ -93,8 +93,7 @@
     (define/public (hasDetectionblock?)
       (and (initialised?)
            (not (eq? detectionID 'none))))
-          
-          
+                
     ;--------------------------------------
     ; Function: setLength!
     ; Parameters:
