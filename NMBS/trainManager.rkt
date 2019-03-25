@@ -60,7 +60,7 @@
           railway
           (error "TrainManager% getRailwayObj: railway object is not set")))
     
-    (define/public (loadRailway! railObj)
+    (define/public (SetRailway! railObj)
       (if (eq? (object-name railObj) railwayType)
           (set! railway railObj)
           (error "TrainManager% railway: Given object is not a railway")))
