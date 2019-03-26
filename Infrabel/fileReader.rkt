@@ -10,8 +10,20 @@
   (class object%
     (super-new)
 
+    ; Hashstable used to save functions
     
-    (define functionHash (make-hash))  ;string is key value is a lambda
+    (define functionHash (make-hash))  
+
+    ;-----------------------------------------------------------
+    ; Function: add!
+    ; Parameters:
+    ;       key; string
+    ;        Use: The key that will be used for the hashing.
+    ;       function: #<procedure>
+    ;        Use: The function that needs to be added.
+    ; Output: n/a
+    ; Use: Save a new function into the hashtable
+    ;----------------------------------------------------------
 
     (define/public (add! key function)
       (if (and (string? key)
@@ -21,6 +33,17 @@
               (error "FileReader% add!: Given key is already member of the hashtable, recieved:" key))
           (error "FileReader% add!: Contract violation, expected a string and a function recieved:" key function)))
 
+    ;-----------------------------------------------------------------------
+    ; Function: update!
+    ; Parameters:
+    ;        key: string
+    ;         Use: The key of the function that needs to be updated.
+    ;        function: #<procedure>
+    ;         Use: The new definition of the the to be updated function.
+    ; Output: n/a
+    ; Use: Update an existing function with a new definition.
+    ;-----------------------------------------------------------------------
+    
     (define/public (update! key function)
       (if (and (string? key)
                (procedure? function))
