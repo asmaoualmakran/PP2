@@ -348,6 +348,7 @@
     ;      Use: The switch object that needs to be retrieved.
     ; Use: Retrieve a Switch% object from the hashtable using it's id.
     ;----------------------------------------------------------------------------
+    
     (define/public (getSwitch id)
       (if (isSwitch? id)
           (hash-ref switchTable id)
@@ -501,14 +502,30 @@
              (error "RailwayManager% findObject: id is not a member of one of the tables recieved" id))))
 
     ;---------------------------------------------------
-    ; Function: clearAllTables
+    ; Function: clearAllTables!
     ; Parameters: n/a
     ; Output: n/a
     ; Use: Delete all the elements from the hashtables.
     ;---------------------------------------------------
 
-    (define/public (clearAllTables)
-      'test)
+    (define/public (clearAllTables!)
+      (hash-clear! trackTable)
+      (hash-clear! switchTable)
+      (hash-clear! detectionblockTable))
+
+    ;----------------------------------------------------------------
+    ; Function: containsRailway?
+    ; Parameters: n/a
+    ; Output:
+    ;     boolean: boolean
+    ;      Use: Determine if the railway manager contains a railway.
+    ; Use: Check if it contains a railway or not.
+    ;----------------------------------------------------------------
+
+    (define/public (containsRailway?)
+      (or (not (hash-empty? trackTable))
+          (not (hash-empty? switchTable))
+          (not (hash-empty? detectionblockTable))))
 
     ;----------------------------------------------------------------------------
     ; Function: isMember?
