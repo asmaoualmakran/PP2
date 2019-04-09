@@ -23,27 +23,54 @@
     (define switchTable (make-hash))
     (define detectionblockTable (make-hash))
 
+    ; Definitions of the object types, enables easyer type checking
     (define trackType 'object:Track%)
     (define switchType 'object:Switch%)
     (define detectionblockType 'object:Detectionblock%)
 
+    ; The graph that represents the railwaysystem in a logical way
     (field [graph 'none])
+
+    ;--------------------------------------------------------------
+    ; Function: setGraph!
+    ; Parameters:
+    ;          g: graph
+    ;          Use: The graph that represents the railway system.
+    ; Output: n/a
+    ; Use: Set the used graph.
+    ;--------------------------------------------------------------
 
     (define/public (setGraph! g)
       (if (graph? g)
           (set! graph g)
           (error "RailwayManager% setGraph!: Contract violation expected graph received" g)))
 
+    ;----------------------------------------------------------
+    ; Function: getGraph
+    ; Parameters: n/a
+    ; Output:
+    ;        g: graph
+    ;        Use: The graph that represents the railwaysystem
+    ; Use: Retrieve the used graph
+    ;----------------------------------------------------------
+    
     (define/public (getGraph)
       (if (initialised?)
           graph
           (error "RailwayManager% getGraph: railway manager is not initialised, please initialise before use")))
+
+    ;-----------------------------------------------------
+    ; Function: initialised?
+    ; Parameters: n/a
+    ; Output:
+    ;        boolean: boolean
+    ;        Use: Determine if the object is initialised.
+    ; Use: Determine if the object is initialised.
+    ;------------------------------------------------------
     
     (define/public (initialised?)
       (not (eq? graph 'none)))
       
-
-    
     ;----------------------------------------------------------------------
     ; Function: isUnique?
     ; Parameters:
@@ -472,6 +499,16 @@
             ((isDetectionblock? id)(getDetectionblock id))
             (else
              (error "RailwayManager% findObject: id is not a member of one of the tables recieved" id))))
+
+    ;---------------------------------------------------
+    ; Function: clearAllTables
+    ; Parameters: n/a
+    ; Output: n/a
+    ; Use: Delete all the elements from the hashtables.
+    ;---------------------------------------------------
+
+    (define/public (clearAllTables)
+      'test)
 
     ;----------------------------------------------------------------------------
     ; Function: isMember?

@@ -81,12 +81,11 @@
     (define/public (generateGraph!)
     
       (let ([railObjs (append (send railwayManager getAllTrackID) (send railwayManager getAllSwitchID))]
-            [adjList '()])
+           [adjList '()])
 
         (for ([obj railObjs])
           (add-between adjList #:after-last (convert obj railwayManager))) ;building the adj list
-        (set! railGraph (unweighted-graph/directed adjList)))
-      )
+        (set! railGraph (unweighted-graph/directed adjList))))
 
     ;---------------------------------------------------------------------------------
     ; Function: convert

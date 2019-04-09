@@ -1,6 +1,8 @@
 #lang racket
 
+(require racket/file)
 (require dyoo-while-loop)
+(require logger)
 
 (require "railwayManager.rkt")
 
@@ -48,7 +50,8 @@
     ;-------------------------------------------------------
     
     (define/public (initialised?)
-      (not (eq? railmanager 'none)))
+      (and (not (eq? railmanager 'none))
+           (not (hash-empty? functionHash))))
 
     ;-------------------------------------------------
     ; Function: getManager
@@ -67,7 +70,7 @@
     ;-----------------------------------------------------------
     ; Function: add!
     ; Parameters:
-    ;       key; string
+    ;       key; symbol
     ;        Use: The key that will be used for the hashing.
     ;       function: #<procedure>
     ;        Use: The function that needs to be added.
@@ -76,17 +79,17 @@
     ;----------------------------------------------------------
 
     (define/public (add! key function)
-      (if (and (string? key)
+      (if (and (symbol? key)
                (procedure? function))
           (if (not (hash-has-key? functionHash key))
               (hash-set! functionHash key function)
               (error "FileReader% add!: Given key is already member of the hashtable, recieved:" key))
-          (error "FileReader% add!: Contract violation, expected a string and a function recieved:" key function)))
+          (error "FileReader% add!: Contract violation, expected a symbol and a function recieved:" key function)))
 
     ;-----------------------------------------------------------------------
     ; Function: update!
     ; Parameters:
-    ;        key: string
+    ;        key: symbol
     ;         Use: The key of the function that needs to be updated.
     ;        function: #<procedure>
     ;         Use: The new definition of the the to be updated function.
@@ -95,34 +98,34 @@
     ;-----------------------------------------------------------------------
     
     (define/public (update! key function)
-      (if (and (string? key)
+      (if (and (symbol? key)
                (procedure? function))
           (if (member? key)
-               (hash-set! functionHash key function)
+              (hash-set! functionHash key function)
               (error "FileReader% update!: Given key does not belong to a function, can not update the function, recieved:" key))
-          (error "FileReader% update!: Contract violation expected a string and a procedure, recieved" key function)))
+          (error "FileReader% update!: Contract violation expected a symbol and a procedure, recieved" key function)))
                
 
     ;----------------------------------------------------------------
     ; Function: delete!
     ; Parameters:
-    ;       key: string
+    ;       key: symbol
     ;        Use: The key of the function that needs to be deleted.
     ; Output: n/a
     ; Use: Delete a function using it's key.
     ;----------------------------------------------------------------
 
     (define/public (delete! key)
-      (if (string? key)
+      (if (symbol? key)
           (if (hash-has-key? functionHash key)
               (hash-remove! functionHash key)
               (error "FileReader delete!: Hashtable does not contain given key, recieved:" key))
-          (error "FileReader% delete!: Contract violation, expected a string recieved:" key)))
+          (error "FileReader% delete!: Contract violation, expected a symbol recieved:" key)))
 
     ;---------------------------------------------------------------------
     ; Function: member?
     ; Parameters:
-    ;        key: string
+    ;        key: symbol
     ;         Use: The key of the function that needs to be checked.
     ; Output:
     ;        boolean: boolean
@@ -131,15 +134,15 @@
     ;---------------------------------------------------------------------
     
     (define/public (member? key)
-      (if (string? key)
+      (if (symbol? key)
           (hash-has-key? functionHash key)
-          (error "FileReader% member?: Contract violation, expected a string recieved:" key)))
+          (error "FileReader% member?: Contract violation, expected a symbol recieved:" key)))
 
 
     ;-------------------------------------------------------------------
     ; Function: getFunc
     ; Parameters:
-    ;         key: string
+    ;         key: symbol
     ;          Use: The key used to hash the function in the hashtable
     ; Output:
     ;         func: #<procedure>
@@ -148,11 +151,11 @@
     ;-------------------------------------------------------------------
     
     (define/public (getFunc key)
-      (if (string? key)
+      (if (symbol? key)
           (if (member? key)
               (hash-ref functionHash key)
               (error "FileReader%: Hashtable has no such key, recieved:" key))
-          (error "FileReader% getKey: Contract violation, expected a string recieved:" key)))
+          (error "FileReader% getKey: Contract violation, expected a symbol recieved:" key)))
           
 
     ;-------------------------------------------------------------------------------
@@ -165,54 +168,103 @@
     ; Output: n/a
     ; Use: Read a file where the railway is saved and create the correct objects.
     ;-------------------------------------------------------------------------------
+    
+    (define/public (loadRailway path)
+      (if (initialised?)
+          (parseFile(openFile path))
+          ((error "FileReader% loadRailway: Object is not initialised, please initialise before use."))))
+      
 
-    (define file  "C:\\Users\\Asma\\GitHub\\PP2\\railwaySetup\\hardware.rkt")
-    (define/public (loadRailway ) ;file)
-      (readFile file))
-
-    ;---------------------------------------------------------------
-    ; Function: readFile
+    ;----------------------------------------------------------------------
+    ; Function: openFile
     ; Parameters:
     ;         file: string
-    ;          Use: The path location of the to be read file
-    ; Output: n/a
-    ; Use: Read the file, parse it and call the correct functions
-    ;---------------------------------------------------------------
-    
-    (define/private (readFile file)
-      (define in (open-input-file file))
-      (for ([l (in-lines in)])
-        (callFunction(parseString l))))
+    ;          Use: The path location of the file that needs to be opend.
+    ; Output:
+    ;         readFile: list
+    ;          Use: The content of the file in list form
+    ; Use: Open the file and return it as a list.
+    ;----------------------------------------------------------------------
 
-    ;-----------------------------------------------------------------------------------
-    ; Function: parseString
+    (define/private (openFile file)
+      (if (initialised?)
+          (if (string? file)
+              (let ([content '()])
+                (set! content (file->list file #:mode 'text))   ;open it as a list and return the created list
+                content)
+              (error "FileReader% readFile: Contract violation, expected a string recieved:" file))
+          (error "FileReader% readFile: Object is not initialised, please initialise before use")))
+
+    ;------------------------------------------------------------
+    ; Function: parseFile
     ; Parameters:
-    ;        string: string
-    ;          Use: The string that needs to be parsed.
-    ;        manager: object: RailwayManager%
-    ;          Use: The railway manager that manages the railway at that time.
-    ; Output: n/a 
-    ; Use: Parse a string and call the appropriate function, determined by parsing it.
-    ;-----------------------------------------------------------------------------------
+    ;         lst: list
+    ;          Use: The content of the read file in list form.
+    ; Output: n/a
+    ; Use: Parse the file and call the correct functions.
+    ;------------------------------------------------------------
 
-    (define/private (parseString string)
-      (for ([char string])
-        (let ([count 0]
-              [i 0]
-              [j 0]
-              [result '()])
-          (if (eq? (vector-ref string i) "(")
-              (begin (set! count (+ count 1))   ;initialisation of the counters an pointers.
-                     (set! i (+ i 1))
+    (define/private (parseFile lst)
+      (display "parsing started")
+      (if (initialised?)
+          (if (and (list? lst)
+                   (not (null? lst)))
+              (for ([i lst])
+                (parseList i))
+              (error "FileReader% parseFile: Contract violation, expected a non empty list recieved:" lst))
+          (error "FileReader% parseFile: Object is not initialised, please initalise before use.")))
 
-                     (while (> count 0)       ;loop where the indexes and counters are manipulated
-                            (if (not (eq? (vector-ref string j) " "))    ;TODO, refine the situations!!!!!!!
-                                (set! j (+ j 1))
-                                (set! result (result append (substring string i j))))))
-              (error "FileReader% parseString: No opening ( in expression, it is not a function call expected function call."))
-          (if (not (null? result))
-              (callFunction result)
-              (error "FileReader% parseString: Variable result is an empty list, no function to be called")))))
+    ;----------------------------------------------------------------------------
+    ; Function: parseList
+    ; Parameters:
+    ;         lst: list
+    ;          Use: The list that needs to be parsed
+    ; Output: n/a
+    ; Use: Parse the list and call the correct functions with it's parameters.
+    ;----------------------------------------------------------------------------
+    
+    (define/private (parseList lst)
+      (display "list gets parsed")
+      (newline)
+      (display lst)
+      (if (list? lst)
+          (if (not(null? lst))
+              (if (< (length lst) 3)    ; allow max 3 elements in the list  (make it a field)
+                  (let ([func 'null]    ; saving the func and pms
+                        [pm   'null]
+                        [pmls '()]
+                        [idx 0])
+                
+                    (for ([i lst])    
+              
+                      (let ([str (cadr i)]) ; (string->symbol str)])
+                        
+                       
+                      (if (symbol? str)
+                       
+                          (if (= idx 0)            ; The first element must be an registered function
+            
+                              (if (member? str)
+                                 
+                                  (set! func str)
+                              
+                                  (error "FileReader% parseList: Given function does not exist, please add to the table, recieved:" str))
+                              
+                              (set! pm str))        ; Beginning from the second element is one of the pm's
+                          
+                          
+                          (if (list? str)
+                              (set! pmls str)
+                              (error "FileReader% parseList: Expected a symbol or a list, recieved" str)))
+                      (set! idx (+ idx 1))))
+                    
+                    (if (null? pmls)
+                        (callFunction func pm)
+                        (callFunction func pm pmls)))
+                  
+                  (error  "FileReader% pareseList: More elements are given then parsed" lst))
+              (info "FileReader% parseList: Recieved an empty list, no parsing happened"))
+          (error "FileReader% parseList: Contract violation, expected list, recieved:" lst)))
 
     ;----------------------------------------------------------------------------------------
     ; Function: callFunction
@@ -222,15 +274,17 @@
     ; Output: n/a
     ; Use: Call the correct functions using the given string list
     ;----------------------------------------------------------------------------------------
-              
-    (define/private (callFunction lst)
-      (if (member? (car lst))
-          (let ([func (getFunc (car lst))]
-                [name (cadr lst)]
-                [connections cddr])
-            (getFunc name railmanager . connections))
-          (error "FileReader% callFunction: Given hashtable does not contain the given key, recieved:" (car lst)) ))
 
+    (define/private (callFunction func objname . connections)
+      (if (and (symbol? func)
+               (symbol? objname))
+          (if (not (null? connections))
+              ((getFunc func) objname connections)                          
+              ((getFunc func) objname))
+          (error "FileReader callFunction: Contract violation expected two symbols and a list, recieved:" func objname connections)))
+
+
+    ;TODO herbekijken van de functie + initialisatie van de objecten --> dit kan worden verbeterd. 
     ;----------------------------------------------------------------------
     ; Function: addBasicFunctions!
     ; Parameters: n/a
@@ -239,20 +293,38 @@
     ;----------------------------------------------------------------------
 
     (define/public (addBasicFunctions!)
-      (if (initialised?)
-      (begin(add! "block%" (lambda (name railmanager)
-                      (send railmanager createBlock! name)))
+   
+          (add! 'block% (lambda (name)
+                                 (send railmanager createDetectionblock! name)
+                                  (display "block created")))
+                 
+                 (add! 'connectBlockTrack (lambda (block track)
+                                            (if (and (symbol? block)
+                                                     (symbol? track))
+                                                (if (and (send railmanager isTrack? track)
+                                                         (send railmanager isBlock? block))
+                                                    'body
+                                                    (error "FileReader% 'connectBlockTrack: Contract violation, expected a track id and a block id recieved" track block))
+                                                (error "FileReader% 'connectBlockTrack: Contract violation, expected symbols recieved" track block))))
+                 (add! 'connect! (lambda (con1 con2)
+                                  'body))
       
-      (add! "switch%" (lambda (name railmanager connections)
-                        (send railmanager createSwitch! name)
-                        (send railmanager initSwitch! name (cons 0 0) 'left 'left 10 (length connections))
-                        (send (send railmanager getSwitch name) initconnections! connections)))
+                 (add! 'switch% (lambda (name)
+                                  (if (symbol? name)
+                                          ; (list? connections))
+                                      (begin
+                                        (send railmanager createSwitch! name)
+                                        (display "switch created")
+                                      ;  (send railmanager initSwitch! name (cons 0 0) 'left 'left 10 (length connections))
+                                      ;  (send (send railmanager getSwitch name) initconnections! connections))
+                                        )
+                                      (error "FileReader% 'switch%: Contract violation, expected symbol and list recieved:" name))))
 
-      (add! "track%" (lambda (name railmanager connections)
-                       (send railmanager createTrack! name connections)
-                       (send railmanager initTrack! name (cons 0 0) 0 0 0 ))))
+                 (add! 'track% (lambda (name)
+                                 (send railmanager createTrack! name)
+                                 (display "track created"))))
+                            ;     (send railmanager initTrack! name (cons 0 0) 0 0 0 ))))
       
-      (error "FileReader% addBasicFunctions!: Object is not initialised, please initialise before use")))
     
     
     
