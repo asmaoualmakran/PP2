@@ -171,7 +171,16 @@
     
     (define/public (loadRailway path)
       (if (initialised?)
-          (parseFile(openFile path))
+          
+          (if (send railmanager containsRailway?)
+              (begin
+                (display "It contained one")
+                (send railmanager clearAllTables!)
+                     (parseFile(openFile path))
+                     (info "FileReader% loadRailway: The railway manager contained a railway, this has been deleted and replaced"))
+              
+              (parseFile (openFile path)))
+          
           ((error "FileReader% loadRailway: Object is not initialised, please initialise before use."))))
       
 
@@ -240,23 +249,23 @@
                       (let ([str (cadr i)]) ; (string->symbol str)])
                         
                        
-                      (if (symbol? str)
+                        (if (symbol? str)
                        
-                          (if (= idx 0)            ; The first element must be an registered function
+                            (if (= idx 0)            ; The first element must be an registered function
             
-                              (if (member? str)
+                                (if (member? str)
                                  
-                                  (set! func str)
+                                    (set! func str)
                               
-                                  (error "FileReader% parseList: Given function does not exist, please add to the table, recieved:" str))
+                                    (error "FileReader% parseList: Given function does not exist, please add to the table, recieved:" str))
                               
-                              (set! pm str))        ; Beginning from the second element is one of the pm's
+                                (set! pm str))        ; Beginning from the second element is one of the pm's
                           
                           
-                          (if (list? str)
-                              (set! pmls str)
-                              (error "FileReader% parseList: Expected a symbol or a list, recieved" str)))
-                      (set! idx (+ idx 1))))
+                            (if (list? str)
+                                (set! pmls str)
+                                (error "FileReader% parseList: Expected a symbol or a list, recieved" str)))
+                        (set! idx (+ idx 1))))
                     
                     (if (null? pmls)
                         (callFunction func pm)
@@ -294,36 +303,36 @@
 
     (define/public (addBasicFunctions!)
    
-          (add! 'block% (lambda (name)
-                                 (send railmanager createDetectionblock! name)
-                                  (display "block created")))
+      (add! 'block% (lambda (name)
+                      (send railmanager createDetectionblock! name)
+                      (display "block created")))
                  
-                 (add! 'connectBlockTrack (lambda (block track)
-                                            (if (and (symbol? block)
-                                                     (symbol? track))
-                                                (if (and (send railmanager isTrack? track)
-                                                         (send railmanager isBlock? block))
-                                                    'body
-                                                    (error "FileReader% 'connectBlockTrack: Contract violation, expected a track id and a block id recieved" track block))
-                                                (error "FileReader% 'connectBlockTrack: Contract violation, expected symbols recieved" track block))))
-                 (add! 'connect! (lambda (con1 con2)
-                                  'body))
+      (add! 'connectBlockTrack (lambda (block track)
+                                 (if (and (symbol? block)
+                                          (symbol? track))
+                                     (if (and (send railmanager isTrack? track)
+                                              (send railmanager isBlock? block))
+                                         'body
+                                         (error "FileReader% 'connectBlockTrack: Contract violation, expected a track id and a block id recieved" track block))
+                                     (error "FileReader% 'connectBlockTrack: Contract violation, expected symbols recieved" track block))))
+      (add! 'connect! (lambda (con1 con2)
+                        'body))
       
-                 (add! 'switch% (lambda (name)
-                                  (if (symbol? name)
-                                          ; (list? connections))
-                                      (begin
-                                        (send railmanager createSwitch! name)
-                                        (display "switch created")
-                                      ;  (send railmanager initSwitch! name (cons 0 0) 'left 'left 10 (length connections))
-                                      ;  (send (send railmanager getSwitch name) initconnections! connections))
-                                        )
-                                      (error "FileReader% 'switch%: Contract violation, expected symbol and list recieved:" name))))
+      (add! 'switch% (lambda (name)
+                       (if (symbol? name)
+                           ; (list? connections))
+                           (begin
+                             (send railmanager createSwitch! name)
+                             (display "switch created")
+                             ;  (send railmanager initSwitch! name (cons 0 0) 'left 'left 10 (length connections))
+                             ;  (send (send railmanager getSwitch name) initconnections! connections))
+                             )
+                           (error "FileReader% 'switch%: Contract violation, expected symbol and list recieved:" name))))
 
-                 (add! 'track% (lambda (name)
-                                 (send railmanager createTrack! name)
-                                 (display "track created"))))
-                            ;     (send railmanager initTrack! name (cons 0 0) 0 0 0 ))))
+      (add! 'track% (lambda (name)
+                      (send railmanager createTrack! name)
+                      (display "track created"))))
+    ;     (send railmanager initTrack! name (cons 0 0) 0 0 0 ))))
       
     
     

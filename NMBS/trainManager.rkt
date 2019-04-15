@@ -26,15 +26,10 @@
     ;TODO enable changing directions and setting speed of trains
     ;TODO copy of the railway object must be handled differently
 
-    ; A vector keeping this objects connections
-    (define connections (make-vector 2))
-    (vector-set! connections 0 'none)
-    (vector-set! connections 1 'none)
-
+    
     ; Hashtables for each type of objects, these are mutable, initial needed size is unknown.
     ; The elements are hashed useing their id's as key, the values are the objects self.
 
-    
     (define trainTable (make-hash))
     (define locomotiveTable (make-hash))
     (define railcarTable (make-hash))
@@ -44,26 +39,65 @@
     (define trainType 'object:Train%)
     (define locomotiveType 'object:Locomotive%)
     (define railcarType 'object:Railcar%)
-    (define railwayType 'object:RailwayManager%)
+    (define railManagerType 'object:RailwayManager%)
 
-   (field [railway 'none])
+    (field [railwayManager 'none])
 
-    ;--------------------------------------------------------------
-    ; Function: getRailwayObj
+    ;----------------------------------------------------
+    ; Function: initialised?
     ; Parameters: n/a
-    ; Output: object: RailwayManager%
-    ; Use: Retrieve the railway manager used by the trainManager.
-    ;--------------------------------------------------------------
+    ; Output:
+    ;     boolean: boolean
+    ;       Use: Determine if the object is initialised.
+    ; Use: Determine if the object is initialised.
+    ;----------------------------------------------------
 
-    (define/public (getRailwayObj)
-      (if (not (eq? railway 'none))
-          railway
-          (error "TrainManager% getRailwayObj: railway object is not set")))
+    (define/public (initialised?)
+      (not (eq? railwayManager 'none)))
+
+    ;-------------------------------------------------------------
+    ; Function: initialise!
+    ; Parameters:
+    ;       railMan: object:RailwayManager%
+    ;         Use: The railway manager that is going to be used.
+    ; Outpunt: n/a
+    ; Use: Initialse the object.
+    ;-------------------------------------------------------------
     
-    (define/public (SetRailway! railObj)
-      (if (eq? (object-name railObj) railwayType)
-          (set! railway railObj)
-          (error "TrainManager% railway: Given object is not a railway")))
+    (define/public (initialse! railMan)
+      (if (not (initialised?))
+          (if (eq? (object-name railMan) railManagerType)
+              (setRailwayManager! railMan)
+              (error "TrainManager% initialise!: Contract violation expected a railway Manager recieved" railMan))
+          (error "TrainManager% initialise!: Object is already initialised, you cannot reinitialise the object")))
+
+    ;-----------------------------------------------------------------------------------
+    ; Function: setRailwayManger!
+    ; Parameters:
+    ;         railMan: object:RailwayManager%
+    ;           Use: The railway manager that is going to be used by the TrainManager%.
+    ; Output: n/a
+    ; Use: Set the railway manager of the train manager.
+    ;-----------------------------------------------------------------------------------
+
+    (define/public (setRailwayManager! railMan)
+      (if (eq? (object-name railMan) railManagerType)
+          (set! railwayManager railMan)
+          (error "TrainManger% setRailwayManager!: Contract violation expected a railway manager recieved" railMan)))
+
+    ;------------------------------------------------------
+    ; Function: getRailwayManager
+    ; Parameters: n/a
+    ; Output:
+    ;     railwayManager: object:RailwayManager%
+    ;       Use: The railway manager used.
+    ; Use: The railway manager used by the train manager.
+    ;------------------------------------------------------
+    
+    (define/public (getRailwayManager)
+      (if (initialised?)
+          railwayManager
+          (error "TrainManager% getRailwayManager: Object is not initialised, please initialise before use")))
     
     ;-----------------------------------------------------------------------------
     ; Function: isUnique?
@@ -120,11 +154,11 @@
                   (send train setCurrentPosition! 'none)
                   (send train initDirection! 'left)
                   (send train setSpeed! 0)
-               ;   (send train setcurrentNode! 'none)
+                  ;   (send train setcurrentNode! 'none)
                   (send train setMasterLocomotiveID! 'none)
                   (send train setRearLocomotiveID! 'none))
-               ;   (send train setLastPosition! 'none))
-               ;   (send train setNextNode! 'none))
+                ;   (send train setLastPosition! 'none))
+                ;   (send train setNextNode! 'none))
                 (error "TrainManager initTrain%: Train is already initialised."id)))
           (error "TrainManager% initTrain: id does not exist or is not from a train."id)))
 

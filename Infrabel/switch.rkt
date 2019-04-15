@@ -16,40 +16,41 @@
     (super-new)
 
     (field 
-           [state       'uninitialised]
-           [direction   'uninitialised])
+     [state       'uninitialised]
+     [direction   'uninitialised])
 
-;-------------------------------------------------------
-; Variable: connections : list
-;      Use: All the connected objects.
-; Use: Get the connections field from the super class.
-;-------------------------------------------------------
+    ;-------------------------------------------------------
+    ; Variable: connections : list
+    ;      Use: All the connected objects.
+    ; Use: Get the connections field from the super class.
+    ;-------------------------------------------------------
 
     (define connections (generic Infrastructure% getConnections))
     (define maximalConnections (generic Infrastructure% getMaximalConnections))
 
 
-;----------------------------------------------------
-; Funtion: initialised?
-; Parameters: n/a
-; Output:
-;   boolean: boolean
-;     Use: Wheter or not the object is initialised.
-; Use: Determine if the object is initialised.
-;----------------------------------------------------
+    ;----------------------------------------------------
+    ; Funtion: initialised?
+    ; Parameters: n/a
+    ; Output:
+    ;   boolean: boolean
+    ;     Use: Wheter or not the object is initialised.
+    ; Use: Determine if the object is initialised.
+    ;----------------------------------------------------
+    
     (define (initialised?)
       (and (not(eq? state 'uninitialised))
            (not(eq? direction 'uninitialised))))
     (augment initialised?)
 
-;-------------------------------------------
-; Function: initState!
-; Parameters:
-;     newstate: symbol
-;       Use: The state of the switch.
-; Output: n/a
-; Use: Initialise the state of the switch.
-;-------------------------------------------
+    ;-------------------------------------------
+    ; Function: initState!
+    ; Parameters:
+    ;     newstate: symbol
+    ;       Use: The state of the switch.
+    ; Output: n/a
+    ; Use: Initialise the state of the switch.
+    ;-------------------------------------------
 
     (define/public (initState! newstate)
       (if (and(or (eq? newstate 'left)
@@ -58,40 +59,41 @@
           (set! state newstate)
           (error "Switch% initState!: State not initialised or given direction is not correct" newstate)))
 
-;----------------------------------------
-; Funtion: setState!
-; Parameters: n/a
-; Output: n/a
-; Use: Change the state of the switch.
-;---------------------------------------
+    ;TODO aanpassen naar ID's van de connecties!!!!
+    ;----------------------------------------
+    ; Funtion: setState!
+    ; Parameters: n/a
+    ; Output: n/a
+    ; Use: Change the state of the switch.
+    ;---------------------------------------
 
     (define/public (setState!)
       (cond ((initialised?)(error "Switch% initState!: State not initialised" state))
             ((eq? state 'left)(set! direction 'right))
             (else(set! state 'right))))
 
-;--------------------------------------
-; Function: getState
-; Parameters: n/a
-; Output:
-;    state: symbol
-;      Use: The state of the switch.
-; Use: Get the state of the switch.
-;--------------------------------------
+    ;--------------------------------------
+    ; Function: getState
+    ; Parameters: n/a
+    ; Output:
+    ;    state: symbol
+    ;      Use: The state of the switch.
+    ; Use: Get the state of the switch.
+    ;--------------------------------------
     
     (define/public (getState)
       (if (initialised?)
           state
           (error "Switch% initState!: State not initialised or given direction is not correct")))
 
-;--------------------------------------------------------
-; Function: setDirection!
-; Parameters:
-;    dir: number
-;     Use: The driving direction of the switch.
-; Output: n/a
-; Use: Setting the dirving direction of the switch.
-;--------------------------------------------------------
+    ;--------------------------------------------------------
+    ; Function: setDirection!
+    ; Parameters:
+    ;    dir: number
+    ;     Use: The driving direction of the switch.
+    ; Output: n/a
+    ; Use: Setting the dirving direction of the switch.
+    ;--------------------------------------------------------
     
     (define/public (setDirection! dir)
       (if (and (symbol? dir)
@@ -100,14 +102,14 @@
           (set! direction dir)
           (error "Switch% setDirection!: contract violation, symbol 'left or 'right expected received" dir)))
 
-;----------------------------------------------------------
-; Function: getDirection
-; Parameters: n/a
-; Output:
-;   direction: number
-;      Use: The driving direction of the switch.
-; Use: Retrieving the diriving direction of the switch.
-;----------------------------------------------------------
+    ;----------------------------------------------------------
+    ; Function: getDirection
+    ; Parameters: n/a
+    ; Output:
+    ;   direction: number
+    ;      Use: The driving direction of the switch.
+    ; Use: Retrieving the diriving direction of the switch.
+    ;----------------------------------------------------------
     
     (define/public (getDirection)
       (if (initialised?)

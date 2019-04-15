@@ -11,11 +11,6 @@
     (super-new)
 
     ;TODO the allID getters need to check is a member is initialised.
-
-    ; A vector keeping this objects connections
-    ;   (define connections (make-vector 2))
-    ;   (vector-set! connections 0 'none)
-    ;   (vector-set! connections 1 'none)
     
     ; The hashtables where the objects are saved.
     ; The keys are the id's and values, the objects.
@@ -27,37 +22,12 @@
     (define trackType 'object:Track%)
     (define switchType 'object:Switch%)
     (define detectionblockType 'object:Detectionblock%)
+    (define trainManagerType 'object:TrainManager%)
 
     ; The graph that represents the railwaysystem in a logical way
-    (field [graph 'none])
-
-    ;--------------------------------------------------------------
-    ; Function: setGraph!
-    ; Parameters:
-    ;          g: graph
-    ;          Use: The graph that represents the railway system.
-    ; Output: n/a
-    ; Use: Set the used graph.
-    ;--------------------------------------------------------------
-
-    (define/public (setGraph! g)
-      (if (graph? g)
-          (set! graph g)
-          (error "RailwayManager% setGraph!: Contract violation expected graph received" g)))
-
-    ;----------------------------------------------------------
-    ; Function: getGraph
-    ; Parameters: n/a
-    ; Output:
-    ;        g: graph
-    ;        Use: The graph that represents the railwaysystem
-    ; Use: Retrieve the used graph
-    ;----------------------------------------------------------
-    
-    (define/public (getGraph)
-      (if (initialised?)
-          graph
-          (error "RailwayManager% getGraph: railway manager is not initialised, please initialise before use")))
+    (field [railGraph 'none]
+           [trainManager 'none]
+           [railway 'none])
 
     ;-----------------------------------------------------
     ; Function: initialised?
@@ -69,7 +39,84 @@
     ;------------------------------------------------------
     
     (define/public (initialised?)
-      (not (eq? graph 'none)))
+      (and (not (eq? railGraph 'none))
+           (not (eq? trainManager 'none))))
+
+    ;----------------------------------------------------------------------
+    ; Function: initialise!
+    ; Parameters:
+    ;      graph: graph
+    ;        Use: The graph that contains a representation of the railway.
+    ;     trainMang: object:TrainManager%
+    ;        Use: The train manager that is used.
+    ; Output: n/a
+    ; Use: Initialise the object.
+    ;----------------------------------------------------------------------
+    
+    (define/public (initialise! graph trainMan)
+      (if (graph? graph)
+          (if (eq? trainManagerType (object-name trainMan))
+              (begin 
+                (setGraph! graph)
+                (setTrainManager! trainMan))
+              (error "RailwayManager% initialise!: Contract violation expected object with type object:TrainManager, recieved:" trainMan))
+          (error "RailwayManager% initialise!: Contract violation expected graph, recieved:" graph)))
+          
+    ;-------------------------------------------------------
+    ; Function: setTrainManager!
+    ; Parameters:
+    ;      trainMan: object:TrainManager%
+    ;        Use: The train manager that needs to be used
+    ; Output: n/a
+    ; Use: Set the train manager.
+    ;-------------------------------------------------------
+    
+    (define/public (setTrainManager! trainMan)
+      (if (eq? trainManagerType (object-name trainMan))
+          (set! trainManager trainMan)
+          (error "RailwayManager% setTrainManager!: Contract violation, expected a object with type object:TrainManager%, recieved:" trainMan)))
+
+    ;------------------------------------------------
+    ; Function: getTrainManager
+    ; Parameters: n/a
+    ; Output:
+    ;     trainMan: object:TrainManager%
+    ;      Use: The train manager that is used.
+    ; Use: Get the train manager that is used.
+    ;------------------------------------------------
+    
+    (define/public (getTrainManager)
+      (if (initialised?)
+          trainManager
+          (error "RailwayManager% getTrainManager: Object is not initialised, initialise before use")))
+
+    ;--------------------------------------------------------------
+    ; Function: setGraph!
+    ; Parameters:
+    ;          graph: graph
+    ;          Use: The graph that represents the railway system.
+    ; Output: n/a
+    ; Use: Set the used graph.
+    ;--------------------------------------------------------------
+
+    (define/public (setGraph! graph)
+      (if (graph? graph)
+          (set! railGraph graph)
+          (error "RailwayManager% setGraph!: Contract violation expected graph received" graph)))
+
+    ;----------------------------------------------------------
+    ; Function: getGraph
+    ; Parameters: n/a
+    ; Output:
+    ;        graph: graph
+    ;        Use: The graph that represents the railwaysystem
+    ; Use: Retrieve the used graph
+    ;----------------------------------------------------------
+    
+    (define/public (getGraph)
+      (if (initialised?)
+          railGraph
+          (error "RailwayManager% getGraph: railway manager is not initialised, please initialise before use")))
       
     ;----------------------------------------------------------------------
     ; Function: isUnique?
@@ -148,7 +195,7 @@
                   (send (getDetectionblock id) hasTrack?)
 
                   (error "RailwayManager% hasRelatedObject?: Object has no related object" id)))
-                  (error "RailwayManager$ hasRelatedObject?: Object id does not belong to a railway object" id)))
+          (error "RailwayManager$ hasRelatedObject?: Object id does not belong to a railway object" id)))
  
     ;------------------------------------------------------------------
     ; Function: isTrack?
