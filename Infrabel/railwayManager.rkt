@@ -25,9 +25,9 @@
     (define trainManagerType 'object:TrainManager%)
 
     ; The graph that represents the railwaysystem in a logical way
-    (field [railGraph 'none]
-           [trainManager 'none]
-           [railway 'none])
+    (field [railGraph    'uninitialised]
+           [trainManager 'uninitialised]
+           [railway      'uninitialised])
 
     ;-----------------------------------------------------
     ; Function: initialised?
@@ -39,8 +39,8 @@
     ;------------------------------------------------------
     
     (define/public (initialised?)
-      (and (not (eq? railGraph 'none))
-           (not (eq? trainManager 'none))))
+      (and (not (eq? railGraph 'uninitialised))
+           (not (eq? trainManager 'uninitialised))))
 
     ;----------------------------------------------------------------------
     ; Function: initialise!

@@ -41,7 +41,7 @@
     (define railcarType 'object:Railcar%)
     (define railManagerType 'object:RailwayManager%)
 
-    (field [railwayManager 'none])
+    (field [railwayManager 'uninitialised])
 
     ;----------------------------------------------------
     ; Function: initialised?
@@ -53,7 +53,7 @@
     ;----------------------------------------------------
 
     (define/public (initialised?)
-      (not (eq? railwayManager 'none)))
+      (not (eq? railwayManager 'uninitialised)))
 
     ;-------------------------------------------------------------
     ; Function: initialise!

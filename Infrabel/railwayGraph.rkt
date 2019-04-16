@@ -22,6 +22,15 @@
 
     (define managerType 'object:RailwayManager%)
 
+    ;----------------------------------------------------------------
+    ; Function: initialise!
+    ; Parameters:
+    ;         manager: object:RailwayManager%
+    ;          Use: The railway manager that is used by the object.
+    ; Output: n/a
+    ; Use: Initialise the object.
+    ;----------------------------------------------------------------
+    
     (define/public (initialise! manager)
       (if (eq? (object-name manager) managerType)
           (begin (setRailManager! manager)
