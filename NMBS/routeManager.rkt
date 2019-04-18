@@ -65,17 +65,26 @@
     ; Use: Initialise the routemanager with the needed objects.
     ;-------------------------------------------------------------
     
-    (define/public (initialise! rmanager tmanager calc railGraph)
-      (if (and (eq? (object-name rmanager) railType)
-               (eq? (object-name tmanager) trainsType)
-               (eq? (object-name calc) calcType)
-               (eq? (object-name railGraph) graphType))
-          (begin (setRailManager! rmanager)
-                 (setTrainManager! tmanager)
-                 (setRouteCalculator! calc)
-                 (setRailGraph! railGraph)                
-                 (setGraph! (send railGraph generateGraph!)))
-          (error "RouteManager% initialise!: Contract violation expected RailwayManager%, RouteCalculator% and RailwayGraph% received" rmanager calc railGraph)))
+    ; (define/public (initialise! tmanager calc railGraph)
+    ;  (if (and
+    ;           (eq? (object-name tmanager) trainsType)
+    ;           (eq? (object-name calc) calcType)
+    ;           (eq? (object-name railGraph) graphType))
+    ;      (begin (setRailManager! rmanager)
+    ;             (setTrainManager! tmanager)
+    ;             (setRouteCalculator! calc)
+    ;             (setRailGraph! railGraph)                
+    ;             (setGraph! (send railGraph generateGraph!)))
+    ;      (error "RouteManager% initialise!: Contract violation expected RailwayManager%, RouteCalculator% and RailwayGraph% received" rmanager calc railGraph)))
+
+
+    (define/public (initialise! tmanager routeCalc)
+      (if (and  (eq? (object-name tmanager) trainsType)
+                (eq? (object-name routeCalc) calcType))
+          (if (send tmanager initialised?)
+              'test
+              (error "RouteManager% initialise!: Given train manager is not initialised, please use an initialised train manager:" tmanager))
+          (error "RouteManager% initialise!: Contract violation expected TrainManager% and RailwayGraph% received:" tmanager routeCalc)))
 
     ;---------------------------------------------------------
     ; Function: isUnique?

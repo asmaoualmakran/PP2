@@ -15,7 +15,53 @@
   (class object%
     (super-new)
 
-    (define managerType 'object:RailwayManager%)
+    (field [trainManager 'uninitialised]
+           [railManager  'uninitialised]
+           [graph        'uninitialised])
+
+    ; Variables to enable type checking
+    
+    (define railManagerType 'object:RailwayManager%)
+    (define trainManagerType 'object:TrainManager%)
+
+    ;------------------------------------------------------
+    ; Function: initialised? 
+    ; Parameters: n/a 
+    ; Output:
+    ;      boolean: boolean
+    ;       Use: Determine if the object is initialised.
+    ; Use: Determine if the object is initialised.
+    ;------------------------------------------------------
+
+    (define/public (initialised?)
+      (and (not (eq? trainManager 'uninitialised))
+           (not (eq? railManager 'uninitialised))
+           (not (eq? graph 'uninitialised))))
+
+    ;-------------------------------------------------
+    ; Function: initialise!
+    ; Parameters:
+    ;         trainMan: object:TrainManager%
+    ;          Use: The train manager that is used.
+    ; Output: n/a
+    ; Use: Initialise the routeCalculator.
+    ;-------------------------------------------------
+    
+    (define/public (initialise! trainMan)
+      (if (eq? (object-name trainMan) trainManagerType)
+          (if (send trainMan initialsed?)
+
+              (begin
+                (set! trainManager trainMan)
+                (if (send (send trainManager getRailwayManager) initialised?)
+
+                    (begin
+                      (set! railManager (send trainManager getRailwayManager))
+                      (set! graph (send railManager getGraph)))
+   
+                    (error "RouteCalculator% initialise!: Recieved railwayManager is not initialised, please use an initialised RailwayManager%, recieved"(send trainManager getRailwayManager))))
+              (error "RouteCalculator% initialise!: Given TrainManager% is not initialised, please use an initialised TrainManager%, recieved:" trainMan))
+          (error "RouteCalculator% initialise!: Contract violation expected a TrainManager%, recieved:" trainMan)))
 
     ;-------------------------------------------------------------
     ; Function: calculateRoute
@@ -32,13 +78,13 @@
     ; Use: Calculate a path between two nodes in the graph
     ;--------------------------------------------------------------
     
-    (define/public (calculateRoute start end railGraph)   
+    (define/public (calculateRoute start end)   
 
-          (let ([route '()])
-            (let-values ([(costs path) (dijkstra railGraph start)])
-              (set! route (constructPath path start end)))
-            route)
-          (error "RailwayGraph% calculateRoute: Contract violation given parameters are not detecionblock,graph or manager"))
+      (let ([route '()])
+        (let-values ([(costs path) (dijkstra graph start)])
+          (set! route (constructPath path start end)))
+        route)
+      (error "RailwayGraph% calculateRoute: Contract violation given parameters are not detecionblock,graph or manager"))
 
     ;--------------------------------------------------------------------
     ; Function: constructPath
@@ -89,5 +135,17 @@
                 (cdr i)
                 (error "RailwayGraph% getPredec: Given element is not a member of the list")))
           (error "RailwayGraph% getPredec: Contract violaton given list is not a list")))
+
+
+    (define/private (uTurn)
+      'test)
+
+    (define/private (uTurnNeeded? route)
+      (if (list? route)
+          (if (not (null? route))
+              (for ([i route])
+                'test)
+              (error "RouteCalculator% uTurnNeeded?: Contract violation expected a non empty list, recieved:" route))
+          (error "RouteCalculator% uTurnNeeded?: Contract violation expected a list, recieved:" route)))
   
     ))

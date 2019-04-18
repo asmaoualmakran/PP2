@@ -10,7 +10,7 @@
   (class object%
     (super-new)
 
-    ;TODO the allID getters need to check is a member is initialised.
+    ;TODO the all ID getters need to check is a member is initialised.
     
     ; The hashtables where the objects are saved.
     ; The keys are the id's and values, the objects.
@@ -26,8 +26,10 @@
 
     ; The graph that represents the railwaysystem in a logical way
     (field [railGraph    'uninitialised]
+           [railwayGraph 'uninitialised]  ; TODO!!! adjust initialisers 
            [trainManager 'uninitialised]
-           [railway      'uninitialised])
+           [railway      'uninitialised]  ;simulator
+           )
 
     ;-----------------------------------------------------
     ; Function: initialised?
