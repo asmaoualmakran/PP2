@@ -102,6 +102,7 @@
           state
           (error "Switch% initState!: State not initialised or given direction is not correct")))
 
+    ;TODO Define direction using one of the ID's
     ;--------------------------------------------------------
     ; Function: setDirection!
     ; Parameters:
@@ -224,7 +225,8 @@
     ;------------------------------------------------------------------------
     
     (define/public (connected?)
-      (not (eq? connection 'uninitialised)))
+      (not (eq? connection 'uninitialised)
+           (eq? y-connection 'uninitialised)))
 
     ;------------------------------------------------------------------------------
     ; Function: getConnections
@@ -236,7 +238,72 @@
     ;------------------------------------------------------------------------------
 
     (define/public (getConnections)
-      (list connection (car y-connection) (cdr y-connection)))
+      (if (connected?)
+      (list connection (car y-connection) (cdr y-connection))
+      (error "Switch getConnections: Switch is not connected, please connect before use.")))
+
+    ;--------------------------------------------------------------------------------------
+    ; Function: getConnection
+    ; Parameters: n/a
+    ; Output:
+    ;       connection: symbol
+    ;        Use: The ID of the object that is connected to the switch.
+    ; Use: Get the ID of the railway object connected on the straight part of the swith.
+    ;--------------------------------------------------------------------------------------
+
+    (define/public (getConnection)
+      (if (connected?)
+          connection
+          (error "Switch% getConnection: Switch is not connected, please connect before use.")))
+
+    ;----------------------------------------------------------------------------------------------------
+    ; Function: getYConnection
+    ; Parameters: n/a
+    ; Output:
+    ;      yConnection: pair<symbol>
+    ;       Use: The ID's of the objects that are connected to the switch.
+    ; Use: Get the ID's of the railway objects that are connected on the splitted part of the switch.
+    ;----------------------------------------------------------------------------------------------------
+    
+    (define/public (getYConnection)
+      (if (connected?)
+          y-connection
+          (error "Switch% getYConnection: Switch is not connected, please connect before use.")))
+
+    ;-----------------------------------------------------------------------------------------
+    ; Function: hasOppositeYconnection?
+    ; Parameters:
+    ;        connID: symbol
+    ;          Use: One of the y connections of the switch who's opposite needs to be found.
+    ; Output:
+    ;       boolean: boolean
+    ;        Use: Determine if the given connection has an opposite connection.
+    ; Use: Determine if one of the switch's y connection has an opposite connection.
+    ;------------------------------------------------------------------------------------------
+    
+    (define/private (hasOppositeYConnection? connID)
+      (and (member connID y-connection)
+           (not (member 'none y-connection))))
+
+    ;----------------------------------------------------------------------------------------
+    ; Function: getOppositeYConnection
+    ; Parameters:
+    ;          connID: symbol
+    ;            Use: The y connection of which the opposite connection needs to be found.
+    ; Output:
+    ;       oppositeConnection: symbol
+    ;         Use: The opposite connection of the given connection.
+    ; Use: Get the opposite connection of the given y connection.
+    ;----------------------------------------------------------------------------------------
+    
+    (define/public (getOppositeYConnection connID)
+      (if (connected?)
+          (when (hasOppositeYConnection? connID)
+            (if (eq? connID (car y-connection))
+                (cdr y-connection)
+                (car y-connection)))
+          (error "Switch% getOppositeYConnection: It has no opposite connection connection:" connID)))
+      
     
     ))
 

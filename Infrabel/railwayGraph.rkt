@@ -5,6 +5,7 @@
 
 (provide RailwayGraph%)
 
+;TODO enable non connections and dead ends.
 ;----------------------------------------------
 ; Class: RailwayGraph%
 ; Parameters: n/a
