@@ -68,25 +68,43 @@
     ;        (set! state newstate)
     ;        (error "Switch% initState!: State not initialised or given direction is not correct" newstate)))
 
-    (define/public (initialise! direction)
+    (define/public (initialise! direction state)
       (if (not (initialised?))
-          (if (symbol? direction)
+          (if (and (symbol? direction)
+                   (or (eq? direction connection)
+                       (member direction y-connection)   ; if the direction is none -> there is no specific driving direcion
+                       ('none)))
               (setDirection! direction)
               (error "Switch% initialise!: contract violation, expected a symbol, recieved" direction))
           (error "Switch% initialise!: Object is already initialised you cannot reinitialise the object")))
 
-    ;TODO aanpassen naar ID's van de connecties!!!!
-    ;----------------------------------------
-    ; Funtion: setState!
+    ;---------------------------------------------------------------------
+    ; Function: setState!
+    ; Parameters:
+    ;         ID: symbol
+    ;          Use: One of the y-connection id's
+    ; Output: n/a
+    ; Use: Initialise the switch to be directed to a certain connection.
+    ;---------------------------------------------------------------------
+    
+    (define/public (setState! ID)
+      (if (connected?)
+          (if (member ID y-connection)
+              (set! state ID)
+              (error "Switch% setState!: Given ID does not belong to one of the connections, recieved:" ID))
+          (error "Switch% setState!: The switch is not connected please connect before use.")))
+
+    ;-----------------------------------------------------
+    ; Function: Switch!
     ; Parameters: n/a
     ; Output: n/a
-    ; Use: Change the state of the switch.
-    ;---------------------------------------
-
-    (define/public (setState!)
-      (cond ((initialised?)(error "Switch% initState!: State not initialised" state))
-            ((eq? state 'left)(set! direction 'right))
-            (else(set! state 'right))))
+    ; Use: Switch the switch to the opposite connection.
+    ;-----------------------------------------------------
+    
+    (define/public (switch!)
+      (if (completelyConnected?)
+          (set! state (getOppositeYConnection state))
+          (error "Switch% switch!: Switch is not connected please connect before use.")))
 
     ;--------------------------------------
     ; Function: getState
@@ -102,24 +120,23 @@
           state
           (error "Switch% initState!: State not initialised or given direction is not correct")))
 
-    ;TODO Define direction using one of the ID's
-    ;--------------------------------------------------------
+    ;-------------------------------------------------------------------------------------
     ; Function: setDirection!
     ; Parameters:
-    ;    dir: number
-    ;     Use: The driving direction of the switch.
+    ;         dirID: symbol
+    ;          Use: One of the connections or 'none when there is no specific direction.
     ; Output: n/a
-    ; Use: Setting the dirving direction of the switch.
-    ;--------------------------------------------------------
-    
-    (define/public (setDirection! dir)
-      (if (and (symbol? dir)
-               (or (eq? 'left dir)
-                   (eq? 'right dir)
-                   (eq? 'none dir)))    ;For the direction, numbers 1 and 2 are used.
-          (set! direction dir)
-          (error "Switch% setDirection!: contract violation, symbol 'left or 'right expected received" dir)))
+    ; Use: Set the driving direction of the switch.
+    ;-------------------------------------------------------------------------------------
 
+    (define/public (setDirection! dirID)
+      (if (and (symbol? dirID)
+               (or (eq? 'none dirID)
+                   (eq? connection dirID)
+                   (member dirID y-connection)))
+          (set! direction dirID)
+          (error "Switch% setDirection!: Given direction is not a symbol, not equal to 'none or not a connection of the switch, recieved:" dirID)))
+               
     ;----------------------------------------------------------
     ; Function: getDirection
     ; Parameters: n/a
@@ -239,8 +256,8 @@
 
     (define/public (getConnections)
       (if (connected?)
-      (list connection (car y-connection) (cdr y-connection))
-      (error "Switch getConnections: Switch is not connected, please connect before use.")))
+          (list connection (car y-connection) (cdr y-connection))
+          (error "Switch getConnections: Switch is not connected, please connect before use.")))
 
     ;--------------------------------------------------------------------------------------
     ; Function: getConnection
