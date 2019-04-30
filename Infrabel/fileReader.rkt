@@ -105,7 +105,6 @@
               (error "FileReader% update!: Given key does not belong to a function, can not update the function, recieved:" key))
           (error "FileReader% update!: Contract violation expected a symbol and a procedure, recieved" key function)))
                
-
     ;----------------------------------------------------------------
     ; Function: delete!
     ; Parameters:
@@ -157,7 +156,6 @@
               (error "FileReader%: Hashtable has no such key, recieved:" key))
           (error "FileReader% getKey: Contract violation, expected a symbol recieved:" key)))
           
-
     ;-------------------------------------------------------------------------------
     ; Function: loadRailway
     ; Parameters:
@@ -176,14 +174,13 @@
               (begin
                 (display "It contained one")
                 (send railmanager clearAllTables!)
-                     (parseFile(openFile path))
-                     (info "FileReader% loadRailway: The railway manager contained a railway, this has been deleted and replaced"))
+                (parseFile(openFile path))
+                (info "FileReader% loadRailway: The railway manager contained a railway, this has been deleted and replaced"))
               
               (parseFile (openFile path)))
           
           ((error "FileReader% loadRailway: Object is not initialised, please initialise before use."))))
       
-
     ;----------------------------------------------------------------------
     ; Function: openFile
     ; Parameters:
@@ -292,8 +289,52 @@
               ((getFunc func) objname))
           (error "FileReader callFunction: Contract violation expected two symbols and a list, recieved:" func objname connections)))
 
+    ;------------------------------------------------------------------------------
+    ; Function: validConnection?
+    ; Parameters:
+    ;          id1: symbol
+    ;           Use: One of the connections.
+    ;          id2: symbol
+    ;           Use: One of the connections>
+    ; Output:
+    ;     boolean: boolean
+    ;      Use: Determine if the connection between two railway objects is vaild.
+    ; Use: Determine if the connection between two railway object is vaild. 
+    ;-------------------------------------------------------------------------------
+    
+    (define/private (validConnection? id1 id2)
+      (and (and (and (symbol? id1)
+                     (symbol? id2))
+                
+                (or (and (eq? id1 'none)
+                         (send railmanager isMember? id2))
+                    (and (eq? id2 'none)
+                         (send railmanager isMember? id1))
+                    
+                    (and (send railmanager isMember? id1)
+                         (send railmanager isMember? id2))))
+           
+                (or (and (send railmanager isDetectionblock? id1)
+                         (send railmanager isTrack? id2))
+                    
+                    (and (send railmanager isTrack? id1)
+                         (send railmanager isDetectionblock? id2))
+                    
+                    (and (not (send railmanager isDetectionblock? id1))
+                         (not (send railmanager isDetectionblock? id2)))
+                    
+                    (and (not (send railmanager isSwitch? id1))
+                         (not (send railmanager isDetectionblock? id2)))
+                    
+                    (and (not (send railmanager isDetectionblock? id1))
+                         (not (send railmanager isSwitch? id2)))
 
-    ;TODO herbekijken van de functie + initialisatie van de objecten --> dit kan worden verbeterd. 
+                    (and (not (send railmanager isDetectionblock? id1))
+                         (not (eq? 'none id2)))
+
+                    (and (not (eq? 'none id1))
+                         (not (send railmanager isDetectionblock? id2))))))
+                              
     ;----------------------------------------------------------------------
     ; Function: addBasicFunctions!
     ; Parameters: n/a
@@ -302,40 +343,70 @@
     ;----------------------------------------------------------------------
 
     (define/public (addBasicFunctions!)
-   
+
+      ;------------------------------------------------------------
+      ; Function: n/a
+      ; Parameters:
+      ;         name: symbol
+      ;          Use: The ID of the to be created detectionblock.
+      ; Output: n/a
+      ; Use: Create a detectionblock with the given ID.
+      ;------------------------------------------------------------
+      
       (add! 'block% (lambda (name)
                       (send railmanager createDetectionblock! name)
                       (display "block created")))
-                 
-      (add! 'connectBlockTrack (lambda (block track)
-                                 (if (and (symbol? block)
-                                          (symbol? track))
-                                     (if (and (send railmanager isTrack? track)
-                                              (send railmanager isBlock? block))
-                                         'body
-                                         (error "FileReader% 'connectBlockTrack: Contract violation, expected a track id and a block id recieved" track block))
-                                     (error "FileReader% 'connectBlockTrack: Contract violation, expected symbols recieved" track block))))
-      (add! 'connect! (lambda (con1 con2)
-                        'body))
-      
+
+      (add! 'connect (lambda (id1 id2)
+                       (if (and (symbol? id1)
+                                (symbol? id2))
+                           
+                           (if (validConnection? id1 id2)
+                               'body
+                               (error "FileReader% add! 'connection: No valid connection between the given objects."))
+                           (error "FileReader% add! 'connection: Contract violation expected two symbols, recieved:" id1 id2))))
+
+     (add! 'connectY! (lambda (switchID id1 id2)
+                        (if (and (symbol? switchID)
+                                 (symbol? id1)
+                                 (symbol? id2))
+                            
+                            (if (send railmanager isSwitch? switchID)
+                                
+                                (if (and (validConnection? switchID id1)
+                                         (validConnection? switchID id2))
+                                    
+                                    (let ([switch (send railmanager getSwitch switchID)]
+                                          [obj1 'none]
+                                          [obj2 'none])
+
+                                      (when (not (eq? obj1 'none))
+                                        (set! obj1 (send railmanager getObject id1)))
+                                      (when (not (eq? obj2 'none))
+                                        (set! obj2 (send railmanager getObject id2)))
+
+                                      (cond ((eq? obj1 'none)(send switch setYConnection! 'none id2))
+                                            ((eq? obj2 'none (send switch setYconnection! id1 'none)))
+                                            (else (begin (send switch setYConnection! id1 id2)
+                                                         (send obj1 setConnection! switchID)
+                                                         (send obj2 setConnection! switchID)))))
+                                    
+                                    (error "FileReader% add! 'connectY!: No valid connection between the given objects."))
+                                (error "FileReader% add! 'connectY!: Contract violation expected a switch as parameter, recieved:" switchID))
+                            (error "FileReader% add! 'connectY!: Contract violation expected three symbols, recieved:" switchID id1 id2))))
+                                 
+           
+                                                       
       (add! 'switch% (lambda (name)
                        (if (symbol? name)
-                           ; (list? connections))
+                          
                            (begin
                              (send railmanager createSwitch! name)
-                             (display "switch created")
-                             ;  (send railmanager initSwitch! name (cons 0 0) 'left 'left 10 (length connections))
-                             ;  (send (send railmanager getSwitch name) initconnections! connections))
-                             )
+                             (display "switch created"))
                            (error "FileReader% 'switch%: Contract violation, expected symbol and list recieved:" name))))
 
       (add! 'track% (lambda (name)
                       (send railmanager createTrack! name)
                       (display "track created"))))
-    ;     (send railmanager initTrack! name (cons 0 0) 0 0 0 ))))
-      
-    
-    
-    
     ))
 

@@ -17,11 +17,9 @@
     
     (field
      [length      'uninitialised]
+     [connections 'uninitialised]
      [curve       'uninitialised]
      [detectionID 'uninitialised])
-     (inherit-field connections
-                   maximalConnections)
-
 
     ;-----------------------------------------------------------------
     ; Function: initialised?
@@ -37,6 +35,112 @@
            (not (eq? detectionID 'uninitialised))))
     (augment initialised?)
 
+    ;-------------------------------------------------------------------------------------------------------
+    ; Function: setConnections!
+    ; Parameters:
+    ;       con1: symbol
+    ;        Use: One of the connections
+    ;       con2: symbol
+    ;        Use: One of the connections
+    ; Output: n/a
+    ; Use: Add connections to the track, the connections are the ID of the to be connected railway objects.
+    ;-------------------------------------------------------------------------------------------------------
+    
+    (define/public (setConnections! con1 con2)
+      (if (initialised?)
+          (if (and (symbol? con1)
+                   (symbol? con2))
+              (set! connections (cons con1 con2))
+              (error "Track% setConnections!: Contract violation, expected two symbols, recieved:" con1 con2))
+          (error "Track% setConnections!: Object is not initialised, please initialise before use")))
+
+    ;-------------------------------------------------------------------------
+    ; Function: setConnection!
+    ; Parameters:
+    ;        con: symbol
+    ;         Use: The connection that needs to be added.
+    ; Output: n/a
+    ; Use: Add a single connection is there is room for an extra connection.
+    ;-------------------------------------------------------------------------
+    
+    (define/public (setConnection! con)
+      (if (initialised?)
+          (if (symbol? con)
+              (if (null? (getConnections))
+                  (setConnections! con 'none)
+                  (if (eq? 'none (car (getConnections)))
+                      (setConnections! (cons (con (cdr (getConnections)))))
+                      (if (eq? 'none (cdr (getConnections)))
+                          (setConnections! (cons (car (getConnections)) con))
+                          (error "Track% setConnection!: There are no more connections available, please delete a connection before adding one."))))
+              (error "Track% setConnection!: Contract violation expected a symbol, recieved:" con))
+          (error "Track% setConnection!: Object is not initialised, please initialise before use.")))
+
+    ;------------------------------------------------------------------
+    ; Function: getConnecions
+    ; Parameters: n/a
+    ; Output:
+    ;      connections: pair<symbol>
+    ;        Use: The pair that contains the connections of the track.
+    ; Use: Get the connections of the track.
+    ;------------------------------------------------------------------
+    
+    (define/public (getConnections)
+      (if (initialised?)
+          connections
+          (error "Track% getConnections!: Object is not initialised, please initialse before use")))
+
+    ;---------------------------------------------------
+    ; Function: hasConnections?
+    ; Parameters: n/a
+    ; Output:
+    ;     boolean: boolean
+    ;       Use: Determine if there are connections.
+    ; Use: Determine if the track has connections.
+    ;---------------------------------------------------
+    
+    (define/public (hasConnections?)
+      (if (initialised?)
+          (or (not (null? (getConnections)))
+              (not (and (eq? 'none (car (getConnections)))
+                        (eq? 'none (cdr (getConnections))))))
+          (error "Track% hasConnections?: Object is not initialised, please initialise before use")))
+
+    ;-----------------------------------------------------------------
+    
+    ; Function: deleteConnection!
+    ; Parameters:
+    ;       con: symbol
+    ;        Use: ID of the connection that needs to be deleted.
+    ;       arg: symbol
+    ;        Use: ID of the connection that needs to be deleted.
+    ; Output: n/a
+    ; Use: Delete one of two connections from the connection lists.
+    ;-----------------------------------------------------------------
+    
+    (define/public (deleteConnection! con . arg)
+      (if (initialised?)
+          (if (not (null? (getConnections)))
+              (if (null? arg)
+                  (if (member con (getConnections))
+                  
+                      (cond ((eq? (car (getConnections)) con)(setConnections!  'none (cdr (getConnections))))
+                            ((eq? (cdr (getConnections)) con)(setConnections! (car (getConnections)) 'none)))
+                      (error "Track% deleteConnection!: Given ID does not belong to the track's connections, recieved:" con))
+
+                  (let ([atom? (lambda (x)
+                                 (and (not (null? x))
+                                      (not (pair? x))))])
+                    (if (atom? arg)
+                        (if (and (member con)
+                                 (member arg))
+                            (setConnections! 'none 'none)
+                            (error "Track% deleteConnection!: Given ID's does not belong to the track's connections, recieved:" con arg))
+                        (error "Track% deleteConnecion!: Contract violation expected two or one arguments, recieved:" con arg))))
+                        
+              (error "Track% deleteConnection!: Object has no connections, no connections can be deleted."))
+          (error "Track% deleteConnection!: Object is not initialised, please initialise before use.")))
+          
     ;--------------------------------------------------------------------
     ; Function: getDetectionblockID
     ; Parameters: n/a
@@ -79,7 +183,6 @@
       (if (initialised?)
           (set! detectionID 'none)
           (error "Track% deleteDetectionblock!: object is not initialised please initialise before use")))
-
 
     ;--------------------------------------------------------
     ; Function: hasDetectionblock?
