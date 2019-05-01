@@ -16,9 +16,9 @@
     (super-new)
     
     (field
-     [length      'uninitialised]
+  ;   [length      'uninitialised]
      [connections 'uninitialised]
-     [curve       'uninitialised]
+  ;   [curve       'uninitialised]
      [detectionID 'uninitialised])
 
     ;-----------------------------------------------------------------
@@ -29,11 +29,21 @@
     ; Use: Predicate to determine wheter all fields are initialised.
     ;-----------------------------------------------------------------
 
-    (define (initialised?)
-      (and (not (eq? length 'uninitialised))
-           (not (eq? curve  'uninitialised))
-           (not (eq? detectionID 'uninitialised))))
-    (augment initialised?)
+    (define (init?)
+  ;    (and (not (eq? length 'uninitialised))
+  ;         (not (eq? curve  'uninitialised))
+           (not (eq? detectionID 'uninitialised)))
+    (augment init?)
+
+    (define (init!)
+      (setDetectionblockID! 'none))
+    (augment init!)
+
+    (define/public (initialised?)
+      (init?))
+
+    (define/public (initialise!)
+      (init!))
 
     ;-------------------------------------------------------------------------------------------------------
     ; Function: setConnections!
@@ -206,10 +216,10 @@
     ; Use: Set the length of the track.
     ;--------------------------------------
 
-    (define/public (setLength! numb)
-      (if (number? numb)
-          (set! length numb)
-          (error "Track% setLength!: contract violation expected number, received" numb)))
+  ;  (define/public (setLength! numb)
+  ;    (if (number? numb)
+  ;        (set! length numb)
+  ;        (error "Track% setLength!: contract violation expected number, received" numb)))
 
     ;-------------------------------------
     ; Function: getLength
@@ -220,10 +230,10 @@
     ; Use: Get the length of the track.
     ;-------------------------------------
     
-    (define/public (getLength)
-      (if (eq? length 'uninitialised)
-          (error "Track% getLength: length is not initialised, please initialise before use")
-          (length)))
+   ; (define/public (getLength)
+   ;   (if (eq? length 'uninitialised)
+   ;       (error "Track% getLength: length is not initialised, please initialise before use")
+   ;       (length)))
 
     ;-------------------------------------------------------------
     ; Function: setCurve!
@@ -234,10 +244,10 @@
     ; Use: Set the size of the curve and the direction.
     ;-------------------------------------------------------------
 
-    (define/public (setCurve! cur)
-      (if (number? cur)
-          (set! curve cur)
-          (error "Track% setCurve!: contract violation, number is expected, received" cur)))
+ ;   (define/public (setCurve! cur)
+ ;     (if (number? cur)
+ ;         (set! curve cur)
+  ;        (error "Track% setCurve!: contract violation, number is expected, received" cur)))
 
     ;--------------------------------------------------
     ; Function: getCurve
@@ -248,8 +258,8 @@
     ; Use: Get the size of the curve and it's direction.
     ;---------------------------------------------------
 
-    (define/public (getCurve)
-      (if (eq? curve 'uninitialised)
-          (error "Track% getCurve: curve is not initialised, please initialised before use")
-          (curve)))
+ ;   (define/public (getCurve)
+ ;     (if (eq? curve 'uninitialised)
+ ;         (error "Track% getCurve: curve is not initialised, please initialised before use")
+ ;         (curve)))
     ))

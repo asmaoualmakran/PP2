@@ -314,26 +314,26 @@
                     (and (send railmanager isMember? id1)
                          (send railmanager isMember? id2))))
            
-                (or (and (send railmanager isDetectionblock? id1)
-                         (send railmanager isTrack? id2))
+           (or (and (send railmanager isDetectionblock? id1)
+                    (send railmanager isTrack? id2))
                     
-                    (and (send railmanager isTrack? id1)
-                         (send railmanager isDetectionblock? id2))
+               (and (send railmanager isTrack? id1)
+                    (send railmanager isDetectionblock? id2))
                     
-                    (and (not (send railmanager isDetectionblock? id1))
-                         (not (send railmanager isDetectionblock? id2)))
+               (and (not (send railmanager isDetectionblock? id1))
+                    (not (send railmanager isDetectionblock? id2)))
                     
-                    (and (not (send railmanager isSwitch? id1))
-                         (not (send railmanager isDetectionblock? id2)))
+               (and (not (send railmanager isSwitch? id1))
+                    (not (send railmanager isDetectionblock? id2)))
                     
-                    (and (not (send railmanager isDetectionblock? id1))
-                         (not (send railmanager isSwitch? id2)))
+               (and (not (send railmanager isDetectionblock? id1))
+                    (not (send railmanager isSwitch? id2)))
 
-                    (and (not (send railmanager isDetectionblock? id1))
-                         (not (eq? 'none id2)))
+               (and (not (send railmanager isDetectionblock? id1))
+                    (not (eq? 'none id2)))
 
-                    (and (not (eq? 'none id1))
-                         (not (send railmanager isDetectionblock? id2))))))
+               (and (not (eq? 'none id1))
+                    (not (send railmanager isDetectionblock? id2))))))
                               
     ;----------------------------------------------------------------------
     ; Function: addBasicFunctions!
@@ -357,45 +357,14 @@
                       (send railmanager createDetectionblock! name)
                       (display "block created")))
 
-      (add! 'connect (lambda (id1 id2)
-                       (if (and (symbol? id1)
-                                (symbol? id2))
-                           
-                           (if (validConnection? id1 id2)
-                               'body
-                               (error "FileReader% add! 'connection: No valid connection between the given objects."))
-                           (error "FileReader% add! 'connection: Contract violation expected two symbols, recieved:" id1 id2))))
-
-     (add! 'connectY! (lambda (switchID id1 id2)
-                        (if (and (symbol? switchID)
-                                 (symbol? id1)
-                                 (symbol? id2))
-                            
-                            (if (send railmanager isSwitch? switchID)
-                                
-                                (if (and (validConnection? switchID id1)
-                                         (validConnection? switchID id2))
-                                    
-                                    (let ([switch (send railmanager getSwitch switchID)]
-                                          [obj1 'none]
-                                          [obj2 'none])
-
-                                      (when (not (eq? obj1 'none))
-                                        (set! obj1 (send railmanager getObject id1)))
-                                      (when (not (eq? obj2 'none))
-                                        (set! obj2 (send railmanager getObject id2)))
-
-                                      (cond ((eq? obj1 'none)(send switch setYConnection! 'none id2))
-                                            ((eq? obj2 'none (send switch setYconnection! id1 'none)))
-                                            (else (begin (send switch setYConnection! id1 id2)
-                                                         (send obj1 setConnection! switchID)
-                                                         (send obj2 setConnection! switchID)))))
-                                    
-                                    (error "FileReader% add! 'connectY!: No valid connection between the given objects."))
-                                (error "FileReader% add! 'connectY!: Contract violation expected a switch as parameter, recieved:" switchID))
-                            (error "FileReader% add! 'connectY!: Contract violation expected three symbols, recieved:" switchID id1 id2))))
-                                 
-           
+      ;---------------------------------------------------
+      ; Function: n/a
+      ; Parameters:
+      ;        name: symbol
+      ;         Use: The ID of the to be created switch.
+      ; Output: n/a
+      ; Use: Create a switch with the given ID.
+      ;---------------------------------------------------
                                                        
       (add! 'switch% (lambda (name)
                        (if (symbol? name)
@@ -405,8 +374,109 @@
                              (display "switch created"))
                            (error "FileReader% 'switch%: Contract violation, expected symbol and list recieved:" name))))
 
+      ;-----------------------------------------------------
+      ; Function: n/a
+      ; Parameters:
+      ;         name: symbol
+      ;          Use: The ID of the to be created track.
+      ; Output: n/a
+      ; Use: Create a track with the given ID.
+      ;-----------------------------------------------------
+
       (add! 'track% (lambda (name)
                       (send railmanager createTrack! name)
-                      (display "track created"))))
-    ))
+                      (display "track created")))
+
+      ;-------------------------------------------------------------------------------------
+      ; Function: n/a
+      ; Parameters:
+      ;        id1: symbol
+      ;         Use: The identifiction of one of the railway objects, or the symbol none.
+      ;        id2: symbol
+      ;         Use: The identification of one of the railway objects, or the symbol none.
+      ; Output: n/a
+      ; Use: Connect two railway objects, or creating a dead end on the railway object.
+      ;-------------------------------------------------------------------------------------
+      
+      (add! 'connect (lambda (id1 id2)
+                       (if (and (symbol? id1)
+                                (symbol? id2))
+                           
+                           (if (validConnection? id1 id2)
+                               (let ([obj1 'none]
+                                     [obj2 'none])
+                                 (when (send railmanager isMember? id1)
+                                   (set! obj1 (send railmanager getObject id1)))
+                                 (when (send railmanager isMember? id2)
+                                   (set! obj2 (send railmanager getObject id2)))
+
+                                 (cond
+                                   ((and (eq? obj1 'none)
+                                         (or (send railmanager isSwitch? id2))
+                                         (send railmanager isTrack? id2)) (send obj2 setConnection! id1))
+
+                                   ((and (eq? obj2 'none)
+                                         (or (send railmanager isSwitch? id1)
+                                             (send railmanager isTrack? id1))) (send obj1 setConnection! id2))
+
+                                   ((and (send railmanager isDetectionblock? id1)
+                                         (send railmanager isSwitch? id2)) (begin (send obj1 setTrackID! id2)
+                                                                                  (send obj2 SetDetectionblockID! id1)))
+                                   ((and (send railmanager isDetectionblock? id2)
+                                         (send railmanager isSwitch? id1)) (begin (send obj1 setTrackID! id1)
+                                                                                  (send obj2 SetDetectionblockID! id2)))
+                                       
+                                   (else (begin (send obj1 setConnection! id2)
+                                                (send obj2 setConnection! id1)))))
+                               (error "FileReader% add! 'connection: No valid connection between the given objects."))
+                           (error "FileReader% add! 'connection: Contract violation expected two symbols, recieved:" id1 id2))))
+
+      ;---------------------------------------------------------------------------------------------------------
+      ; Function: n/a
+      ; Parameters:
+      ;         switchID: symbol
+      ;           Use: The identification of the switch.
+      ;         id1: symbol
+      ;          Use: The identification of the railway object that needs to be connected or the symbol none.
+      ;         id2: symbol
+      ;          Use: The identification of the railway object that needs to be connected or the symbol none.
+      ; Output: n/a
+      ; Use: Connecting two railway objects to the splitted connection of the switch, or create a dead end.
+      ;----------------------------------------------------------------------------------------------------------
+      
+      (add! 'connectY! (lambda (switchID id1 id2)
+
+                         (if (and (symbol? switchID)
+                                  (symbol? id1)
+                                  (symbol? id2))
+                            
+                             (if (send railmanager isSwitch? switchID)
+                                
+                                 (if (and (validConnection? switchID id1)
+                                          (validConnection? switchID id2))
+                                    
+                                     (let ([switch (send railmanager getSwitch switchID)]
+                                           [obj1 'none]
+                                           [obj2 'none])
+
+                                       (when (send railmanager isMember? id1)
+                                         (set! obj1 (send railmanager getObject id1)))
+                                       (when (send railmanager isMember? id2)
+                                         (set! obj2 (send railmanager getObject id2)))
+
+                                       (cond
+                                         
+                                         ((eq? obj1 'none)(send switch setYConnection! 'none id2))
+                                         ((eq? obj2 'none (send switch setYconnection! id1 'none)))
+
+                                         (else (begin (send switch setYConnection! id1 id2)
+                                                      (send obj1 setConnection! switchID)
+                                                      (send obj2 setConnection! switchID)))))
+                                    
+                                     (error "FileReader% add! 'connectY!: No valid connection between the given objects."))
+                                 (error "FileReader% add! 'connectY!: Contract violation expected a switch as parameter, recieved:" switchID))
+                             (error "FileReader% add! 'connectY!: Contract violation expected three symbols, recieved:" switchID id1 id2))))
+                                 
+
+    )))
 

@@ -1,7 +1,7 @@
 #lang racket
 
 (require racket/class data/heap)
-(require "infrastructure.rkt")
+;(require "infrastructure.rkt")
 
 ; NOTE operations on binary heaps are not thread-safe
 ; NOTE overerven van infrastructure
@@ -21,6 +21,9 @@
    
     (struct reservation (id [priority #:mutable]))  ; a struct defineing a reservation
 
+    (define/public (initialise!)
+      (initReservations!))
+
     ;-------------------------------------------------------
     ; Function: initialised?
     ; Parameters: n/a
@@ -31,11 +34,10 @@
     ;-------------------------------------------------------
     
     (define/public (initialised?)
-      (and (not(eq? ID 'uninitialised))
-           (not(eq? trackID 'uninitialised))
-           (not(eq? reservations 'uninitialised))
-           (not(eq? maxReservations 'uninitialised))
-           (not(eq? length 'uninitialised))))
+      (and 
+           (not(eq? reservations 'uninitialised))))
+      ;     (not(eq? maxReservations 'uninitialised))
+       ;    (not(eq? length 'uninitialised))))
 
     ;-------------------------------------------------------------------------
     ; Function: setID!

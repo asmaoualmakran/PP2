@@ -35,7 +35,7 @@
     ; Use: The number of the maximal connections the object can have.
     ;---------------------------------------------------------------------
     
-    (define maximalConnections (generic Infrastructure% getMaximalConnections))
+;    (define maximalConnections (generic Infrastructure% getMaximalConnections))
 
 
     ;----------------------------------------------------
@@ -47,10 +47,13 @@
     ; Use: Determine if the object is initialised.
     ;----------------------------------------------------
     
-    (define (initialised?)
+    (define (init?)
       (and (not(eq? state 'uninitialised))
            (not(eq? direction 'uninitialised))))
-    (augment initialised?)
+    (augment init?)
+
+    (define/public (initialised?)
+      (init?))
 
     ;-------------------------------------------
     ; Function: initState!
@@ -68,15 +71,15 @@
     ;        (set! state newstate)
     ;        (error "Switch% initState!: State not initialised or given direction is not correct" newstate)))
 
-    (define/public (initialise! direction state)
-      (if (not (initialised?))
-          (if (and (symbol? direction)
-                   (or (eq? direction connection)
-                       (member direction y-connection)   ; if the direction is none -> there is no specific driving direcion
-                       ('none)))
-              (setDirection! direction)
-              (error "Switch% initialise!: contract violation, expected a symbol, recieved" direction))
-          (error "Switch% initialise!: Object is already initialised you cannot reinitialise the object")))
+ ;   (define/public (initialise! direction state)
+ ;     (if (not (initialised?))
+ ;         (if (and (symbol? direction)
+ ;                  (or (eq? direction connection)
+ ;                      (member direction y-connection)   ; if the direction is none -> there is no specific driving direcion
+ ;                      ('none)))
+ ;             (setDirection! direction)
+ ;             (error "Switch% initialise!: contract violation, expected a symbol, recieved" direction))
+ ;         (error "Switch% initialise!: Object is already initialised you cannot reinitialise the object")))
 
     ;---------------------------------------------------------------------
     ; Function: setState!
