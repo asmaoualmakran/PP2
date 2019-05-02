@@ -16,9 +16,9 @@
     (super-new)
     
     (field
-  ;   [length      'uninitialised]
+     ;   [length      'uninitialised]
      [connections 'uninitialised]
-  ;   [curve       'uninitialised]
+     ;   [curve       'uninitialised]
      [detectionID 'uninitialised])
 
     ;-----------------------------------------------------------------
@@ -30,20 +30,25 @@
     ;-----------------------------------------------------------------
 
     (define (init?)
-  ;    (and (not (eq? length 'uninitialised))
-  ;         (not (eq? curve  'uninitialised))
-           (not (eq? detectionID 'uninitialised)))
+      ;    (and (not (eq? length 'uninitialised))
+      ;         (not (eq? curve  'uninitialised))
+      (and (not (eq? detectionID 'uninitialised))
+           (not (eq? connections 'uninitialised)))
+      )
     (augment init?)
 
     (define (init!)
-      (setDetectionblockID! 'none))
+      (init!))
     (augment init!)
 
     (define/public (initialised?)
       (init?))
 
     (define/public (initialise!)
-      (init!))
+      (init!)
+      (setDetectionblockID! 'none)
+      (set! connections (cons 'none 'none))
+      )
 
     ;-------------------------------------------------------------------------------------------------------
     ; Function: setConnections!
@@ -57,12 +62,11 @@
     ;-------------------------------------------------------------------------------------------------------
     
     (define/public (setConnections! con1 con2)
-      (if (initialised?)
-          (if (and (symbol? con1)
-                   (symbol? con2))
-              (set! connections (cons con1 con2))
-              (error "Track% setConnections!: Contract violation, expected two symbols, recieved:" con1 con2))
-          (error "Track% setConnections!: Object is not initialised, please initialise before use")))
+     
+      (if (and (symbol? con1)
+               (symbol? con2))
+          (set! connections (cons con1 con2))
+          (error "Track% setConnections!: Contract violation, expected two symbols, recieved:" con1 con2)))
 
     ;-------------------------------------------------------------------------
     ; Function: setConnection!
@@ -79,9 +83,9 @@
               (if (null? (getConnections))
                   (setConnections! con 'none)
                   (if (eq? 'none (car (getConnections)))
-                      (setConnections! (cons (con (cdr (getConnections)))))
+                      (setConnections! con (car (getConnections)))
                       (if (eq? 'none (cdr (getConnections)))
-                          (setConnections! (cons (car (getConnections)) con))
+                          (setConnections! con (cdr (getConnections)))
                           (error "Track% setConnection!: There are no more connections available, please delete a connection before adding one."))))
               (error "Track% setConnection!: Contract violation expected a symbol, recieved:" con))
           (error "Track% setConnection!: Object is not initialised, please initialise before use.")))
@@ -117,7 +121,6 @@
           (error "Track% hasConnections?: Object is not initialised, please initialise before use")))
 
     ;-----------------------------------------------------------------
-    
     ; Function: deleteConnection!
     ; Parameters:
     ;       con: symbol
@@ -176,11 +179,8 @@
     ;----------------------------------------------------------------------------
 
     (define/public (setDetectionblockID! id)
-      (if (initialised?)
-          (if (not (eq? id 'none))     
-              (set! detectionID id)
-              (error "Track% setDetectionblock!: Invalid name id, must be different from 'none given" id))
-          (error "Track% setDetectionblock!: object is not initialised please initialise before use")))
+          (when (symbol? id)
+            (set! detectionID id)))
 
     ;----------------------------------------------------------------
     ; Function: deleteDetectionblock!
@@ -216,10 +216,10 @@
     ; Use: Set the length of the track.
     ;--------------------------------------
 
-  ;  (define/public (setLength! numb)
-  ;    (if (number? numb)
-  ;        (set! length numb)
-  ;        (error "Track% setLength!: contract violation expected number, received" numb)))
+    ;  (define/public (setLength! numb)
+    ;    (if (number? numb)
+    ;        (set! length numb)
+    ;        (error "Track% setLength!: contract violation expected number, received" numb)))
 
     ;-------------------------------------
     ; Function: getLength
@@ -230,10 +230,10 @@
     ; Use: Get the length of the track.
     ;-------------------------------------
     
-   ; (define/public (getLength)
-   ;   (if (eq? length 'uninitialised)
-   ;       (error "Track% getLength: length is not initialised, please initialise before use")
-   ;       (length)))
+    ; (define/public (getLength)
+    ;   (if (eq? length 'uninitialised)
+    ;       (error "Track% getLength: length is not initialised, please initialise before use")
+    ;       (length)))
 
     ;-------------------------------------------------------------
     ; Function: setCurve!
@@ -244,10 +244,10 @@
     ; Use: Set the size of the curve and the direction.
     ;-------------------------------------------------------------
 
- ;   (define/public (setCurve! cur)
- ;     (if (number? cur)
- ;         (set! curve cur)
-  ;        (error "Track% setCurve!: contract violation, number is expected, received" cur)))
+    ;   (define/public (setCurve! cur)
+    ;     (if (number? cur)
+    ;         (set! curve cur)
+    ;        (error "Track% setCurve!: contract violation, number is expected, received" cur)))
 
     ;--------------------------------------------------
     ; Function: getCurve
@@ -258,8 +258,8 @@
     ; Use: Get the size of the curve and it's direction.
     ;---------------------------------------------------
 
- ;   (define/public (getCurve)
- ;     (if (eq? curve 'uninitialised)
- ;         (error "Track% getCurve: curve is not initialised, please initialised before use")
- ;         (curve)))
+    ;   (define/public (getCurve)
+    ;     (if (eq? curve 'uninitialised)
+    ;         (error "Track% getCurve: curve is not initialised, please initialised before use")
+    ;         (curve)))
     ))

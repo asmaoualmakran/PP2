@@ -359,6 +359,20 @@
 
                          (and (not (eq? 'none id1))
                               (not (send railmanager isDetectionblock? id2))))))
+
+  ;  (define/private (validConnection? id1 id2)
+   ;   (and (and (symbol? id1)
+    ;            (symbol? id2))
+     ;      (or (and (send railmanager isDetectionblock? id1)
+      ;              (send railmanager isTrack? id2))
+       ;        (and (send railmanager isTrack? id1)
+        ;            (send railmanager isDetectionblock? id2))
+         ;      (and (send railmanager isSwitch? id1)
+          ;          (send railmanager isTrack? id2))
+           ;    (and (send railmanager isTrack? id1)
+            ;        (send railmanager isSwitch? id2)))))
+              
+                    
                               
               ;----------------------------------------------------------------------
               ; Function: addBasicFunctions!
@@ -379,8 +393,10 @@
                 ;------------------------------------------------------------
       
                 (add! 'block% (lambda (name)
-                                (display name)
+                                (when (symbol? name)
+                                
                                 (send railmanager createDetectionblock! name)
+                                (send(send railmanager getDetectionblock name) initialise!))
                                 (display "block created")))
 
                 ;---------------------------------------------------
@@ -393,13 +409,12 @@
                 ;---------------------------------------------------
                                                        
                 (add! 'switch% (lambda (name)
-                                 (if (symbol? name)
-                          
-                                     (begin
-                                       (display name)
+                                 (when (symbol? name)
+
                                        (send railmanager createSwitch! name)
-                                       (display "switch created"))
-                                     (error "FileReader% 'switch%: Contract violation, expected symbol and list recieved:" name))))
+                                       (send (send railmanager getSwitch name) initialise!))))
+                                       
+                                    
 
                 ;-----------------------------------------------------
                 ; Function: n/a
@@ -411,8 +426,10 @@
                 ;-----------------------------------------------------
 
                 (add! 'track% (lambda (name)
+                                (when (symbol? name)
                                 (send railmanager createTrack! name)
-                                (display "track created")))
+                                (send (send railmanager getTrack name) initialise!))))
+                                
 
                 ;-------------------------------------------------------------------------------------
                 ; Function: n/a
@@ -447,11 +464,11 @@
                                                         (send railmanager isTrack? id1))) (send obj1 setConnection! id2))
 
                                               ((and (send railmanager isDetectionblock? id1)
-                                                    (send railmanager isSwitch? id2)) (begin (send obj1 setTrackID! id2)
-                                                                                             (send obj2 SetDetectionblockID! id1)))
+                                                    (send railmanager isTrack? id2)) (begin (send obj1 setTrackID! id2)
+                                                                                             (send obj2 setDetectionblockID! id1)))
                                               ((and (send railmanager isDetectionblock? id2)
-                                                    (send railmanager isSwitch? id1)) (begin (send obj1 setTrackID! id1)
-                                                                                             (send obj2 SetDetectionblockID! id2)))
+                                                    (send railmanager isTrack? id1)) (begin (send obj2 setTrackID! id1)
+                                                                                             (send obj1 setDetectionblockID! id2)))
                                        
                                               (else (begin (send obj1 setConnection! id2)
                                                            (send obj2 setConnection! id1)))))

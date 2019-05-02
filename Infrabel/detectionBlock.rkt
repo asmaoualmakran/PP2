@@ -22,6 +22,7 @@
     (struct reservation (id [priority #:mutable]))  ; a struct defineing a reservation
 
     (define/public (initialise!)
+      (setMaxReservations! 10)
       (initReservations!))
 
     ;-------------------------------------------------------

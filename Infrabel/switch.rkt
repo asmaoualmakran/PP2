@@ -55,6 +55,15 @@
     (define/public (initialised?)
       (init?))
 
+    (define (init!)
+      (init!))
+    (augment init!)
+
+    (define/public (initialise!)
+      (setConnections! 'none 'none 'none)
+      (setState! 'none)
+      (init!))
+
     ;-------------------------------------------
     ; Function: initState!
     ; Parameters:
@@ -186,8 +195,7 @@
     ;------------------------------------------------------------------------------------------------
     
     (define/public (setConnection! conn)
-      (if (and(symbol? conn)
-              (not (eq? conn 'uninitialised)))
+      (if (symbol? conn)
           (set! connection conn)
           (error "Switch% setConnection!: Contract violation expected a symbol, recieved:" conn)))
 
@@ -204,9 +212,7 @@
     
     (define/public (setYConnection! conn1 conn2)
       (if (and (symbol? conn1)
-               (symbol? conn2)
-               (not (eq? conn1 'uninitialised))
-               (not (eq? conn2 'uninitialised)))
+               (symbol? conn2))
           (set! y-connection (cons conn1 conn2))
           (error "Switch% setYConnection!: Contract violation expected two symbols, recieved:" conn1 conn2)))
 
@@ -245,8 +251,8 @@
     ;------------------------------------------------------------------------
     
     (define/public (connected?)
-      (not (eq? connection 'uninitialised)
-           (eq? y-connection 'uninitialised)))
+     (and (not (eq? connection 'uninitialised))
+           (not (eq? y-connection 'uninitialised))))
 
     ;------------------------------------------------------------------------------
     ; Function: getConnections
@@ -258,9 +264,9 @@
     ;------------------------------------------------------------------------------
 
     (define/public (getConnections)
-      (if (connected?)
-          (list connection (car y-connection) (cdr y-connection))
-          (error "Switch getConnections: Switch is not connected, please connect before use.")))
+   ;   (if (connected?)
+          (list connection (car y-connection) (cdr y-connection)))
+    ;      (error "Switch getConnections: Switch is not connected, please connect before use.")))
 
     ;--------------------------------------------------------------------------------------
     ; Function: getConnection
@@ -272,9 +278,9 @@
     ;--------------------------------------------------------------------------------------
 
     (define/public (getConnection)
-      (if (connected?)
-          connection
-          (error "Switch% getConnection: Switch is not connected, please connect before use.")))
+ ;     (if (connected?)
+          connection)
+  ;        (error "Switch% getConnection: Switch is not connected, please connect before use.")))
 
     ;----------------------------------------------------------------------------------------------------
     ; Function: getYConnection
@@ -286,9 +292,9 @@
     ;----------------------------------------------------------------------------------------------------
     
     (define/public (getYConnection)
-      (if (connected?)
-          y-connection
-          (error "Switch% getYConnection: Switch is not connected, please connect before use.")))
+  ;    (if (connected?)
+          y-connection)
+   ;       (error "Switch% getYConnection: Switch is not connected, please connect before use.")))
 
     ;-----------------------------------------------------------------------------------------
     ; Function: hasOppositeYconnection?
