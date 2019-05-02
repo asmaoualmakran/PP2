@@ -68,7 +68,7 @@
     ;----------------------------------------------------------
     
     (define/public (setID! id)
-      (if (not(init?))      ;ID can only be set at initialisation
+      (if (eq? ID 'uninitialised)      ;ID can only be set at initialisation
           (set! ID id)
           (error "Infrastructure% setID!: ID is already initialised" ID)))
     

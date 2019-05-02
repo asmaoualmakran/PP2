@@ -10,20 +10,26 @@
 
 (define gui (new GUI%))
 
+
 (startInfrabel)
-(startNmbs railwayManager railwayGraph)
+;(startNmbs railwayManager railwayGraph)
+
+(send railwayManager setTrainManager! trainManager)
+(send trainManager setRailwayManager! railwayManager)
+(send railwayManager clearAllTables!)
+(send fileReader loadRailway "railwaySetup\\test.txt")
 
 
 
-(send trainManager loadRailway! railwayManager)
-(send railwayManager createTrack! 'T1)
-(send railwayManager createTrack! 'T2)
-(send railwayManager createSwitch! 'S1)
-(send railwayManager createDetectionblock! 'B1)
+;(send trainManager loadRailway! railwayManager)
+;(send railwayManager createTrack! 'T1);
+;(send railwayManager createTrack! 'T2)
+;(send railwayManager createSwitch! 'S1)
+;(send railwayManager createDetectionblock! 'B1)
 
 
-(send gui updateTracks)
-(send gui updateSwitches)
-(send gui updateDetectionblocks)
+;(send gui updateTracks)
+;(send gui updateSwitches)
+;(send gui updateDetectionblocks)
 
 

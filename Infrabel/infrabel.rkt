@@ -3,17 +3,21 @@
 (require "railwayManager.rkt")
 (require "railwayGraph.rkt")
 (require "securityProtocol.rkt")
+(require "fileReader.rkt")
 
 (provide railwayManager)
 (provide railwayGraph)
 (provide startInfrabel)
+(provide fileReader)
 
 (define railwayManager (new RailwayManager%))
 (define railwayGraph (new RailwayGraph%))
-(define securityProtocol(new SecurityProtocol%))
+(define fileReader (new FileReader%))
+;;(define securityProtocol(new SecurityProtocol%))
 
 (define (startInfrabel)
 (send railwayGraph initialise! railwayManager)
 ;(define graph (send railwayGraph getGraph))
 (send railwayManager setGraph! (send railwayGraph getGraph))
-(send securityProtocol initialise! railwayManager))
+(send fileReader initialise! railwayManager))
+;(send securityProtocol initialise! railwayManager))
