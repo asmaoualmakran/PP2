@@ -173,7 +173,6 @@
           
           (if (send railmanager containsRailway?)
               (begin
-                (display "It contained one")
                 (send railmanager clearAllTables!)
                 (parseFile(openFile path))
                 (info "FileReader% loadRailway: The railway manager contained a railway, this has been deleted and replaced"))
@@ -212,7 +211,6 @@
     ;------------------------------------------------------------
 
     (define/private (parseFile lst)
-      (display "parsing started")
       (if (initialised?)
           (if (and (list? lst)
                    (not (null? lst)))
@@ -231,38 +229,13 @@
     ;----------------------------------------------------------------------------
     
     (define/private (parseList lst)
-      (display "list gets parsed")
-      (newline)
-      (display lst)
+
       (if (list? lst)
           (if (not(null? lst))
               (if (<= (length lst) maxCallLength)    ; allow max 4 elements in the list  (make it a field)
                   (let ([func 'null]    ; saving the func and pms
                         [pm   'null]
                         [pmls '()])
-                
-                    ;     (for ([i lst])    
-              
-                    ;      (let ([str (cadr i)]) ; (string->symbol str)])
-                        
-                       
-                    ;       (if (symbol? str)
-                       
-                    ;          (if (= idx 0)            ; The first element must be an registered function
-                    ;
-                    ;                 (if (member? str)
-                    ;                    
-                    ;                      (set! func str)
-                    ;              
-                    ;                  (error "FileReader% parseList: Given function does not exist, please add to the table, recieved:" str))
-                    ;             
-                    ;             (set! pm str))        ; Beginning from the second element is one of the pm's
-                          
-                    ;      
-                    ;       (if (list? str)
-                    ;          (set! pmls str)
-                    ;         (error "FileReader% parseList: Expected a symbol or a list, recieved" str)))
-                    ; (set! idx (+ idx 1))))
 
                     (for ([i lst]
                           [idx (in-range 0 (length lst))])
@@ -277,17 +250,8 @@
 
                             (if (= idx 1)
                                 (set! pm str)
-                                (begin
-                                  (newline)
-                                  (display "appended: ")
-                                  (display str)
-                                  (display " pmls: ")
-                                  (display pmls)
-                                  (newline)
-                                  (set! pmls (append pmls (list str)))
-                                  (display " pmls: ")
-                                  (display pmls)
-                                  (newline))))))
+
+                                  (set! pmls (append pmls (list str)))))))
                     
                     (if (null? pmls)     
                         (callFunction func pm)     
@@ -307,11 +271,7 @@
     ;----------------------------------------------------------------------------------------
 
     (define/private (callFunction func objname . args)
-                
-                
-      (display "connections: ")
-      (display args)
-      (newline)
+
       (if (<= (length args) (- maxCallLength 2))   ;two positions are already in use by function and mandatory pm
           (if (and (symbol? func)
                    (symbol? objname))
@@ -319,7 +279,6 @@
                   (let ([connections (car args)])
                     (cond ((=(length connections)1) ((getFunc func) objname (car connections)))
                           ((= (length connections)2) ((getFunc func) objname (car connections)(cadr connections)))))
-                    ;     ((getFunc func) objname connections)) 
                     ((getFunc func) objname))
                   (error "FileReader callFunction: Contract violation expected two symbols and a list, recieved:" func objname args))
               (error "FileReader callFunction: Conctract violation, optional argument list is to long maximum length is:" (- maxCallLength 2))))
@@ -369,20 +328,6 @@
               (and (or (send railmanager isSwitch? id2)
                        (send railmanager isTrack? id2))
                    (eq? 'none id1)))))
-
-    ;  (define/private (validConnection? id1 id2)
-    ;   (and (and (symbol? id1)
-    ;            (symbol? id2))
-    ;      (or (and (send railmanager isDetectionblock? id1)
-    ;              (send railmanager isTrack? id2))
-    ;        (and (send railmanager isTrack? id1)
-    ;            (send railmanager isDetectionblock? id2))
-    ;      (and (send railmanager isSwitch? id1)
-    ;          (send railmanager isTrack? id2))
-    ;    (and (send railmanager isTrack? id1)
-    ;        (send railmanager isSwitch? id2)))))
-              
-                    
                               
     ;----------------------------------------------------------------------
     ; Function: addBasicFunctions!
@@ -403,11 +348,9 @@
       ;------------------------------------------------------------
       
       (add! 'block% (lambda (name)
-                      (when (symbol? name)
-                                
+                      (when (symbol? name) 
                         (send railmanager createDetectionblock! name)
-                        (send(send railmanager getDetectionblock name) initialise!))
-                      (display "block created")))
+                        (send(send railmanager getDetectionblock name) initialise!))))
 
       ;---------------------------------------------------
       ; Function: n/a
@@ -420,11 +363,8 @@
                                                        
       (add! 'switch% (lambda (name)
                        (when (symbol? name)
-
                          (send railmanager createSwitch! name)
                          (send (send railmanager getSwitch name) initialise!))))
-                                       
-                                    
 
       ;-----------------------------------------------------
       ; Function: n/a
@@ -439,7 +379,6 @@
                       (when (symbol? name)
                         (send railmanager createTrack! name)
                         (send (send railmanager getTrack name) initialise!))))
-                                
 
       ;-------------------------------------------------------------------------------------
       ; Function: n/a
@@ -454,8 +393,6 @@
       
       (add! 'connect! (lambda (id1  id2)
 
-                        (display "start connection")
-                        (newline)
                         (if (and(symbol? id1)
                                 (symbol? id2))
                            
@@ -468,12 +405,6 @@
 
                                   (when (send railmanager isMember? id2)
                                     (set! obj2 (send railmanager getObject id2)))
-
-                                  (display "obj1 is: ")
-                                  (display obj1)
-                                  (display "obj2 is: ")
-                                  (display obj2)
-                                  (newline)
 
                                   (cond
                                     ((and (eq? obj1 'none)
@@ -526,6 +457,7 @@
 
                                        (when (send railmanager isMember? id1)
                                          (set! obj1 (send railmanager getObject id1)))
+
                                        (when (send railmanager isMember? id2)
                                          (set! obj2 (send railmanager getObject id2)))
 
@@ -541,7 +473,5 @@
                                      (error "FileReader% add! 'connectY!: No valid connection between the given objects."))
                                  (error "FileReader% add! 'connectY!: Contract violation expected a switch as parameter, recieved:" switchID))
                              (error "FileReader% add! 'connectY!: Contract violation expected three symbols, recieved:" switchID id1 id2))))
-                                 
-
       )))
 

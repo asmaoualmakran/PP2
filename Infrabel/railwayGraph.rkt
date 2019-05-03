@@ -94,11 +94,7 @@
            [adjList '()])
 
         (for ([obj railObjs])
-       ;   (add-between adjList #:after-last (convert obj))) ;building the adj list
           (set! adjList (append (list(convert obj)))))
-        (display "adj list: ")
-        (display adjList)
-        (newline)
         (set! railGraph (unweighted-graph/directed adjList))))
 
     ;---------------------------------------------------------------------------------
@@ -119,17 +115,11 @@
 
                 (let ([connections (send object getConnections)]
                       [result (list objID)])
-                 (display "Connections!:  ")
-                  (display connections)
-                  (newline)
+
                   (for ([i connections])
                     (when (not (eq? i 'none))
-                      (set! result (append result (list i)))))
-                  
-                  result
-                  (display "Results:  ")
-                  (display result)
-                  (newline)))
+                      (set! result (append result (list i))))) 
+                  result))
               (error "RailwayGraph% convert: Given objID does not belong to a railway object:" objID))
           (error "RailwayGraph% convert: Contract violation expected a symbol, recieved:" objID)))
           
