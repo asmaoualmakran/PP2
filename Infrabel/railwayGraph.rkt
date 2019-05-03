@@ -116,14 +116,19 @@
       (if (symbol? objID)
           (if (send railwayManager isMember? objID)
               (let ([object (send railwayManager getObject objID)])
+
                 (let ([connections (send object getConnections)]
                       [result (list objID)])
+                 (display "Connections!:  ")
+                  (display connections)
+                  (newline)
                   (for ([i connections])
                     (when (not (eq? i 'none))
                       (set! result (append result (list i)))))
-                  connections
-                  (display "Connections:  ")
-                  (display connections)
+                  
+                  result
+                  (display "Results:  ")
+                  (display result)
                   (newline)))
               (error "RailwayGraph% convert: Given objID does not belong to a railway object:" objID))
           (error "RailwayGraph% convert: Contract violation expected a symbol, recieved:" objID)))

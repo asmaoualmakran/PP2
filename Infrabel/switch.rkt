@@ -265,7 +265,7 @@
 
     (define/public (getConnections)
    ;   (if (connected?)
-          (list connection (car y-connection) (cdr y-connection)))
+          (list connection (car y-connection) (cadr y-connection)))
     ;      (error "Switch getConnections: Switch is not connected, please connect before use.")))
 
     ;--------------------------------------------------------------------------------------
