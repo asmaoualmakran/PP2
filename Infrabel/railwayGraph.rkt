@@ -94,27 +94,32 @@
            [adjList '()])
 
         (for ([obj railObjs])
-          (add-between adjList #:after-last (convert obj railwayManager))) ;building the adj list
+          (add-between adjList #:after-last (convert obj))) ;building the adj list
         (set! railGraph (unweighted-graph/directed adjList))))
 
     ;---------------------------------------------------------------------------------
     ; Function: convert
     ; Parameters:
-    ;      obj: object:Track% / object:Switch%
-    ;       Use: The railway object.
+    ;        objID: symbol
+    ;         Use: The object and it's connections that needs adding to the graph.
     ; Output:
     ;     list: list<symbol>
-    ;      Use: A list of symbols, identifications.
+    ;      Use: A list containting the railway object's IDs and it's connection's IDs
     ; Use: Placing the object's id and the ids of the connecting objects in a list.
-    ;---------------------------------------------------------------------------------
-
-    (define/private (convert obj manager)
-      (if (eq? (object-name manager) managerType)
-          (if (send manager isTrack? obj)
-              (append (list obj) (send (send manager getTrack obj) getConnections))
-              (if (send manager isSwitch? obj)
-                  (append (list obj) (send (send manager getSwitch obj) getConnections))
-                  (error "RailwayGraph% convert: Contract violation given obj is not a switch or a track.")))
-          (error "RailwayGraph% convert: Contract violation given manager is not of the type RailwayManager%")))
+    ;----------------------------------------------------------------------------------
+    
+    (define/private (convert objID)
+      (if (symbol? objID)
+          (if (send railwayManager isMember? objID)
+              (let ([object (send railwayManager getObject objID)])
+                (let ([connections (send object getConnections)]
+                      [result (list objID)])
+                  (for ([i connections])
+                    (when (not (eq? i 'none))
+                      (set! result (append result (list i)))))
+                  connections))
+              (error "RailwayGraph% convert: Given objID does not belong to a railway object:" objID))
+          (error "RailwayGraph% convert: Contract violation expected a symbol, recieved:" objID)))
+          
 
     ))
