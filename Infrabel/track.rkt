@@ -47,7 +47,7 @@
     (define/public (initialise!)
       (init!)
       (setDetectionblockID! 'none)
-      (set! connections (cons 'none 'none))
+      (set! connections (list 'none 'none))
       )
 
     ;-------------------------------------------------------------------------------------------------------
@@ -65,7 +65,7 @@
      
       (if (and (symbol? con1)
                (symbol? con2))
-          (set! connections (cons con1 con2))
+          (set! connections (list con1 con2))
           (error "Track% setConnections!: Contract violation, expected two symbols, recieved:" con1 con2)))
 
     ;-------------------------------------------------------------------------
@@ -76,20 +76,16 @@
     ; Output: n/a
     ; Use: Add a single connection is there is room for an extra connection.
     ;-------------------------------------------------------------------------
-    
+   
     (define/public (setConnection! con)
       (if (initialised?)
           (if (symbol? con)
-              (if (null? (getConnections))
-                  (setConnections! con 'none)
-                  (if (eq? 'none (car (getConnections)))
-                      (setConnections! con (car (getConnections)))
-                      (if (eq? 'none (cdr (getConnections)))
-                          (setConnections! con (cdr (getConnections)))
-                          (error "Track% setConnection!: There are no more connections available, please delete a connection before adding one."))))
+              (cond ((eq? (car (getConnections)) 'none)(set! connections (list con (cadr (getConnections)))))
+                    ((eq? (cadr (getConnections)) 'none)(set! connections (list (car (getConnections)) con)))
+                    (else (error "Track% setConnection!: All connections are in use")))
               (error "Track% setConnection!: Contract violation expected a symbol, recieved:" con))
           (error "Track% setConnection!: Object is not initialised, please initialise before use.")))
-
+    
     ;------------------------------------------------------------------
     ; Function: getConnecions
     ; Parameters: n/a

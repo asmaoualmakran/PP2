@@ -213,7 +213,7 @@
     (define/public (setYConnection! conn1 conn2)
       (if (and (symbol? conn1)
                (symbol? conn2))
-          (set! y-connection (cons conn1 conn2))
+          (set! y-connection (list conn1 conn2))
           (error "Switch% setYConnection!: Contract violation expected two symbols, recieved:" conn1 conn2)))
 
     ;------------------------------------------------------------------------------------
