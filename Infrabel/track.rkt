@@ -30,11 +30,8 @@
     ;-----------------------------------------------------------------
 
     (define (init?)
-      ;    (and (not (eq? length 'uninitialised))
-      ;         (not (eq? curve  'uninitialised))
       (and (not (eq? detectionID 'uninitialised))
-           (not (eq? connections 'uninitialised)))
-      )
+           (not (eq? connections 'uninitialised))))
     (augment init?)
 
     (define (init!)
@@ -47,8 +44,8 @@
     (define/public (initialise!)
       (init!)
       (setDetectionblockID! 'none)
-      (set! connections (list 'none 'none))
-      )
+      (set! connections (list 'none 'none)))
+
 
     ;-------------------------------------------------------------------------------------------------------
     ; Function: setConnections!
@@ -80,8 +77,8 @@
     (define/public (setConnection! con)
       (if (initialised?)
           (if (symbol? con)
-              (cond ((eq? (car (getConnections)) 'none)(set! connections (list con (cadr (getConnections)))))
-                    ((eq? (cadr (getConnections)) 'none)(set! connections (list (car (getConnections)) con)))
+              (cond ((isConnectionFree? (getFirstConnection))(set! connections (list con (getSecondConnection))))
+                    ((isConnectionFree? (getSecondConnection))(set! connections (list (getFirstConnection) con)))
                     (else (error "Track% setConnection!: All connections are in use")))
               (error "Track% setConnection!: Contract violation expected a symbol, recieved:" con))
           (error "Track% setConnection!: Object is not initialised, please initialise before use.")))
@@ -100,6 +97,50 @@
           connections
           (error "Track% getConnections!: Object is not initialised, please initialse before use")))
 
+    ;-------------------------------------------------------------------
+    ; Function: getFirstConnection
+    ; Parameters: n/a
+    ; Output:
+    ;     connection: symbol
+    ;      Use: The connection that's first in the connections list.
+    ; Use: Get the first connection of the connections list.
+    ;-------------------------------------------------------------------
+    
+    (define/public (getFirstConnection)
+      (if (initialised?)
+          (car (getConnections))
+          (error "Track% getFirstConnection: Object is not initialised, please initialise before use.")))
+
+    ;----------------------------------------------------------------
+    ; Function: getSecondConnection
+    ; Parameters: n/a
+    ; Output:
+    ;    connection: symbol
+    ;     Use: The connection that's second in the connections list.
+    ; Use: Get the second connection of the connections list.
+    ;----------------------------------------------------------------
+
+    (define/public (getSecondConnection)
+     (if (initialised?)
+         (cadr (getConnections))
+         (error "Track getSecondConnection: Object is not initialised, please initialise before use.")))
+
+    ;--------------------------------------------------------------------------
+    ; Function: isConnectionFree?
+    ; Parameters:
+    ;         connection:symbol
+    ;           Use: The connection who's availability needs to be checked.
+    ; Output:
+    ;      boolean: boolean
+    ;       Use: Determine if the connection is free.
+    ; Use: Determine if the given connection is free.
+    ;--------------------------------------------------------------------------
+
+    (define/public (isConnectionFree? connection)
+      (if (initialised?)
+          (not (eq? 'none connection))
+          (error "Track isConnectionFree: Object is not initialised, plase initialise before use.")))
+
     ;---------------------------------------------------
     ; Function: hasConnections?
     ; Parameters: n/a
@@ -112,8 +153,8 @@
     (define/public (hasConnections?)
       (if (initialised?)
           (or (not (null? (getConnections)))
-              (not (and (eq? 'none (car (getConnections)))
-                        (eq? 'none (cdr (getConnections))))))
+              (not (and (isConnectionFree? (getFirstConnection))))
+                        (isConnectionFree? (getSecondConnection)))
           (error "Track% hasConnections?: Object is not initialised, please initialise before use")))
 
     ;-----------------------------------------------------------------
@@ -133,8 +174,8 @@
               (if (null? arg)
                   (if (member con (getConnections))
                   
-                      (cond ((eq? (car (getConnections)) con)(setConnections!  'none (cdr (getConnections))))
-                            ((eq? (cdr (getConnections)) con)(setConnections! (car (getConnections)) 'none)))
+                      (cond ((eq? (getFirstConnection) con)(setConnections! (list 'none (getSecondConnection))))
+                            ((eq? (getSecondConnection) con)(setConnections! (list (getFirstConnection) 'none))))
                       (error "Track% deleteConnection!: Given ID does not belong to the track's connections, recieved:" con))
 
                   (let ([atom? (lambda (x)
@@ -202,60 +243,5 @@
     (define/public (hasDetectionblock?)
       (and (initialised?)
            (not (eq? detectionID 'none))))
-                
-    ;--------------------------------------
-    ; Function: setLength!
-    ; Parameters:
-    ;     numb: number
-    ;       Use: The length of the track. 
-    ; Output: n/a
-    ; Use: Set the length of the track.
-    ;--------------------------------------
-
-    ;  (define/public (setLength! numb)
-    ;    (if (number? numb)
-    ;        (set! length numb)
-    ;        (error "Track% setLength!: contract violation expected number, received" numb)))
-
-    ;-------------------------------------
-    ; Function: getLength
-    ; Parameters: n/a
-    ; Output:
-    ;   lenght: number
-    ;     Use: The length of the track.
-    ; Use: Get the length of the track.
-    ;-------------------------------------
-    
-    ; (define/public (getLength)
-    ;   (if (eq? length 'uninitialised)
-    ;       (error "Track% getLength: length is not initialised, please initialise before use")
-    ;       (length)))
-
-    ;-------------------------------------------------------------
-    ; Function: setCurve!
-    ; Parameters:
-    ;     cur: number
-    ;      Use: The size of the curve and direction in degrees.
-    ; Output: n/a
-    ; Use: Set the size of the curve and the direction.
-    ;-------------------------------------------------------------
-
-    ;   (define/public (setCurve! cur)
-    ;     (if (number? cur)
-    ;         (set! curve cur)
-    ;        (error "Track% setCurve!: contract violation, number is expected, received" cur)))
-
-    ;--------------------------------------------------
-    ; Function: getCurve
-    ; Parameters: n/a
-    ; Output:
-    ;    curve: number
-    ;      Use: The size and the direction of the curve.
-    ; Use: Get the size of the curve and it's direction.
-    ;---------------------------------------------------
-
-    ;   (define/public (getCurve)
-    ;     (if (eq? curve 'uninitialised)
-    ;         (error "Track% getCurve: curve is not initialised, please initialised before use")
-    ;         (curve)))
+  
     ))
