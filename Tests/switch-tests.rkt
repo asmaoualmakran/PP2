@@ -30,7 +30,7 @@
 
 ;------------------------------------------------------------
 ; Connection tests
-; Check if objects can be correctly connected to the switch
+; Check if ID's can be correctly connected to the switch
 ;------------------------------------------------------------
 
 (let ([switch (new Switch%)]
@@ -43,8 +43,11 @@
 (test-case
  "Initialisation test"
  (check-true (send switch initialised?)))
+  
   (send switch setConnections! t1 t2 t3)
+  
   (let ([yConnections (send switch getYConnection)])
+    
   (test-case
    "Connection test switch"
    (check-eq? t1 (send switch getConnection))
