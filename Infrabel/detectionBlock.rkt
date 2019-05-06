@@ -11,8 +11,12 @@
   (class object%
     (super-new)
 
+    (inherit-field ID)
+    (inherit setID! getID)
+
+    
     (field
-     [ID              'uninitialised]
+
      [trackID         'uninitialised]
      [reservations    'uninitialised]   ; functies voor schrijven
      [maxReservations 'uninitialised]   ;getters en setters voor schrijven
@@ -22,8 +26,10 @@
     (struct reservation (id [priority #:mutable]))  ; a struct defineing a reservation
 
     (define/public (initialise!)
+      (setTrackID! 'none)
       (setMaxReservations! 10)
-      (initReservations!))
+      (initReservations!)
+      (setLength! 0))
 
     ;-------------------------------------------------------
     ; Function: initialised?
@@ -35,41 +41,11 @@
     ;-------------------------------------------------------
     
     (define/public (initialised?)
-      (and 
-           (not(eq? reservations 'uninitialised))))
-      ;     (not(eq? maxReservations 'uninitialised))
-       ;    (not(eq? length 'uninitialised))))
-
-    ;-------------------------------------------------------------------------
-    ; Function: setID!
-    ; Parameters:
-    ;      symbol: symbol
-    ;         Use: The symbol where the identification needs to be set to.
-    ; Output: n/a
-    ; Use: Set the identification of the detectionblock object.
-    ;-------------------------------------------------------------------------
-
-    (define/public (setID! symbol)
-      (if (and (eq? ID 'uninitialised)
-               (symbol? symbol))
-          (set! ID symbol)
-          (error "Detectionblock% setID!: ID is already set or contract violation symbol expected recieved" symbol)))
-
-    ;------------------------------------------------
-    ; Function: getID
-    ; Parameters: n/a
-    ; Output:
-    ;      ID: symbol
-    ;       Use: The identification of the object.
-    ; Use: Retrieve the object's identification.
-    ;------------------------------------------------
-    
-    (define/public (getID)
-      (if (initialised?)
-          (begin
-            ID
-            (display ID))
-          (error "Detectionblock% getID: Object is not initialised please initialise before use")))
+      (and
+       (not (eq? trackID 'uninitialised))
+       (not (eq? reservations 'uninitialised))
+       (not (eq? maxReservations 'uninitialised))
+       (not (eq? length 'uninitialised))))
 
     ;-----------------------------------------------------------------------------------
     ; Function: setTrackID
@@ -96,7 +72,7 @@
 
     (define/public (getTrackID)
       (if (and(initialised?)
-          (hasTrack?))
+              (hasTrack?))
           trackID
           (error "Detectionblock% getTrackID: object is not initialised" trackID)))
 
@@ -113,7 +89,6 @@
       (and(initialised?)
           (not (eq? trackID 'none))))
          
-
     ;----------------------------------------------------------
     ; Function: deleteTrackID!
     ; parameters: n/a
@@ -124,7 +99,7 @@
     (define/public (deleteTrackID!)
       (if (initialised?)
           (set! trackID 'none)
-          (error "Detectionblock% deleteTrackID: object is not initialised please initialise before use")))
+          (error "Detectionblock% deleteTrackID: Object is not initialised please initialise before use.")))
 
     ;--------------------------------------------------------------------
     ; Function: isPlaced?
@@ -136,8 +111,9 @@
     ;--------------------------------------------------------------------
     
     (define/public (isPlaced?)
-      (not (eq? (getTrackID 'none))))
-
+      (if (initialised?)
+      (not (eq? (getTrackID 'none)))
+      (error "Detectionblock% isPlaced: Object is not initialised please initialise before use.")))
 
     ;----------------------------------------------------------------------
     ; Function: setLength!
@@ -151,7 +127,7 @@
     (define/public (setLength! number)
       (if (number? number)
           (set! length number)
-          (error "Detectionblock% setLength!: contract violation expected number received" number)))
+          (error "Detectionblock% setLength!: contract violation expected number received:" number)))
 
     ;-------------------------------------------------------------------------
     ; Function: getLength
@@ -208,7 +184,6 @@
       (if (not (eq? maxReservations 'uninitialised))   ; not using initialised? this will be false if the reservations can't be initialised.
           (set! reservations (make-heap order))
           (error "Detectionblock% initReservations!: maxReservations is not initialised, please initialse before use")))
-
 
     ;------------------------------------------------------------
     ; Function: order

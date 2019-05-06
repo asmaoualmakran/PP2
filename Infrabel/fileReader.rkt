@@ -138,7 +138,6 @@
           (hash-has-key? functionHash key)
           (error "FileReader% member?: Contract violation, expected a symbol recieved:" key)))
 
-
     ;-------------------------------------------------------------------
     ; Function: getFunc
     ; Parameters:
@@ -441,6 +440,8 @@
       ;----------------------------------------------------------------------------------------------------------
       
       (add! 'connectY! (lambda (switchID id1 id2)
+                          (display (symbol? id1))
+                           (display (symbol? id2))
 
                          (if (and (symbol? switchID)
                                   (symbol? id1)
@@ -463,10 +464,12 @@
 
                                        (cond
                                          
-                                         ((eq? obj1 'none)(send switch setYConnection! 'none id2))
-                                         ((eq? obj2 'none) (send switch setYConnection! id1 'none))
+                                         ((eq? obj1 'none)(send switch setYConnections! 'none id2))
+                                         ((eq? obj2 'none) (send switch setYConnections! id1 'none))
 
-                                         (else (begin (send switch setYConnection! id1 id2)
+                                         (else (begin
+                                                
+                                                 (send switch setYConnections! id1 id2)
                                                       (send obj1 setConnection! switchID)
                                                       (send obj2 setConnection! switchID)))))
                                     

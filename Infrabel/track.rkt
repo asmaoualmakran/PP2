@@ -14,6 +14,10 @@
 (define Track%
   (class Infrastructure%
     (super-new)
+
+    (inherit-field ID available speedlimit standardSpeed x y)
+    (inherit setID! getID setAvailable! getSpeedlimit setSpeedlimit! getLocation setLocation!)
+  
     
     (field
      ;   [length      'uninitialised]
@@ -29,20 +33,23 @@
     ; Use: Predicate to determine wheter all fields are initialised.
     ;-----------------------------------------------------------------
 
-    (define (init?)
-      (and (not (eq? detectionID 'uninitialised))
-           (not (eq? connections 'uninitialised))))
-    (augment init?)
-
-    (define (init!)
-      (init!))
-    (augment init!)
-
     (define/public (initialised?)
-      (init?))
+      (and (not (eq? ID 'uninitialised))
+           (not (eq? available 'uninitialised))
+           (not (eq? speedlimit 'uninitialised))
+           (not (eq? connections 'uninitialised))
+           (not (eq? detectionID 'uninitialised))))
+
+    ;---------------------------------------
+    ; Function: initialise!
+    ; parameters: n/a
+    ; Output: n/a
+    ; Use: Initialise the object's fields.
+    ;---------------------------------------
 
     (define/public (initialise!)
-      (init!)
+      (setAvailable! 'none)
+      (setSpeedlimit! standardSpeed)
       (setDetectionblockID! 'none)
       (set! connections (list 'none 'none)))
 
@@ -121,9 +128,9 @@
     ;----------------------------------------------------------------
 
     (define/public (getSecondConnection)
-     (if (initialised?)
-         (cadr (getConnections))
-         (error "Track getSecondConnection: Object is not initialised, please initialise before use.")))
+      (if (initialised?)
+          (cadr (getConnections))
+          (error "Track getSecondConnection: Object is not initialised, please initialise before use.")))
 
     ;--------------------------------------------------------------------------
     ; Function: isConnectionFree?
@@ -138,7 +145,7 @@
 
     (define/public (isConnectionFree? connection)
       (if (initialised?)
-          (not (eq? 'none connection))
+          (eq? 'none connection)
           (error "Track isConnectionFree: Object is not initialised, plase initialise before use.")))
 
     ;---------------------------------------------------
@@ -154,7 +161,7 @@
       (if (initialised?)
           (or (not (null? (getConnections)))
               (not (and (isConnectionFree? (getFirstConnection))))
-                        (isConnectionFree? (getSecondConnection)))
+              (isConnectionFree? (getSecondConnection)))
           (error "Track% hasConnections?: Object is not initialised, please initialise before use")))
 
     ;-----------------------------------------------------------------
@@ -216,8 +223,8 @@
     ;----------------------------------------------------------------------------
 
     (define/public (setDetectionblockID! id)
-          (when (symbol? id)
-            (set! detectionID id)))
+      (when (symbol? id)
+        (set! detectionID id)))
 
     ;----------------------------------------------------------------
     ; Function: deleteDetectionblock!
