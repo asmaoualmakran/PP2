@@ -33,10 +33,24 @@
 
   (send railwayManager initialise! graph trainManager)
 
+  (let ([switch (send railwayManager createSwitch! 's)]
+        [track (send railwayManager createTrack! 't)]
+        [detectionblock (send railwayManager createDetectionblock! 'd)])
+    (let ([getSwitch (send railwayManager getSwitch 's)]
+          [getTrack (send railwayManager getTrack 't)]
+          [getBlock (send railwayManager getDetectionblock 'd)])
+
   (test-case
    "Creation and initialisation tests"
 
-   (check-true (send railwayManager initialised?))))
+   (check-true (send railwayManager initialised?))
+   (check-eq? (send railwayManager getObject 's) getSwitch)
+   (check-eq? (send railwayManager getObject 't) getTrack)
+   (check-eq? (send railwayManager getObject 'd) getBlock)
+   (check-true (send getSwitch initialised?))
+   (check-true (send getTrack  initialised?))
+   (check-true (send getBlock  initialised?))
+   ))))
 
 
 ;------------------------------------------
@@ -61,6 +75,7 @@
   
   (test-case
    "Failure test railway manager wrong creation pm"
+   
    (check-exn exn:fail?
               (lambda () (send railwayManager createDetectionblock! 5)))
    (check-exn exn:fail?
