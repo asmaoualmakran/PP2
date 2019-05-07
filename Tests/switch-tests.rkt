@@ -55,5 +55,17 @@
    (check-eq? t3 (send switch getSecondYConnection))
    (check-match (list t2 t3) yConnections))))
 
+;-------------------------------------------
+; Failure Tests
+; Check if the code fails in these tests.
+;-------------------------------------------
+
+(let ([switch (new Switch%)])
+  (test-case
+   "Failure test switch"
+   (check-false (send switch initialised?))
+   (check-exn exn:fail?
+              (lambda () (send switch getID)))))
+   
  
  

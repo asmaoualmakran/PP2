@@ -46,7 +46,7 @@
         [secondConn (send track getSecondConnection)])
 
     (test-case
-     "Initialiseation tests"
+     "Initialisation tests"
 
      (check-true init)
      (check-eq? ID 't1)
@@ -65,3 +65,15 @@
      (check-eq? 't2 firstConn)
      (check-eq? 't3 secondConn))
     ))
+
+;-------------------------------------------
+; Failure Tests
+; Check if the code fails in these tests.
+;-------------------------------------------
+
+(let ([track (new Track%)])
+  (test-case
+   "Failure test track"
+   (check-false (send track initialised?))
+   (check-exn exn:fail?
+              (lambda () (send track getID)))))
