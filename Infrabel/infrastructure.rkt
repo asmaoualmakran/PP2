@@ -29,8 +29,8 @@
     ;-------------------------------------------------------
 
     (define/private (init?)
-     (and (not (eq? ID 'uninitialsed))
-          (not (eq? available 'unitialised))))
+      (and (not (eq? ID 'uninitialised))
+           (not (eq? available 'uninitialised))))
 
     ;-----------------------------------------------------------
     ; Function: setID! 
@@ -42,9 +42,11 @@
     ;----------------------------------------------------------
     
     (define/public (setID! id)
-      (if (eq? ID 'uninitialised)      ;ID can only be set at initialisation
-          (set! ID id)
-          (error "Infrastructure% setID!: ID is already initialised" ID)))
+      (if (symbol? id)
+          (if (eq? ID 'uninitialised)      ;ID can only be set at initialisation
+              (set! ID id)
+              (error "Infrastructure% setID!: ID is already initialised" ID))
+          (error "Infrastructure% setID!: Contract violation expected a symbol, recieved:" id)))
     
     ;--------------------------------------------------------
     ; Function: getID
@@ -130,7 +132,7 @@
     ; Use: Set the speedlimit for a track, this must be positive.
     ;-------------------------------------------------------------
 
-   (define/public (setSpeedlimit! speed)
+    (define/public (setSpeedlimit! speed)
       (if (and(number? speed)
               (<= 0 speed))         ;speedlimit needs to be positive
           (set! speedlimit speed)
