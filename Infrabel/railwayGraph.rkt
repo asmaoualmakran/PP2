@@ -87,15 +87,19 @@
     ; Output: n/a
     ; Use: Generate the graph representing the railway system
     ;-----------------------------------------------------------
-    
+
     (define/public (generateGraph!)
-    
       (let ([railObjs (append (send railwayManager getAllTrackID) (send railwayManager getAllSwitchID))]
-           [adjList '()])
+            [adjList '()])
 
         (for ([obj railObjs])
-          (set! adjList (append (list(convert obj)))))
-        (set! railGraph (unweighted-graph/directed adjList))))
+          (let ([object (send railwayManager getObject obj)]
+                [convCon (convert obj)])
+
+            (set! adjList (append adjList convCon))))
+        
+        (set! railGraph (unweighted-graph/directed adjList))
+        ))
 
     ;---------------------------------------------------------------------------------
     ; Function: convert
@@ -107,21 +111,22 @@
     ;      Use: A list containting the railway object's IDs and it's connection's IDs
     ; Use: Placing the object's id and the ids of the connecting objects in a list.
     ;----------------------------------------------------------------------------------
-    
+
     (define/private (convert objID)
       (if (symbol? objID)
           (if (send railwayManager isMember? objID)
               (let ([object (send railwayManager getObject objID)])
 
                 (let ([connections (send object getConnections)]
-                      [result (list objID)])
+                      [result (list )])
 
                   (for ([i connections])
+
                     (when (not (eq? i 'none))
-                      (set! result (append result (list i))))) 
+                      (set! result (append result (list (list objID i))))))
                   result))
-              (error "RailwayGraph% convert: Given objID does not belong to a railway object:" objID))
-          (error "RailwayGraph% convert: Contract violation expected a symbol, recieved:" objID)))
+              (error "RailwayGraph% convert: Given objID does not belong to a railway object, recieved: " objID))
+          (error "RailwayGraph% convert: Contract violation expected a symbol, recieved: " objID)))
           
 
     ))
