@@ -51,7 +51,7 @@
     
     (define/public (initialise! trainMan)
       (if (eq? (object-name trainMan) trainManagerType)
-          (if (send trainMan initialsed?)
+          (if (send trainMan initialised?)
 
               (begin
                 (set! trainManager trainMan)
@@ -69,9 +69,9 @@
     ; Function: calculateRoute
     ; Parameters:
     ;    start: symbol
-    ;      Use: The starting location of the path.
+    ;      Use: The starting detectionblock location of the path.
     ;    end: symbol
-    ;     Use: The ending location of the path.
+    ;     Use: The ending detectionblock location of the path.
     ;    railGraph: graph
     ;     Use: The graph representing the railwaysystem.    
     ; Output:
@@ -79,14 +79,19 @@
     ;      Use: List containing the path.
     ; Use: Calculate a path between two nodes in the graph
     ;--------------------------------------------------------------
-    
-    (define/public (calculateRoute start end)   
 
-      (let ([route '()])
-        (let-values ([(costs path) (dijkstra graph start)])
-          (set! route (constructPath path start end)))
-        route)
-      (error "RouteCalculator% calculateRoute: Contract violation given parameters are not detecionblock,graph or manager"))
+    (define/public (calculateRoute start end)
+      (if (and (send railManager isDetectionblock? start)
+               (send railManager isDetectionblock? end))
+
+          (let ([route (list )]
+                [s (send (send railManager getObject start) getTrackID)]
+                [e (send (send railManager getObject end) getTrackID)])
+
+            (let-values ([(costs path) (dijkstra graph s)])  ;hashtable and a list returned als result
+
+             (set! route  (constructPath (hash->list path) s e))))
+          (error "RouteCalculator% calculateRoute: Start and ending node are not detectionblocks, route cannot be calculated: " start end)))
 
     ;--------------------------------------------------------------------
     ; Function: constructPath
