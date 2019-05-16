@@ -6,6 +6,7 @@
 (require "routeManager.rkt")
 
 (provide trainManager)
+(provide routeCalculator)
 (provide startNmbs)
 
 (define trainManager (new TrainManager%))
@@ -17,6 +18,6 @@
       
       (if (send railwayMan initialised?)
              
-          (send routeManager initialise! railwayMan trainManager routeCalculator railwaygraph)
+          (send routeManager initialise! trainManager routeCalculator) ;railwaygraph)
           (error "nmbs startNmbs: Cannot start nmbs before railwaymanager is initialised"))
       (error "nmbs startNmbs: Contract violation expected route manager received" railwayMan)))

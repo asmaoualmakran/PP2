@@ -5,7 +5,9 @@
 
 (provide RailwayGraph%)
 
-;TODO enable non connections and dead ends.
+;NOTE: Not connected railway objects are not added as vertices.
+;      Only vertices with edges between them are added in the graph.
+
 ;----------------------------------------------
 ; Class: RailwayGraph%
 ; Parameters: n/a
@@ -49,7 +51,8 @@
 
     (define/public (initialised?)
       (and (not (eq? railwayManager 'none))
-           (not (eq? railGraph 'none))))
+         ;  (not (eq? railGraph 'none))
+           ))
 
     ;---------------------------------------------------------
     ; Function: getGraph

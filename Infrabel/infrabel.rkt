@@ -1,5 +1,7 @@
 #lang racket
 
+(require graph)
+
 (require "railwayManager.rkt")
 (require "railwayGraph.rkt")
 (require "securityProtocol.rkt")
@@ -18,6 +20,5 @@
 (define (startInfrabel)
 (send railwayGraph initialise! railwayManager)
 ;(define graph (send railwayGraph getGraph))
-(send railwayManager setGraph! (send railwayGraph getGraph))
 (send fileReader initialise! railwayManager))
 ;(send securityProtocol initialise! railwayManager))

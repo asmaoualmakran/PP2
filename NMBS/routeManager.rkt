@@ -82,7 +82,7 @@
       (if (and  (eq? (object-name tmanager) trainsType)
                 (eq? (object-name routeCalc) calcType))
           (if (send tmanager initialised?)
-              'test
+              (setTrainManager! tmanager)
               (error "RouteManager% initialise!: Given train manager is not initialised, please use an initialised train manager:" tmanager))
           (error "RouteManager% initialise!: Contract violation expected TrainManager% and RailwayGraph% received:" tmanager routeCalc)))
 

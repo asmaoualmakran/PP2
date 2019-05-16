@@ -2,7 +2,7 @@
 
 (require graph)
 (require data/heap)
-(require typed-stack)	
+(require typed-stack)
 (require dyoo-while-loop)
 (provide RouteCalculator%)
 
@@ -22,13 +22,13 @@
            [graph        'uninitialised])
 
     ; Variables to enable type checking
-    
+
     (define railManagerType 'object:RailwayManager%)
     (define trainManagerType 'object:TrainManager%)
 
     ;------------------------------------------------------
-    ; Function: initialised? 
-    ; Parameters: n/a 
+    ; Function: initialised?
+    ; Parameters: n/a
     ; Output:
     ;      boolean: boolean
     ;       Use: Determine if the object is initialised.
@@ -48,7 +48,7 @@
     ; Output: n/a
     ; Use: Initialise the routeCalculator.
     ;-------------------------------------------------
-    
+
     (define/public (initialise! trainMan)
       (if (eq? (object-name trainMan) trainManagerType)
           (if (send trainMan initialised?)
@@ -60,7 +60,7 @@
                     (begin
                       (set! railManager (send trainManager getRailwayManager))
                       (set! graph (send railManager getGraph)))
-   
+
                     (error "RouteCalculator% initialise!: Recieved railwayManager is not initialised, please use an initialised RailwayManager%, recieved"(send trainManager getRailwayManager))))
               (error "RouteCalculator% initialise!: Given TrainManager% is not initialised, please use an initialised TrainManager%, recieved:" trainMan))
           (error "RouteCalculator% initialise!: Contract violation expected a TrainManager%, recieved:" trainMan)))
@@ -73,7 +73,7 @@
     ;    end: symbol
     ;     Use: The ending detectionblock location of the path.
     ;    railGraph: graph
-    ;     Use: The graph representing the railwaysystem.    
+    ;     Use: The graph representing the railwaysystem.
     ; Output:
     ;    list: list<symbol>
     ;      Use: List containing the path.
@@ -88,39 +88,47 @@
                 [s (send (send railManager getObject start) getTrackID)]
                 [e (send (send railManager getObject end) getTrackID)])
 
-            (let-values ([(costs path) (dijkstra graph s)])  ;hashtable and a list returned als result
+            (let-values ([(costs path) (dijkstra graph e)])  ;hashtable and a list returned als result
 
-             (set! route  (constructPath (hash->list path) s e))))
+             (set! route  (constructPath (hash->list path) s e)))
+             route)
           (error "RouteCalculator% calculateRoute: Start and ending node are not detectionblocks, route cannot be calculated: " start end)))
 
-    ;--------------------------------------------------------------------
+    ;------------------------------------------------------------------------------------------------------
     ; Function: constructPath
-    ; Parameters:
-    ;      list: list<pair>
-    ;        Use: List containing all the connecting nodes
-    ;      start: symbol
-    ;        Use: The starting node of the path
-    ;      end: symbol
-    ;        Use: The ending node of the path
-    ; Output:
-    ;      path: list<symbol>
-    ;        Use: List containing the path between start and end node.
-    ; Use: Construct a path between the start and end node.
-    ;--------------------------------------------------------------------
+    ; Parameters: 
+    ;        lst: list<cons>
+    ;         Use: One point path calculation result.
+    ;        start: symbol
+    ;         Use: The start node of the path.
+    ;        end: symbol
+    ;         Use: The end node of the path.
+    ; Output: 
+    ;       list: list<symbol>
+    ;        Use: A constructed path from lst.
+    ; Use: Construct a path from start to end using a path that consists from a list containing conscells.
+    ;-------------------------------------------------------------------------------------------------------
 
-    (define/private (constructPath list start end)
-      (if (list? list)
-          (let ([path '()])
-            (for ([i list])
-              (if (eq? (car i) end)
-                  (set! path (add-between path #:before-first (car i) ))
-                  '()))
-            (if (not (eq? path '()))
-                (while (not (eq? (car path) start))
-                       (set! path (add-between path #:before-first (getPredec list (car path)))))
-                (error "RouteCalculator% constructPath: Path is not initialised, rest can not be constructed"))
-            path) ;returning the path
-          (error "RouteCalculator% constructPath: Contract violation given list is not a list")))
+     (define/private (constructPath lst start end)
+     
+        (if (list? lst)
+          (if (not (null? lst))
+            (if (and (symbol? start)
+                     (symbol? end))
+                (let ([origin car]
+                      [destination cdr]
+                      [next start]
+                      [path (list)])
+                      
+                      (while next    ;when you reach the origin that is also the end, the destination is then false
+                        (for ([i lst])
+                          (when (eq? next (origin i))
+                            (set! path (append path (list next)))
+                            (set! next (destination i)))))
+                           path)
+              (error "RoutCalculator% constructPath: Contract violation expected two symbols, recieved: " start end))
+          (error "RouteCalculator% contructPath: Contract violation expected a non-empty list, recieved: " lst))
+        (error "RouteCalculator% constructPath: Contract violation expected a list, recieved: " lst)))
 
     ;--------------------------------------------------------------
     ; Function: getPredec
@@ -155,7 +163,7 @@
     ;       Use: The list that is the shortest of the two
     ; Use: Determine which of the two lists is the shortest, procedure used for the heap in uTurn.
     ;----------------------------------------------------------------------------------------------
-    
+
     (define (<=? x y)
       (if (and (list? x)
                (list? y))
@@ -187,7 +195,7 @@
                             [connID (cdr i)])
 
                         (let ([oppositeID (send(send railManager getSwitch switchID) getOppositeConnection connID)])
-                            
+
                         (for ([block detectionBlocks])
                           (let ([trackID (send (send railManager getDetectionblock block) getTrackID)])
                             (let ([currentPath (calculateRoute switchID trackID)])
@@ -196,16 +204,16 @@
                           ))))
                           (push! results (heap-min results))
                           (set! subResults (make-heap <=?))
-                          
+
                           ))))
                   (error "RouteCalculator% uTurn: Contract violation expected a list of pairs, recieved:" turnLoc))
               (error "RouteCalculator% uTurn: Contract violation expected a non empty list, recieved:" turnLoc))
           (error "RouteCalculator% uTurn: Contract violation expected a list, recieved:" turnLoc)))
-              
+
 
     (define/private (addUTurns route turnStack)
       'test)
-               
+
 
     ;----------------------------------------------------------------------------------------
     ; Function: uTurnNeeded?
@@ -217,7 +225,7 @@
     ;       Use: The locations where u-turns are needed if no u turns needed #f is returned.
     ; Use: Determine the locations where u turns are needed and returning them.
     ;----------------------------------------------------------------------------------------
-    
+
     (define/private (uTurnNeeded? route)
       (if (list? route)
           (if (not (null? route))

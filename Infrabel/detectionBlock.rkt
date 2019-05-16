@@ -1,5 +1,6 @@
 #lang racket
 
+(require "infrastructure.rkt")
 (require racket/class data/heap)
 ;(require "infrastructure.rkt")
 
@@ -8,7 +9,7 @@
 (provide Detectionblock%)
 
 (define Detectionblock%
-  (class object%
+  (class Infrastructure%
     (super-new)
 
     (inherit-field ID)

@@ -347,9 +347,8 @@
       ;------------------------------------------------------------
       
       (add! 'block% (lambda (name)
-                      (when (symbol? name) 
-                        (send railmanager createDetectionblock! name)
-                        (send(send railmanager getDetectionblock name) initialise!))))
+                      (when (symbol? name)
+                        (send railmanager createDetectionblock! name))))
 
       ;---------------------------------------------------
       ; Function: n/a
@@ -362,8 +361,7 @@
                                                        
       (add! 'switch% (lambda (name)
                        (when (symbol? name)
-                         (send railmanager createSwitch! name)
-                         (send (send railmanager getSwitch name) initialise!))))
+                         (send railmanager createSwitch! name))))
 
       ;-----------------------------------------------------
       ; Function: n/a
@@ -376,8 +374,7 @@
 
       (add! 'track% (lambda (name)
                       (when (symbol? name)
-                        (send railmanager createTrack! name)
-                        (send (send railmanager getTrack name) initialise!))))
+                        (send railmanager createTrack! name))))
 
       ;-------------------------------------------------------------------------------------
       ; Function: n/a
@@ -440,8 +437,6 @@
       ;----------------------------------------------------------------------------------------------------------
       
       (add! 'connectY! (lambda (switchID id1 id2)
-                          (display (symbol? id1))
-                           (display (symbol? id2))
 
                          (if (and (symbol? switchID)
                                   (symbol? id1)

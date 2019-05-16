@@ -25,7 +25,8 @@
 
     ; The railway manager that's used (railway that needs to be secured)
     
-    (field [railManager 'none])
+    (field [railManager 'none]
+           [trainManager 'none])
 
     ;---------------------------------------------------------------
     ; Function: initialised?
@@ -37,7 +38,8 @@
     ;---------------------------------------------------------------
     
     (define/public (initialised?)
-      (not (eq? railManager 'none)))
+      (and(not (eq? railManager 'none)
+          (not (eq? trainManager 'none)))))
 
     ;------------------------------------------------------------
     ; Function: initialise!
@@ -50,7 +52,10 @@
 
     (define/public (initialise! manager)
       (if (eq? (object-name manager) railManType)
-          (set! railManager manager)
+          (if (send manager intialised?)
+                (begin (set! railManager manager)
+                       (set! trainManager))
+          (error "SecurityProtocol% initialise!: Contract violation given RailwayManager% is not initialised, recieved: " manager)
           (error "SecurityProtocol% initialise!: Contract violation expected RailwayManager% recieved" manager)))
 
     ;-----------------------------------------------------------------------------------
