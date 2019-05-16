@@ -2,6 +2,7 @@
 
 (require racket/tcp)
 (require logger)
+(require racket/serialize)
 
 (provide Client%)
 
@@ -84,6 +85,15 @@
     (define/public (outputPortOpen?)
       (port? output))
 
+    ;--------------------------------------------------
+    ; Function: getOutputPort
+    ; Parameters: n/a 
+    ; Output: 
+    ;     output: output port
+    ;       Use: The output port used.
+    ; Use: Getting the output port used by the client.
+    ;---------------------------------------------------
+
     (define/public (getOutputPort)
       (if (outputPortOpen?)
         output
@@ -108,5 +118,38 @@
             (info "Client closeConnection!: Output port closed."))
         (error "Client% closeConnection!: There is no output port and input port active.")))
 
+    ;--------------------------------------------------------------------
+    ; Function: writeOutput
+    ; Parameters: 
+    ;         data: any
+    ;           Use: The data that must be written on the output port.
+    ; Output: n/a 
+    ; Use: Serialize and wirte data to the output port.
+    ;--------------------------------------------------------------------
+
+    (define/public (writeOutput data)
+      (if (connectionActive?)
+        (if (serializable? data)
+              (let ([serData (serialize data)])
+                (write serData output)
+                (flush-output output)
+                (display "data written"))
+          (error "Client% writeOutput: The given data is not serializable, recieved: " data))
+        (error "Client% writeOutput: No connection active.")))
+
+    ;------------------------------------------
+    ; Function: readInput
+    ; Parameters: n/a 
+    ; Output: 
+    ;     inputData: any serializable data.
+    ;       Use: The data that is recieved.
+    ; Use: Read data for the input port.
+    ;------------------------------------------
+  
+    (define/public (readInput)
+      (let ([readData (read input)]
+            [deserialzed 'none])
+        (set! deserialzed (deserialize readData))
+        deserialzed))
   
   ))

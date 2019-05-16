@@ -2,6 +2,7 @@
 
 (require racket/tcp)
 (require logger)
+(require racket/serialize)
 
 (provide Server%)
 
@@ -70,9 +71,21 @@
         maximalConnections
         (error "Server getMaximalConnections: Maximalconnections is not a number.")))
 
+  ;---------------------------------------------------------------------------
+  ; Function: setMaximalConnections!
+  ; Parameters: 
+  ;       numb: number
+  ;         Use: The number where the maximal connections needs to be set to.
+  ; Output: n/a 
+  ; Use: Set the number of maximal connections.
+  ;---------------------------------------------------------------------------
+
   (define/public (setMaximalConnections! numb)
-    'body
-  )
+    (if (number? numb)
+      (if (> numb 0)
+        (set! maximalConnections numb)
+      (error "Server% setMaximalConnections!: Given number is not larger than 0, recieved: " numb))
+    (error "Server% setMaximalConnection!: Contract violation expected a number, recieved: " numb)))
   ;-----------------------------------------------------
   ; Function: listenerActive?
   ; Parameters: n/a 
@@ -151,6 +164,7 @@
 
   (define/public (closeConnection!)
     (tcp-close (getListener))
+    (set! listener 'none)
     (closePorts!))
 
   ;-------------------------------------------------
@@ -225,5 +239,38 @@
         (close-output-port (getOutputPort))
         (set! output 'none))
     (info "Server% closePorts!: There is no output-port open, output-port cannot be closed.")))
+
+  ;------------------------------------------------
+  ; Function: writeOutput
+  ; Parameters: 
+  ;       data: any serializable data.
+  ;         Use: The data that needs to be send.
+  ; Output: n/a 
+  ; Use: Write data to the output port.
+  ;------------------------------------------------
+
+  (define/public (writeOutput data)
+    (if (connectionActive?)
+      (if (serializable? data)
+        (let ([serData (serialize data)])
+          (write serData output)
+          (flush-output output))
+      (error "server% writeOutput: The given data is "))
+    (error "Server% writeOutput: There is no connection active.")))
+
+  ;------------------------------------------
+  ; Function: readInput
+  ; Parameters: n/a 
+  ; Output: 
+  ;     inputData: any serializable data.
+  ;       Use: The data that is recieved.
+  ; Use: Read data for the input port.
+  ;------------------------------------------
+
+    (define/public (readInput)
+      (let ([readData (read input)]
+            [deserialzed 'none])
+        (set! deserialzed (deserialize readData))
+        deserialzed))
 
   ))
