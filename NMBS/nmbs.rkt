@@ -1,23 +1,31 @@
 #lang racket
-(require graph)
 
+(require "../gui/gui.rkt")
 (require "trainManager.rkt")
-(require "routeCalculator.rkt")
 (require "routeManager.rkt")
+(require "routeCalculator.rkt")
+(require "interface.rkt")
+(require "../TCP/client.rkt")
 
-(provide trainManager)
-(provide routeCalculator)
-(provide startNmbs)
+(provide client)
+(provide GUI)
+(provide startNMBS)
 
+(define GUI (new GUI%))
 (define trainManager (new TrainManager%))
-(define routeCalculator (new RouteCalculator%))
 (define routeManager (new RouteManager%))
+(define routeCalculator (new RouteCalculator%))
+(define interface (new Interface%))
+(define client (new Client%))
 
-(define (startNmbs railwayMan railwaygraph)
-  (if (eq? (object-name railwayMan) 'object:RailwayManager%)
-      
-      (if (send railwayMan initialised?)
-             
-          (send routeManager initialise! trainManager routeCalculator) ;railwaygraph)
-          (error "nmbs startNmbs: Cannot start nmbs before railwaymanager is initialised"))
-      (error "nmbs startNmbs: Contract violation expected route manager received" railwayMan)))
+
+(define (startNMBS)
+    
+    (send trainManager initialise! client)
+    (send routeManager initialise! client trainManager routeCalculator)
+    (send routeCalculator initialise! client)
+    (send interface initialise! trainManager routeManager)
+    (send client initialise! interface)
+    (send GUI initialise! client routeManager)
+)
+

@@ -39,9 +39,9 @@
     (define trainType 'object:Train%)
     (define locomotiveType 'object:Locomotive%)
     (define railcarType 'object:Railcar%)
-    (define railManagerType 'object:RailwayManager%)
+    (define clientType 'object:Client%)
 
-    (field [railwayManager 'uninitialised])
+    (field [NMBSclient 'uninitialised])
 
     ;----------------------------------------------------
     ; Function: initialised?
@@ -53,51 +53,49 @@
     ;----------------------------------------------------
 
     (define/public (initialised?)
-      (not (eq? railwayManager 'uninitialised)))
+      (not (eq? NMBSclient 'uninitialised)))
 
     ;-------------------------------------------------------------
     ; Function: initialise!
     ; Parameters:
-    ;       railMan: object:RailwayManager%
-    ;         Use: The railway manager that is going to be used.
+    ;       cliet: object:Client%
+    ;         Use: The TCP client that is going to be used.
     ; Outpunt: n/a
     ; Use: Initialse the object.
     ;-------------------------------------------------------------
     
-    (define/public (initialse! railMan)
+    (define/public (initialise! client)
       (if (not (initialised?))
-          (if (eq? (object-name railMan) railManagerType)
-              (setRailwayManager! railMan)
-              (error "TrainManager% initialise!: Contract violation expected a railway Manager recieved" railMan))
+              (setClient! client)
           (error "TrainManager% initialise!: Object is already initialised, you cannot reinitialise the object")))
 
     ;-----------------------------------------------------------------------------------
-    ; Function: setRailwayManger!
+    ; Function: setClient!
     ; Parameters:
-    ;         railMan: object:RailwayManager%
-    ;           Use: The railway manager that is going to be used by the TrainManager%.
+    ;         client: object: client%
+    ;           Use: The TCP client that is going to be used by the TrainManager%.
     ; Output: n/a
-    ; Use: Set the railway manager of the train manager.
+    ; Use: Set the TCP client of the train manager.
     ;-----------------------------------------------------------------------------------
 
-    (define/public (setRailwayManager! railMan)
-      (if (eq? (object-name railMan) railManagerType)
-          (set! railwayManager railMan)
-          (error "TrainManger% setRailwayManager!: Contract violation expected a railway manager recieved" railMan)))
+    (define/public (setClient! client)
+      (if (eq? (object-name client) clientType)
+          (set! NMBSclient client)
+          (error "TrainManger% setClient!: Contract violation expected a TCP client recieved" client)))
 
     ;------------------------------------------------------
-    ; Function: getRailwayManager
+    ; Function: getClient
     ; Parameters: n/a
     ; Output:
-    ;     railwayManager: object:RailwayManager%
-    ;       Use: The railway manager used.
-    ; Use: The railway manager used by the train manager.
+    ;     TCP client: object:CLient%
+    ;       Use: The TCP client used.
+    ; Use: The TCP client used by the train manager.
     ;------------------------------------------------------
     
-    (define/public (getRailwayManager)
+    (define/public (getClient)
       (if (initialised?)
-          railwayManager
-          (error "TrainManager% getRailwayManager: Object is not initialised, please initialise before use")))
+          NMBSclient
+          (error "TrainManager% getClient: Object is not initialised, please initialise before use")))
     
     ;-----------------------------------------------------------------------------
     ; Function: isUnique?

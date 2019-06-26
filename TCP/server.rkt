@@ -18,12 +18,47 @@
   (super-new)
 
 
+
 (field [listener    'uninitialised]
        [input       'uninitialised]
        [output      'uninitialised]
+       [infrabelInterface 'uninitialised]
        [port        9883]
-       [maximalConnections 1])
+       [maximalConnections 1]
+       [railwayManager 'railwayManager] ; enable adding the correct tags for remote method calls
+       [railway        'railway]
+       [trainManager  'trainManager]
+       [routeManager  'routeManager])
 
+  ; Variable to enable object type checking
+
+  (define interfaceType 'object:Interface%)
+
+  ;-----------------------------------------------------
+  ; Function: initialised? 
+  ; Parameters: n/a 
+  ; Output: 
+  ;     boolean: boolean
+  ;       Use: Determine if the object is initialised
+  ; Use: Determine if the object is initialised.
+  ;-----------------------------------------------------
+
+  (define/public (initialised?)
+    (not (eq? 'uninitialised infrabelInterface)))
+
+  ;------------------------------------------------------------------------------
+  ; Function: initialise!
+  ; Parameters: 
+  ;       interface: object:Interface%
+  ;         Use: The interface used to enable calls over TCP from the client.
+  ; Output: n/a 
+  ; Use: Initialise the object.
+  ;------------------------------------------------------------------------------
+
+  (define/public (initialise! interface)
+    (if (eq? (object-name interface) interfaceType)
+        (set! infrabelInterface interface)
+        (error "Server% initialise!: Contract violation expected an interface, recieved: " interface)))
   ;------------------------------------
   ; Function: getPortnr
   ; Parameters: n/a 
@@ -165,6 +200,7 @@
   (define/public (closeConnection!)
     (tcp-close (getListener))
     (set! listener 'none)
+    (info "Server CloseConnection!: Listener closed and deleted.")
     (closePorts!))
 
   ;-------------------------------------------------
@@ -231,13 +267,15 @@
     (if (inputPortOpen?)
         (begin
           (close-input-port (getInputPort))
-          (set! input 'none))
+          (set! input 'none)
+          (info "Server closePorts!: input port is closed and deleted."))
     (info "Server% closePorts!: There is no input-port open, input-port cannot be closed."))
 
     (if (outputPortOpen?)
         (begin
         (close-output-port (getOutputPort))
-        (set! output 'none))
+        (set! output 'none)
+        (info "Server closePorts!: output port is closed and deleted."))
     (info "Server% closePorts!: There is no output-port open, output-port cannot be closed.")))
 
   ;------------------------------------------------
@@ -273,4 +311,35 @@
         (set! deserialzed (deserialize readData))
         deserialzed))
 
+    ;----------------------------------------------------
+    ; Function: recieveTCP
+    ; Parameters: n/a 
+    ; Output: 
+    ;   returnData: any serializable data
+    ;     Use: The data that is returned as result.
+    ; Use: Make a function call and send it over TCP.
+    ;-----------------------------------------------------
+
+    (define/public (recieveTCP)
+      (let ([recievedData 'none])
+        (set! recievedData (readInput))
+
+        (if (list? recievedData)
+          (if (or (eq? (car recievedData) railwayManager)
+                  (eq? (car recievedData) railway))
+                  
+                  (let ([result 'none])
+                    (set! result (send infrabelInterface callFunction recievedData))
+
+                    (when (or (not (eq? result 'none))
+                              (not (void? result)))
+      
+                              (writeOutput result)))
+              recievedData)
+          recievedData))
+          (recieveTCP))
+
+    ;(define/public (startServer)
+    ;  recieveTCP)
+    
   ))

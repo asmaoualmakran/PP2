@@ -3,8 +3,10 @@
 (require racket/tcp)
 (require logger)
 (require racket/serialize)
+(require "../NMBS/interface.rkt")
 
 (provide Client%)
+
 
 ;--------------------------
 ; Class: Client%
@@ -17,10 +19,44 @@
   (class object%
   (super-new)
 
+  (define interfaceObj 'object:Interface%)
+
+
   (field [host "localhost"]
          [port 9883]
          [input  'uninitialised]
-         [output 'uninitialised])
+         [output 'uninitialised]
+         [NMBSinterface 'uninitialised]
+         [railwayManager 'railwayManager] ; These fields are used to enable adding the correct symbol for remote calls
+         [railway        'railway]
+         [trainManager  'trainManager]
+         [routeManager  'routeManager])
+
+    ;-----------------------------------------------------
+    ; Function: initialised? 
+    ; Parameters: n/a 
+    ; Output: 
+    ;     boolean: boolean
+    ;       Use: Determine if the object is initialised.
+    ; Use: Determine if the client is initialised.
+    ;-----------------------------------------------------
+
+    (define/public (initialised?)
+      (not (eq? 'uninitialised NMBSinterface)))
+
+    ;-----------------------------------------------------
+    ; Function: initialise! 
+    ; Parameters: 
+    ;        interface: object:Interface%
+    ;         Use: The interface used on the client side.
+    ; Output: n/a 
+    ; Use: Initialise the object.
+    ;-----------------------------------------------------
+
+    (define/public (initialise! interface)
+      (if (eq? (object-name interface) interfaceObj)
+          (set! NMBSinterface interface)
+          (error "Client% initialise!: Contract violation expected a interface object, recieved: " interface)))
 
     ;-----------------------------
     ; Function: connect! 
@@ -132,8 +168,7 @@
         (if (serializable? data)
               (let ([serData (serialize data)])
                 (write serData output)
-                (flush-output output)
-                (display "data written"))
+                (flush-output output))
           (error "Client% writeOutput: The given data is not serializable, recieved: " data))
         (error "Client% writeOutput: No connection active.")))
 
@@ -152,4 +187,41 @@
         (set! deserialzed (deserialize readData))
         deserialzed))
   
+    ;----------------------------------------------------------------------
+    ; Function: TCPcall 
+    ; Parameters: 
+    ;       data: any serializable data
+    ;         Use: The data that needs to be send for function calls.
+    ; Output: 
+    ;     returnData: any serializable data
+    ;       Use: The data that is returned as result.
+    ; Use: Make a function call over TCP and recieved data in some cases.
+    ;----------------------------------------------------------------------
+
+  (define/public (TCPcall data)
+    (writeOutput data)
+    (display "TCP call made ")
+    (display data)
+    (newline)
+    
+    (let ([returnData 'none])
+
+      (set! returnData (readInput))
+
+      (if (list? returnData)
+          (if (or (eq? (car returnData) trainManager)
+                  (eq? (car returnData) routeManager))
+                 
+                  (let ([result 'none])
+                    (set! result (send NMBSinterface callFunction returnData)) ; if the first element is one of the symbols
+                                                                            ; you know it's a function call
+                    (when (or (not (eq? result 'none))
+                            (not (void? result)))    ; There is a result available form the call
+                            
+                            (writeOutput result)))
+
+                  returnData)
+        returnData)
+    ))
+
   ))

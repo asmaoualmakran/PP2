@@ -2,34 +2,36 @@
 
 (require "NMBS/nmbs.rkt")
 (require "Infrabel/infrabel.rkt")
-(require "GUI/gui.rkt")
+(require dyoo-while-loop)
 
 
-
-
-
-(define gui (new GUI%))
-
-
+(startNMBS)
+;(send GUI startGUI)
 (startInfrabel)
-;(startNmbs railwayManager railwayGraph)
+(send server openConnection!)
 
-(send railwayManager setTrainManager! trainManager)
-(send trainManager setRailwayManager! railwayManager)
-(send railwayManager clearAllTables!)
-(send fileReader loadRailway "railwaySetup\\test.txt")
+(send client connect!)
+(send server connect!)
 
+;(define (startServerThread)
+;  (send server startServer))
 
+;(thread (send GUI keepAlive))
+;(send server startServer)
+;(send server recieveTCP)
+(define (keepAlive)
+  (while (boolean? #t)
+         (display 'alive)
+         (newline)))
 
-;(send trainManager loadRailway! railwayManager)
-;(send railwayManager createTrack! 'T1);
-;(send railwayManager createTrack! 'T2)
-;(send railwayManager createSwitch! 'S1)
-;(send railwayManager createDetectionblock! 'B1)
+;(define serverThread (void))
 
+;(define start (lambda ()
+;                (set! serverThread (thread (send server startServer)))))
 
-;(send gui updateTracks)
-;(send gui updateSwitches)
-;(send gui updateDetectionblocks)
+;;(define threadPool (make-thread-group ))
+(display "start thread\n")
 
-
+(thread (lambda () (send server recieveTCP)))
+(thread (lambda () (sleep 1) (send client TCPcall (list 'railwayManager 'getAllSwitchID))))
+(send GUI startGUI)

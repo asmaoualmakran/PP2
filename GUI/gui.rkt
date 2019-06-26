@@ -1,6 +1,8 @@
 #lang racket
 (require racket/gui)
-(require "../simulator/gui_simulator/interface.rkt")
+(require dyoo-while-loop)
+(require "../TCP/client.rkt")
+(require "../NMBS/routeManager.rkt")
 
 (provide GUI%)
 
@@ -8,7 +10,49 @@
   (class object%
     (super-new)
 
+    (field [TCPclient 'uninitialised]
+           [routeManager 'uninitialised])
+
+    (define clientType 'object:Client%)
+    (define routeType 'object:RouteManager%)
+
+    (define/public (initialised?)
+      (and (not (eq? TCPclient 'uninitialised))
+           (not (eq? routeManager 'uninitialised))))
+
+  ;  (define/public (initialise! client routeMan)
+  ;    (if (and (eq? (object-name client) clientType)
+  ;              (eq? (object-name routeMan) routeType))
+  ;        (begin (set! TCPclient client)
+  ;              (set! routeManager routeMan))
+  ;        (error "GUI% initialise!: Contract violation expected a TCP client recieved and route manager: " client routeMan)))
+
+    (define/public (initialise! client routeMan)
+      (set! TCPclient client)
+      (set! routeManager routeMan))
+
+     (define railwayManager 'railwayManager)
+     (define railway 'railway)
+   ; (define railwayManager 
+   ;   (when (eq? (object-name TCPclient) clientType)
+   ;     (when (send TCPclient initialised?)
+   ;      (class-field-accessor TCPclient railwayManager))))
+
+   ; (define railway
+   ;    (when (eq? (object-name TCPclient) clientType)
+   ;     (when (send TCPclient initialised?)
+   ;      (class-field-accessor TCPclient railway))))
+
+    (define/public (startGUI)
+      (send frame show #t))
+    
+    (define/public (keepAlive)
+      (while (send frame is-enabled)
+      #t
+      ))
+
     (define frame (new frame% [label "PP2"]))
+
 
     (define mainPanel (new vertical-panel% [parent frame]))
 
@@ -52,27 +96,39 @@
 
     ;track-selector items
     
+   
+
     (define trackDropdown (new choice%
                                (label "Tracks")
                                (parent track-selector-left)
-                               (choices (list "straight" "with switches")))) ;choices needs to be modular 
+                               (choices (list "Hardware")))) ;choices needs to be modular 
 
     (define startButton (new button% [parent track-selector-right]
                              [label "start simulator"]
                              [callback (lambda (button event)
-                                         (start))]))
+                                         (when (= (send trackDropdown get-selection) 0)
+                                         (send TCPclient TCPcall (list railwayManager 'startRailway "../railwaySetup/test" ))
+                                         (display "call made")
+                                         (newline)
+                                         ))
+                                         ]))
 
-    (define stopButton(new button% [parent track-selector-right]
+    (define stopButton (new button% [parent track-selector-right]
                            [label "stop simulator"]
                            [callback (lambda (button event)
-                                       (stop))]))
+                                       (send TCPclient TCPcall (list railway 'stop-simulator)))]))
 
     ;Traject selector items
 
     (define trajectDopdown (new choice%
                                 (label "Trajects")
                                 (parent traject-selector-left)
-                                (choices (list "traject1" "traject2"))))
+                                (choices (loadTrajects))))
+     
+    (define/private (loadTrajects)
+      (if (initialised?)
+          (for-each symbol->string (send routeManager getAllRouteID))
+          (list " ")))
 
     (define trajectSelect (new button% [parent traject-selector-right]
                                [label "select traject"]
@@ -84,7 +140,7 @@
     (define trajectCreate (new button% [parent traject-creator-left]
                                [label "create traject"]
                                [callback (lambda (button event)
-                                           (define popframe (new frame% [label"Create train"]))
+                                           (define popframe (new frame% [label"Create Traject"]))
                                            (define main (new vertical-panel% [parent popframe]))
                                            (define top (new horizontal-panel% [parent main]))
                                            (define middle (new horizontal-panel% [parent main]))
@@ -96,12 +152,18 @@
                                            (define startDop (new choice%
                                                                  (label "Start node")
                                                                  (parent top)
-                                                                 (choices (list "start1" "start2"))))
+                                                                 (choices (list "test"))))
+                                                                 
+                                                                 ;(for-each symbol->string (send TCPclient TCPcall (list railwayManager 'getAllDetectionID))
+                                                                 
+                                                                ; ))))
                                            
                                            (define endDrop (new choice%
                                                                 (label "End node")
                                                                 (parent top)
-                                                                (choices (list "end 1" "end 2"))))
+                                                                (choices 
+                                                                  (list "test"))))
+                                                                ;(for-each symbol->string (send TCPclient TCPcall (list railwayManager 'getAllDetectionID))))))
 
                                            (define trajectID (new text-field%
                                                                   (label "Traject ID")
@@ -111,11 +173,14 @@
                                            (define createButton (new button% [parent bottom]
                                                                      [label "create"]
                                                                      [callback (lambda (button event)
-                                                                                 (display "traject created"))]))
+                                                                              ;  (when (initialised?)
+                                                                              ;   (send routeManager calculateRoute (string->symbol (send trajectID get-value)))))
+                                                                                (display "created")) ]))
                                            (define cancelButton (new button% [parent bottom]
                                                                      [label "cancel"]
                                                                      [callback (lambda (button event)
-                                                                                 (display "trajcet canceled"))]))
+                                                                                 (display "trajcet canceled")
+                                                                                 (send popframe show #f))]))
                                                               
                                            (send popframe show #t))]))
 
@@ -281,7 +346,6 @@
                                                                         (send popframe show #f))]))
                                         (send popframe show #t))]))
 
-    (send frame show #t)
 
     ))
 

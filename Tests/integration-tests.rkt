@@ -10,16 +10,14 @@
 ;---------------------------------------------------------
 
 (let ([railwayManager (new RailwayManager%)]
-      [trainManager (new TrainManager%)]
       [graph (unweighted-graph/directed '((a b) (c d)))])
 
-  (send railwayManager initialise! graph trainManager)
+  (send railwayManager initialise! graph)
   
   (test-case
    "RailwayManager Initialisation tests"
 
    (check-true (send railwayManager initialised?))
-   (check-eq? trainManager (send railwayManager getTrainManager))
    (check-eq? graph (send railwayManager getGraph))))
 
 ;------------------------------------------------------------
@@ -28,10 +26,9 @@
 ;------------------------------------------------------------
 
 (let ([railwayManager (new RailwayManager%)]
-      [trainManager (new TrainManager%)]
       [graph (unweighted-graph/directed '((a b) (c d)))])
 
-  (send railwayManager initialise! graph trainManager)
+  (send railwayManager initialise! graph)
 
   (let ([switch (send railwayManager createSwitch! 's)]
         [track (send railwayManager createTrack! 't)]
@@ -83,7 +80,6 @@
 ;------------------------------------------
 
 (let ([railwayManager (new RailwayManager%)]
-      [trainManager (new TrainManager%)]
       [graph (unweighted-graph/directed '((a b) (c d)))])
   
   (let([switch (send railwayManager createSwitch! 's)]
@@ -99,7 +95,7 @@
      (check-exn exn:fail?
                 (lambda () (send railwayManager initialise! 5 4))))
 
-    (send railwayManager initialise! graph trainManager)
+    (send railwayManager initialise! graph)
   
     (test-case
      "Failure test railway manager wrong creation pm"

@@ -26,6 +26,13 @@
    
     (struct reservation (id [priority #:mutable]))  ; a struct defineing a reservation
 
+    ;--------------------------------------
+    ; Function: initialise!
+    ; Parameters: n/a 
+    ; Output: n/a 
+    ; Use: Initialise the detectionblock.
+    ;--------------------------------------
+
     (define/public (initialise!)
       (setTrackID! 'none)
       (setMaxReservations! 10)

@@ -2,6 +2,7 @@
 
 (require racket/class)
 (require typed-stack)
+(require "../interface/interface.rkt")
 
 (provide SecurityProtocol%)
 
@@ -25,8 +26,7 @@
 
     ; The railway manager that's used (railway that needs to be secured)
     
-    (field [railManager 'none]
-           [trainManager 'none])
+    (field [railwayManager 'none])
 
     ;---------------------------------------------------------------
     ; Function: initialised?
@@ -38,8 +38,7 @@
     ;---------------------------------------------------------------
     
     (define/public (initialised?)
-      (and(not (eq? railManager 'none)
-          (not (eq? trainManager 'none)))))
+      (not (eq? railwayManager 'none)))
 
     ;------------------------------------------------------------
     ; Function: initialise!
@@ -50,14 +49,10 @@
     ; Use: Assign a railway manager to the security protocol.
     ;------------------------------------------------------------
 
-    (define/public (initialise! manager)
-      (if (eq? (object-name manager) railManType)
-          (if (send manager intialised?)
-                (begin (set! railManager manager)
-                       (set! trainManager))
-          (error "SecurityProtocol% initialise!: Contract violation given RailwayManager% is not initialised, recieved: " manager)
-          (error "SecurityProtocol% initialise!: Contract violation expected RailwayManager% recieved" manager)))
-
+    (define/public (initialise! railMan)
+      (if (eq? (object-name railMan) railManType)
+          (set! railwayManager railMan)
+          (error "SecurityProtocol% initialise!: Contract violation expected RailwayManager% recieved: " railMan)))
     ;-----------------------------------------------------------------------------------
     ; Function: reserve!
     ; Parameters:
@@ -71,15 +66,15 @@
     
     (define/private (reserve! railObj trainID)
       (if (initialised?)
-      (if (send railManager isMember? (send railObj getID))
+      (if (send railwayManager isMember? (send railObj getID))
           (if (or(not(symbol? (send railObj getAvailable)))  ;If it is a symbol, it must be set on #f (not available)
                  (send railObj getAvailble))                 ;If the boolean is #t  the obj is available
 
-              (if (and (not (send railManager isSwitch? (send railObj getID)))
-                       (send railManager hasRelatedObject? (send railObj getID))) ;if it does not have a related object, no extra fetching needed
+              (if (and (not (send railwayManager isSwitch? (send railObj getID)))
+                       (send railwayManager hasRelatedObject? (send railObj getID))) ;if it does not have a related object, no extra fetching needed
 
                   (begin
-                    (send (send railManager getRelatedObject (send railObj getID)) setAvailable! trainID) ;if it is a detectionblock
+                    (send (send railwayManager getRelatedObject (send railObj getID)) setAvailable! trainID) ;if it is a detectionblock
                     (send railObj setAvailable! trainID))
 
                   (send railObj setAvailable! trainID))
@@ -109,13 +104,13 @@
                (eq? (object-name endBlock) blockType)
                (list? route)
                (symbol? trainID)
-               (eq? (object-name railManager) railManType))
+               (eq? (object-name railwayManager) railManType))
           
           (if (not (null? list))
               (let ([resStack (empty-stack)] ; create an empty stack
                     [railObj 'none]) ; variable to save the railobject 
                 (for ([i route])     ; In this part build the stack to enable correct reservation
-                  (set! railObj (send railManager getObject i))
+                  (set! railObj (send railwayManager getObject i))
                   #:break (or (symbol? (send railObj getAvailable))   ; When a non available railobject is reached, end the loop.
                               (not (send railObj getAvailable)))
 
@@ -125,16 +120,16 @@
                     (print "route is completely reserved")
                     
                     (begin(for ([i resStack])
-                            #:break  (and (eq? (object-name (send railManager getObject i)) trackType) ; in this case a detectionblock has been found.
-                                          (send (send railManager getObject i) hasDetectionblock?))
+                            #:break  (and (eq? (object-name (send railwayManager getObject i)) trackType) ; in this case a detectionblock has been found.
+                                          (send (send railwayManager getObject i) hasDetectionblock?))
                             (pop! resStack)) ; if it is not a detection block remove it form the stack
                           
                           (for ([e resStack])    ; The available elements are in the stack (between two detectionblocks)
-                            (reserve!(send railManager getObject e)))
+                            (reserve!(send railwayManager getObject e)))
                           )))  ; clear the stack afther te operations
               
               (error "SecurityProtocol% reserveSection: Cannot reserve section, route is empty"))
-          (error "SecurityProtocol% reserveSection!: Contract violation, expected detectionblock detecionblock list symbol RailwayManager% received" startBlock endBlock route trainID railManager))
+          (error "SecurityProtocol% reserveSection!: Contract violation, expected detectionblock detecionblock list symbol RailwayManager% received" startBlock endBlock route trainID))
       (error "SecurityProtocol% reserveSection!: SecurityProtocol% not initialised, please initialise before use")))
 
     ;---------------------------------------------------------------------
@@ -149,15 +144,15 @@
     (define/private (release! railObj)
       (if (initialised?)
       (let ([id (send railObj getID)])
-        (if (or (send railManager isDetectionblock? id)
-                (send railManager isTrack? id))
+        (if (or (send railwayManager isDetectionblock? id)
+                (send railwayManager isTrack? id))
             
-            (if (send railManager hasRelatedObject? id)
+            (if (send railwayManager hasRelatedObject? id)
                 (begin (send railObj setAvailable! #t)
-                       (send (send railManager getRelatedObject id) setAvailable! #t))
+                       (send (send railwayManager getRelatedObject id) setAvailable! #t))
                 (send railObj setAvailable! #t))
             
-            (if (send railManager isSwitch? id)
+            (if (send railwayManager isSwitch? id)
                 (send railObj setAvailable! #t)
                 (error "SecurityProtocol% release!: Given id does not belong to a railway object."))))
       (error "SecurityProtocol% release!: SecurityProtocol% not initialised, please initialise before use"))) 
@@ -176,9 +171,9 @@
     (define/public (releaseSection! trainID route)
       (if (initialised?)
       (for ([i route])
-        (let ([current (send railManager getObject i)])
+        (let ([current (send railwayManager getObject i)])
           (if (eq? trainID(send current getAvailable))
-              (release! current railManager)
+              (release! current railwayManager)
               'couldNotRelease)))
       (error "SecurityProtocol% releaseSection!: SecurityProtocol% is not initialised, please initialise before use")))
 
@@ -199,11 +194,16 @@
       (if (initialised?)
           (if (and (symbol? trainID)
                    (symbol? detectionblockID))
-              (if (send railManager isDetectionblock? detectionblockID)
-                  (eq? trainID (send (send railManager getObject detectionblockID) getAvailable))
+              (if (send railwayManager isDetectionblock? detectionblockID)
+                  (eq? trainID (send (send railwayManager getObject detectionblockID) getAvailable))
                   (error "SecurityProtocol% hasPremission?: detectionblockID does not belong to a detectionblock recieved" detectionblockID))
               (error "SecurityProtocol% hasPremission?: Contract violaton, expected symbol symbol recieved" trainID detectionblockID))
           (error "SecurityProtocol% hasPremission?: SecurityProtocol% is not initialised, please initialse before use")))
-                            
+
+ ;   (define/public (startSecurity trainID route)
+ ;     (if (and (symbol? trainID)
+ ;              (list? route))
+         
+ ;         (error "SecurityProtocol% startSecurity: Contract violation, expected a trainID and a route, recieved: " trainID route))                       
 
     ))

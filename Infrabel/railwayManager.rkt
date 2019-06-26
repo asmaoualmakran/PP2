@@ -3,6 +3,7 @@
 (require "track.rkt")
 (require "switch.rkt")
 (require "detectionBlock.rkt")
+(require "../interface/interface.rkt")
 
 (provide RailwayManager%)
 
@@ -22,14 +23,11 @@
     (define trackType 'object:Track%)
     (define switchType 'object:Switch%)
     (define detectionblockType 'object:Detectionblock%)
-    (define trainManagerType 'object:TrainManager%)
+    (define serverType  'object:Server%)
 
-    ; The graph that represents the railwaysystem in a logical way
+
     (field [railGraph    'uninitialised]
-           [railwayGraph 'uninitialised]  ; TODO!!! adjust initialisers 
-           [trainManager 'uninitialised]
-           [railway      'uninitialised]  ;simulator
-           )
+           [TCPserver    'uninitialised])
 
     ;-----------------------------------------------------
     ; Function: initialised?
@@ -42,55 +40,51 @@
     
     (define/public (initialised?)
       (and (not (eq? railGraph 'uninitialised))
-           (not (eq? trainManager 'uninitialised))))
+           (not (eq? TCPserver 'uninitiailsed))))
 
     ;----------------------------------------------------------------------
     ; Function: initialise!
     ; Parameters:
     ;      graph: graph
     ;        Use: The graph that contains a representation of the railway.
-    ;     trainMang: object:TrainManager%
-    ;        Use: The train manager that is used.
     ; Output: n/a
     ; Use: Initialise the object.
     ;----------------------------------------------------------------------
     
-    (define/public (initialise! graph trainMan)
+    (define/public (initialise! graph server)
       (if (graph? graph)
-          (if (eq? trainManagerType (object-name trainMan))
-              (begin 
+              (begin
                 (setGraph! graph)
-                (setTrainManager! trainMan))
-              (error "RailwayManager% initialise!: Contract violation expected object with type object:TrainManager, recieved:" trainMan))
+                (setServer! server))
           (error "RailwayManager% initialise!: Contract violation expected graph, recieved:" graph)))
           
-    ;-------------------------------------------------------
-    ; Function: setTrainManager!
-    ; Parameters:
-    ;      trainMan: object:TrainManager%
-    ;        Use: The train manager that needs to be used
-    ; Output: n/a
-    ; Use: Set the train manager.
-    ;-------------------------------------------------------
-    
-    (define/public (setTrainManager! trainMan)
-      (if (eq? trainManagerType (object-name trainMan))
-          (set! trainManager trainMan)
-          (error "RailwayManager% setTrainManager!: Contract violation, expected a object with type object:TrainManager%, recieved:" trainMan)))
+    ;-----------------------------------------------------------------------
+    ; Function: setServer!
+    ; Parameters: 
+    ;       server: object:Server%
+    ;         Use: The TCP server that is used.
+    ; Output: n/a 
+    ; Use: Set the TCP server to enable communication outside the module.
+    ;-----------------------------------------------------------------------
 
-    ;------------------------------------------------
-    ; Function: getTrainManager
-    ; Parameters: n/a
-    ; Output:
-    ;     trainMan: object:TrainManager%
-    ;      Use: The train manager that is used.
-    ; Use: Get the train manager that is used.
-    ;------------------------------------------------
-    
-    (define/public (getTrainManager)
+    (define/public (setServer! server)
+      (if (eq? (object-name server) serverType)
+          (set! TCPserver server)
+          (error "RailwayManager% setServer!: Contract violation expected a server, recieved: " server)))
+
+    ;----------------------------------------------------------
+    ; Function: getServer
+    ; Parameters: n/a 
+    ; Output: 
+    ;     TCPserver: object:Server%
+    ;       Use: The server used for outgoing communication.
+    ; Use: Get the server for outgoing communication.
+    ;----------------------------------------------------------
+
+    (define/public (getServer)
       (if (initialised?)
-          trainManager
-          (error "RailwayManager% getTrainManager: Object is not initialised, initialise before use")))
+        TCPserver
+        (error "RailwayManager% getServer: Object is not initialised.")))
 
     ;--------------------------------------------------------------
     ; Function: setGraph!

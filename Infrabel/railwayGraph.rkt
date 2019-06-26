@@ -20,8 +20,8 @@
     (super-new)
 
     (field
-     [railwayManager 'none]
-     [railGraph 'none])
+     [railwayManager 'uninitialised]
+     [railGraph 'uninitialised])
 
     (define managerType 'object:RailwayManager%)
 
@@ -36,8 +36,8 @@
     
     (define/public (initialise! manager)
       (if (eq? (object-name manager) managerType)
-          (begin (setRailManager! manager)
-                 (generateGraph!))
+           (setRailManager! manager)
+
           (error "RailwayGraph% initialse!: Contract violation expected railway manager recieved" manager)))
 
     ;-----------------------------------------------------
@@ -50,9 +50,7 @@
     ;-----------------------------------------------------
 
     (define/public (initialised?)
-      (and (not (eq? railwayManager 'none))
-         ;  (not (eq? railGraph 'none))
-           ))
+      (not (eq? railwayManager 'uninitialised)))
 
     ;---------------------------------------------------------
     ; Function: getGraph
