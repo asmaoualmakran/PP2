@@ -27,6 +27,11 @@
     (define routeType 'object:RouteManager%)
     (define trainManType 'object:TrainManager%)
 
+    ; Variables used as tags to enable TCP calls to the backend 
+
+    (define railwayManager 'railwayManager)
+    (define railway 'railway)
+
     ;---------------------------------------------------
     ; Function: initialised? 
     ; Parameters: n/a 
@@ -43,100 +48,107 @@
     ;------------------------------------
     ; Function: initialise!
     ; Parameters: 
-    ;     client: Object:Client%
+    ;     client: object:Client%
     ;       Use: TCP client
-    ;     route
+    ;     routeMan: object:RouteManager%
+    ;       Use: The route manager use to track the trajects. 
+    ;     trainMan: object:TrainManager%
+    ;       Use: The train manager used.
     ;-------------------------------------------
-    
+
     (define/public (initialise! client routeMan trainMan)
-    (if (and (eq? client clientType)
-             (eq? routeMan routeType)
-             (eq? trainMan trainManType))
+    (if (and (eq? (object-name client) clientType)
+             (eq? (object-name routeMan) routeType)
+             (eq? (object-name trainMan) trainManType))
       (begin       
         (set! TCPclient client)
         (set! routeManager routeMan)
-        (set! trainManager trainMan))
-      (error "GUI% initialise!: Contract violation, expected a Client% routeManager% and TrainManager% recieved: " client routeMan trainMan)))
+      )
+      (error "GUI% initialise!: Contract violation, expected a Client% routeManager% and TrainManager% recieved: " client routeMan trainMan )))
 
-     (define railwayManager 'railwayManager)
-     (define railway 'railway)
-   ; (define railwayManager 
-   ;   (when (eq? (object-name TCPclient) clientType)
-   ;     (when (send TCPclient initialised?)
-   ;      (class-field-accessor TCPclient railwayManager))))
+    
+  ;  (define/private (loadRailway)
+  ;    (if (initalised?)
+      
+  ;    )
+  ;  )
 
-   ; (define railway
-   ;    (when (eq? (object-name TCPclient) clientType)
-   ;     (when (send TCPclient initialised?)
-   ;      (class-field-accessor TCPclient railway))))
+    ;--------------------------
+    ; Function: startGUI
+    ; Parameters: n/a 
+    ; Output: n/a 
+    ; Use: Start the GUI
+    ;--------------------------
 
     (define/public (startGUI)
       (send frame show #t))
     
-    (define/public (keepAlive)
-      (while (send frame is-enabled)
-      #t
-      ))
+
+    ; The frame used to create the GUI
 
     (define frame (new frame% [label "PP2"]))
 
+    ; The main panel used to create the GUI
 
     (define mainPanel (new vertical-panel% [parent frame]))
 
-    ;Track selector panes
+    ; Track selector panes
 
     (define track-selector (new horizontal-panel% [parent mainPanel]))
     (define track-selector-left (new vertical-panel% [parent track-selector]))
     (define track-selector-right (new vertical-panel% [parent track-selector]))
 
-    ;Traject selector pane
+    ; Traject selector pane
 
     (define traject-selector (new horizontal-panel% [parent mainPanel]))
     (define traject-selector-left (new vertical-panel% [parent traject-selector]))
     (define traject-selector-right (new vertical-panel% [parent traject-selector]))
 
-    ;Traject creator pane
+    ; Traject creator pane
 
     (define traject-creator (new horizontal-panel% [parent mainPanel]))
     (define traject-creator-left (new vertical-panel% [parent traject-creator]))
     (define traject-creator-right (new vertical-panel% [parent traject-creator]))
 
-    ;Train selectors panes
+    ; Train selectors panes
 
     (define train-selector (new horizontal-panel% [parent mainPanel]))
     (define train-selector-left (new vertical-panel% [parent train-selector]))
     (define train-selector-right (new vertical-panel% [parent train-selector]))
 
-    ;Train creator panes
+    ; Train creator panes
 
     (define train-creator (new horizontal-panel% [parent mainPanel]))
     (define train-creator-left (new vertical-panel% [parent train-creator ]))
     (define train-creator-right (new vertical-panel% [parent train-creator ]))
 
-    ;Traject setter
+    ; Traject setter
 
     (define traject-setter (new horizontal-panel% [parent mainPanel]))
     (define traject-setter-left (new vertical-panel% [parent traject-setter ]))
     (define traject-setter-right (new vertical-panel% [parent traject-setter ]))
     
-
-
-    ;track-selector items
+    ; Track selector items
     
-   
-
     (define trackDropdown (new choice%
                                (label "Tracks")
                                (parent track-selector-left)
-                               (choices (list "Hardware")))) ;choices needs to be modular 
+                               (choices (list "Hardware" "Straight""Straight with switch" "Loop")))) 
 
     (define startButton (new button% [parent track-selector-right]
                              [label "start simulator"]
                              [callback (lambda (button event)
-                                         (when (= (send trackDropdown get-selection) 0)
-                                         (send TCPclient TCPcall (list railwayManager 'startRailway "../railwaySetup/test" ))
-                                         (display "call made")
-                                         (newline)
+                                         
+                                         (cond  ((= (send trackDropdown get-selection)0) (display "hardware selected")
+                                                                                        (newline)
+                                                                                        (send TCPclient TCPcall ))
+                                                ((= (send trackDropdown get-selection)1) (display "straight selected")
+                                                                                        (newline))
+                                                ((= (send trackDropdown get-selection)2) (display "straight with switch selected")
+                                                                                        (newline))
+                                                ((= (send trackDropdown get-selection)3) (display "loop selected")
+                                                                                          (newline))
+                                         
                                          ))
                                          ]))
 
@@ -145,7 +157,7 @@
                            [callback (lambda (button event)
                                        (send TCPclient TCPcall (list railway 'stop-simulator)))]))
 
-    ;Traject selector items
+    ; Traject selector items
 
     (define trajectDopdown (new choice%
                                 (label "Trajects")
@@ -157,12 +169,12 @@
           (for-each symbol->string (send routeManager getAllRouteID))
           (list " ")))
 
-    (define trajectSelect (new button% [parent traject-selector-right]
-                               [label "select traject"]
+    (define trajectDelete (new button% [parent traject-selector-right]
+                               [label "Delete traject"]
                                [callback (lambda (button event)
                                            (display "traject selected"))]))
 
-    ;Traject creator items
+    ; Traject creator items
     
     (define trajectCreate (new button% [parent traject-creator-left]
                                [label "create traject"]
@@ -211,7 +223,7 @@
                                                               
                                            (send popframe show #t))]))
 
-    ;train-selector items
+    ; Train-selector items
 
     (define trainDropdown (new choice%
                                (label "Trains")
@@ -221,21 +233,44 @@
 
     (define setSpeedButton (new button% [parent train-selector-right]
                                 [label "set speed"]
-                                [callback (lambda (button event)
-                                            (display "speed set")
-                                            (newline))]))
+                               [callback (lambda (button event)
+                                           
+                                           (define popframe (new frame% [label "Set train speed"]))
+                                           (define main (new vertical-panel% [parent popframe]))
+                                           (define top (new horizontal-panel% [parent main]))
+                                           (define middle (new horizontal-panel% [parent main]))
+                                           (define left (new vertical-panel% [parent middle]))
+                                           (define right (new vertical-panel% [parent middle]))
+                                           (define bottom (new horizontal-panel% [parent main]))
+
+                                           (define trainSpeed (new text-field%
+                                                               [label "New speed"]
+                                                               [parent top]
+                                                               [init-value "0"]))
+
+                                           (define setSpeed (new button% [parent bottom]
+                                                                   [label "Set speed"]
+                                                                   [callback (lambda (button event)
+                                                                               (display "speed set")
+                                                                               (newline))]))
+                                           (define cancel (new button% [parent bottom]
+                                                               [label "cancel"]
+                                                               [callback (lambda (button event)
+                                                                           (send popframe show #f))]))
+                                           (send popframe show #t))]))
 
     (define getSpeedButton (new button% [parent train-selector-right]
                                 [label "get speed"]
                                 [callback (lambda (button event)
                                             (display "speed get")
                                             (newline))]))
+
+    (define trainDelete (new button% [parent train-selector-right]
+                               [label "Delete train"]
+                               [callback (lambda (button event)
+                                           (display "train selected"))]))
                                       
-
-
-    ;train creator items
-
- 
+    ; Train creator items
 
     (define newTrainButton (new button% [parent train-creator-left]
                                 [label "new train"]
@@ -274,8 +309,7 @@
                                                                 (callback (lambda (button event)
                                                                             (send popframe show #f)))))
                                             (send popframe show #t))]))
-                            
-                          
+                                                 
 
     (define newLocoButton (new button% [parent train-creator-left]
                                [label "new locomotive"]
@@ -335,8 +369,6 @@
                                                                               (send popframe show #f))]))
                                               (send popframe show #t))]))
     
-
-
     (define setTraject (new button%
                             [parent traject-setter-right]
                             [label "set traject"]

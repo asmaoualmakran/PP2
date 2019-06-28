@@ -26,6 +26,6 @@
     (send routeCalculator initialise! client)
     (send interface initialise! trainManager routeManager)
     (send client initialise! interface)
-    (send GUI initialise! client routeManager)
+    (send GUI initialise! client routeManager trainManager)
 )
 
