@@ -208,7 +208,8 @@
 
       (set! returnData (readInput))
 
-      (if (list? returnData)
+      (if (and (list? returnData)
+               (not (null? returnData)))
           (if (or (eq? (car returnData) trainManager)
                   (eq? (car returnData) routeManager))
                  

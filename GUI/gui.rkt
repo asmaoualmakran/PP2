@@ -6,30 +6,57 @@
 
 (provide GUI%)
 
+;---------------------------------
+; Class: GUI%
+; Parameters: n/a 
+; Output: object:GUI%
+; Use: A GUI for the simulator.
+;---------------------------------
+
 (define GUI%
   (class object%
     (super-new)
 
     (field [TCPclient 'uninitialised]
-           [routeManager 'uninitialised])
+           [routeManager 'uninitialised]
+           [trainManager 'uninitialised])
+
+    ; Variables to enable easy type checking
 
     (define clientType 'object:Client%)
     (define routeType 'object:RouteManager%)
+    (define trainManType 'object:TrainManager%)
+
+    ;---------------------------------------------------
+    ; Function: initialised? 
+    ; Parameters: n/a 
+    ; Output: boolean: boolean
+    ;   Use: Determine if the object is initialised.
+    ; Use: Determine if the object isinitialised.
+    ;---------------------------------------------------
 
     (define/public (initialised?)
       (and (not (eq? TCPclient 'uninitialised))
-           (not (eq? routeManager 'uninitialised))))
+           (not (eq? routeManager 'uninitialised))
+           (not (eq? trainManager 'uninitialised))))
 
-  ;  (define/public (initialise! client routeMan)
-  ;    (if (and (eq? (object-name client) clientType)
-  ;              (eq? (object-name routeMan) routeType))
-  ;        (begin (set! TCPclient client)
-  ;              (set! routeManager routeMan))
-  ;        (error "GUI% initialise!: Contract violation expected a TCP client recieved and route manager: " client routeMan)))
-
-    (define/public (initialise! client routeMan)
-      (set! TCPclient client)
-      (set! routeManager routeMan))
+    ;------------------------------------
+    ; Function: initialise!
+    ; Parameters: 
+    ;     client: Object:Client%
+    ;       Use: TCP client
+    ;     route
+    ;-------------------------------------------
+    
+    (define/public (initialise! client routeMan trainMan)
+    (if (and (eq? client clientType)
+             (eq? routeMan routeType)
+             (eq? trainMan trainManType))
+      (begin       
+        (set! TCPclient client)
+        (set! routeManager routeMan)
+        (set! trainManager trainMan))
+      (error "GUI% initialise!: Contract violation, expected a Client% routeManager% and TrainManager% recieved: " client routeMan trainMan)))
 
      (define railwayManager 'railwayManager)
      (define railway 'railway)
