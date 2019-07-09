@@ -3,7 +3,7 @@
 (require "track.rkt")
 (require "switch.rkt")
 (require "detectionBlock.rkt")
-(require "../interface/interface.rkt")
+
 
 (provide RailwayManager%)
 

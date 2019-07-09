@@ -2,7 +2,7 @@
 
 (require racket/class)
 (require typed-stack)
-(require "../interface/interface.rkt")
+(require "railwaySystem.rkt")
 
 (provide SecurityProtocol%)
 

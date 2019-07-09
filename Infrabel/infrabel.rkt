@@ -29,6 +29,7 @@
 (require "securityProtocol.rkt")
 (require "../TCP/server.rkt")
 (require "interface.rkt")
+(require "railwaySystem.rkt")
 
 (provide server)
 (provide startInfrabel)
@@ -40,6 +41,7 @@
 (define securityProtocol (new SecurityProtocol%))
 (define server (new Server%))
 (define interface (new Interface%))
+(define railwaySystem (new RailwaySystem%))
 
 
 (define (startInfrabel)
@@ -48,7 +50,7 @@
   (send railwayGraph initialise! railwayManager)
   (send securityProtocol initialise! railwayManager)
   (send server initialise! interface)
-  (send interface initialise! railwayManager fileReader railwayGraph)
+  (send interface initialise! railwayManager railwaySystem fileReader railwayGraph)
 
 )
 

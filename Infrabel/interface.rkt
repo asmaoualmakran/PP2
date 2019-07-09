@@ -1,7 +1,7 @@
 #lang racket
 
 (require "railwayManager.rkt")
-(require "../interface/interface.rkt") ; The Z21 interface
+(require "railwaySystem.rkt")
 
 (provide Interface%)
 
@@ -11,11 +11,13 @@
 
     (field [railwayManager 'uninitialised]
            [fileReader     'uninitialised]
-           [railwayGraph   'uninitialised])
+           [railwayGraph   'uninitialised]
+           [railwaySystem  'uninitialised])
 
     (define railwayManObj 'object:RailwayManager%)
-    (define fileObj      'object:FileReader%)
+    (define fileObj       'object:FileReader%)
     (define graphObj      'object:RailwayGraph%)
+    (define railSysObj    'object:RailwaySystem%)
 
     ; The tables that contain the used functions.
 
@@ -34,16 +36,30 @@
     ; Use: Initialise the object.
     ;----------------------------------------------
 
-    (define/public (initialise! railwayMan reader graph)
+    (define/public (initialise! railwayMan railwaySys reader graph)
+      (display "start initialisation")
+      (newline)
+      (display "These are the arguments: ")
+      (display (object-name railwayMan))
+      (display " ")
+      (display (object-name railwaySys))
+      (display " ")
+      (display (object-name reader))
+      (display " ")
+      (display (object-name graph))
+      (newline)
       (if (and (eq? railwayManObj (object-name railwayMan))
+               (eq? railSysObj (object-name railwaySys))
                (eq? fileObj (object-name reader))
                (eq? graphObj (object-name graph)))
          
           (begin
           (set! railwayManager railwayMan)
+          (set! railwaySystem railwaySys)
           (set! fileReader  reader)
           (set! railwayGraph graph)
-          (addBasicFunctions!))
+          (addBasicFunctions!)
+          (display "Functions added"))
 
       (error "Interface% initialise!: Contract violation expected a railwayManager object, recieved: " railwayMan)))
   
@@ -57,9 +73,9 @@
     ;-----------------------------------------------------
 
     (define/public (initialised?)
-      (and (not (eq? 'uninitialised railwayManager)
-           (not (empty? railwayManFunc)
-           (not (empty? railwayFunc))))))
+      (and (not (eq? 'uninitialised railwayManager))
+           (not (empty? railwayManFunc))
+           (not (empty? railwayFunc))))
     
     ;--------------------------------------------------------------------
     ; Function: addFunction! 
@@ -81,8 +97,10 @@
           (if (and (not (hash-has-key? railwayManFunc key))
                    (not (hash-has-key? railwayFunc key)))
                 
-                (cond ((eq? dest railwayManSym) (hash-set! railwayManFunc key function))
-                      ((eq? dest railwaySym) (hash-set! railwayFunc key function))
+                (cond ((eq? dest railwayManSym) (hash-set! railwayManFunc key function)
+                                                (display "Function added: ") (display "manager ") (display key) (newline))
+                      ((eq? dest railwaySym) (hash-set! railwayFunc key function)
+                                              (display "Function added: ") (display "railway ") (display key) (newline))
                 (else (error "Interface! addFunction!: Destiantion is unknown, recieved: " dest)))
 
                 (error "Interface% addFunction!: Key is not unique, function already exists, recieved: " key))
@@ -298,11 +316,12 @@
     ; Function: n/a 
     ; Parameters: n/a 
     ; Output: n/a 
-    ; Use: Start the railway simulator (z21).
+
     ;------------------------------------------
 
-    (addFunction! railwaySym 'startSimulator (lambda ()
-                                                (start-simulator)))
+    (addFunction! railwaySym 'startSimulator (lambda (railway status)
+                                                (send railwaySystem setStatus! status)
+                                                (send railwaySystem startSystem railway)))
 
     ;----------------------------------------
     ; Function: n/a 
@@ -312,7 +331,8 @@
     ;-----------------------------------------
 
     (addFunction! railwaySym 'stopSimulator (lambda ()
-                                                (stop-simulator)))
+                                                (send railwaySystem stopSystem)))
+
 
     ;-----------------------------------------------------------------
     ; Function: n/a 
@@ -325,8 +345,8 @@
     ;         Use: The current location of the train.
     ;------------------------------------------------------------------
 
-    (addFunction! railwaySym 'createTrain (lambda (trainID dir loc)
-                                            (add-loco dir loc)))
+   ; (addFunction! railwaySym 'createTrain (lambda (trainID dir loc)
+    ;                                        (add-loco dir loc)))
 
     ;-----------------------------------------------------------
     ; Function: n/a 
@@ -339,8 +359,8 @@
     ; Use: Change the speed of the train.
     ;------------------------------------------------------------
 
-    (addFunction! railwaySym 'setSpeed! (lambda (trainID speed)
-                                            (set-loco-speed! trainID speed)))
+   ; (addFunction! railwaySym 'setSpeed! (lambda (trainID speed)
+   ;                                         (set-loco-speed! trainID speed)))
 
     ;---------------------------------------------
     ; Function: n/a 
@@ -353,8 +373,8 @@
     ; Use: Get the speed of the train.
     ;----------------------------------------------
 
-    (addFunction! railwaySym 'getSpeed (lambda (trainID)
-                                          (get-loco-speed trainID)))
+ ;   (addFunction! railwaySym 'getSpeed (lambda (trainID)
+ ;                                         (get-loco-speed trainID)))
 
     ;-------------------------------------------------------------
     ; Function: n/a 
@@ -367,8 +387,8 @@
     ; Use: Get the location (detectionblock) of the train.
     ;--------------------------------------------------------------
 
-    (addFunction! railwaySym 'getLocationTrain (lambda (trainID)
-                                                  (get-loco-detection-block trainID)))
+  ;  (addFunction! railwaySym 'getLocationTrain (lambda (trainID)
+  ;                                                (get-loco-detection-block trainID)))
 
     ;-------------------------------------------
     ; Function: n/a 
@@ -381,8 +401,8 @@
     ; Use: Get the position of the switch.
     ;--------------------------------------------
 
-    (addFunction! railwaySym 'getSwitchPos (lambda (switchID)
-                                              (get-switch-position switchID)))
+  ;  (addFunction! railwaySym 'getSwitchPos (lambda (switchID)
+  ;                                            (get-switch-position switchID)))
 
     ;-----------------------------------------------
     ; Function: n/a 
@@ -395,8 +415,8 @@
     ; Use: Setting the switch position.
     ;-----------------------------------------------
 
-    (addFunction! railwaySym 'setSwitchPos (lambda (switchID pos)
-                                              (set-switch-position! switchID pos)))
+;    (addFunction! railwaySym 'setSwitchPos (lambda (switchID pos)
+ ;                                             (set-switch-position! switchID pos)))
     )
 
     ;----------------------------------------------------
@@ -410,15 +430,15 @@
     ; Use: Get a function from the selected hashtable.
     ;----------------------------------------------------
 
-    (define/private (getFunction hasht key)
+    (define/public (getFunction hasht key)
      (if (and (symbol? hasht)
               (symbol? hasht))
           
           (cond ((eq? hasht railwayManSym) (if (hash-has-key? railwayManFunc key)
                                                 (hash-ref railwayManFunc key)
                                                 (error "Interface% getFunction: Table does not contain the key, recieved: " hasht key)))
-                ((eq? hasht railwaySym) (if (hash-has-key? railwayManFunc key)
-                                              (hash-ref railwayManFunc key)
+                ((eq? hasht railwaySym) (if (hash-has-key? railwayFunc key)
+                                              (hash-ref railwayFunc key)
                                               (error "Interface% getFunction: Table does not contain the key, recieved: " hasht key)))
                 (else (error "Interface getFunction: The given table does not exist, recieved: " hasht)))
               
