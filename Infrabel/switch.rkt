@@ -156,7 +156,8 @@
                (symbol? conn3))
           (begin
             (setConnection! conn1)
-            (setYConnections! conn2 conn3))
+            (setYConnection! conn2)
+            (setYConnection! conn3))
           (error "Switch% setConnections!: Contract violation expected three symbols, recieved:" conn1 conn2 conn3)))
 
     ;------------------------------------------------------------------------------------------------
@@ -182,23 +183,22 @@
     ; Parameters:
     ;         conn1: symbol
     ;          Use: ID of the rail or switch that is connected on one of the splitted parts of the switch.
-    ;         conn2: symbol
-    ;          Use: ID of the rail or switch that is connected on one of the splitted parts of the switch.
     ; Output: n/a
-    ; Use: Set the connections of the switch on the splitted side.
+    ; Use: Set one of the connections of the switch on the splitted side.
     ;--------------------------------------------------------------------------------------------------------
-    
-    (define/public (setYConnections! conn1 conn2)
-      (if (initialised?)
-          
-          (if (and (symbol? conn1)
-                   (symbol? conn2))
-              (if (and (isConnectionFree? (getFirstYConnection))
-                       (isConnectionFree? (getSecondYConnection)))               
-                  (set! y-connection (list conn1 conn2))
-                  (error "Switch% SetYConnection!: Not both of the y connections are free, connection cannot be made."))
-              (error "Switch% setYConnection!: Contract violation expected two symbols, recieved:" conn1 conn2))
-          (error "Switch% setYConnection!: Object is not initialised, please initialise before use.")))
+  
+      (define/public (setYconnection! id)
+        (if (initialised?)
+          (if (symbol? id)
+            (cond 
+              ((isConnectionFree? (getFirstYConnection))  (set! y-connection (list id (getSecondYConnection)))) ;set the first
+              ((isConnectionFree? (getSecondYConnection)) (set! y-connection (list (getFirstYConnection) id)))  ;set the second
+              
+              (else (info "Switch% setYconnection!: All Y-connections are set, please delete one first before adding.")))
+          (error "Switch% setYconnection!: Contract violation expected a symbol, recieved: " id)
+        (error "Switch% setYConnection!: Object is not initialised, please initialise before use."))
+      
+      )
 
     ;------------------------------------------------------------------------------------
     ; Function: completelyConnected?

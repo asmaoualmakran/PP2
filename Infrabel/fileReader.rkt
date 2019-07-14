@@ -428,48 +428,63 @@
       ; Parameters:
       ;         switchID: symbol
       ;           Use: The identification of the switch.
-      ;         id1: symbol
-      ;          Use: The identification of the railway object that needs to be connected or the symbol none.
-      ;         id2: symbol
+      ;         id: symbol
       ;          Use: The identification of the railway object that needs to be connected or the symbol none.
       ; Output: n/a
       ; Use: Connecting two railway objects to the splitted connection of the switch, or create a dead end.
+      ; Note: When connecting two switches, id will be connected to the y-connection of the switch
+      ;       and the switch will be connected to the straight connection of id
       ;----------------------------------------------------------------------------------------------------------
       
-      (add! 'connectY! (lambda (switchID id1 id2)
+      (add! 'connectY! (lambda (switchID id)
+                        (if (and (symbol? switchID)
+                                 (symbol? id))
 
-                         (if (and (symbol? switchID)
-                                  (symbol? id1)
-                                  (symbol? id2))
-                            
-                             (if (send railmanager isSwitch? switchID)
+                          (if (send railmanager isSwitch? switchID)
+                            (if (validConnection? switchID id)
+
+                              (let ([switch (send railmanager getSwitch switchID)]
+                                    [obj 'none])
+                                    
+                                    (when (send railmanager isMember? id)
+                                      (set! obj (send railmanager getObject id))))
+                                    
+                                    (if (eq? obj 'none)
+                                      (send switch setYConnection! obj)
+                                      (begin 
+                                            (send switch setYConnection! id)
+                                             (send obj setConnection! switchID)))
+                                    
+                            (error "FileReader% add! 'connectY!: No valid connection between the objects with given ID's: " switchID id))
+                          (error "FileReader% add! 'connectY!: Contract violation expected a switch ID as parameter, recieved: " switchID))       
+                        (error "FileReader% add! 'connectY!: Contract violation expected two symbols, recieved: " switchID id))
+                        ))
+
+      ;-------------------------------------------------------------
+      ; Function: n/a 
+      ; Parameters: 
+      ;       id1: object:Switch%
+      ;         Use: The switch that needs to be connected. 
+      ;       id2: object:Switch%
+      ;         Use: The switch that needs to be connected. 
+      ; Output: n/a 
+      ; Use: Connect Y-connections of two switches to each other. 
+      ;------------------------------------------------------------
+
+      (add! 'connectYtoY! (lambda (id1 id2)
+                            (if (and (symbol? id1)
+                                     (symbol? id2))
+
+                              (if (and (send railmanager isSwitch? id1)
+                                       (send railmanager isSwitch? id2))
                                 
-                                 (if (and (validConnection? switchID id1)
-                                          (validConnection? switchID id2))
-                                    
-                                     (let ([switch (send railmanager getSwitch switchID)]
-                                           [obj1 'none]
-                                           [obj2 'none])
-
-                                       (when (send railmanager isMember? id1)
-                                         (set! obj1 (send railmanager getObject id1)))
-
-                                       (when (send railmanager isMember? id2)
-                                         (set! obj2 (send railmanager getObject id2)))
-
-                                       (cond
-                                         
-                                         ((eq? obj1 'none)(send switch setYConnections! 'none id2))
-                                         ((eq? obj2 'none) (send switch setYConnections! id1 'none))
-
-                                         (else (begin
-                                                
-                                                 (send switch setYConnections! id1 id2)
-                                                      (send obj1 setConnection! switchID)
-                                                      (send obj2 setConnection! switchID)))))
-                                    
-                                     (error "FileReader% add! 'connectY!: No valid connection between the given objects."))
-                                 (error "FileReader% add! 'connectY!: Contract violation expected a switch as parameter, recieved:" switchID))
-                             (error "FileReader% add! 'connectY!: Contract violation expected three symbols, recieved:" switchID id1 id2))))
+                                (let ([switch1 (send railmanager getSwitch id1)]
+                                      [switch2 (send railmanager getSwitch id2)])
+                                      
+                                      (send switch1 setYConnection! id2)
+                                      (send switch2 setYConnection! id1))
+                                  
+                              (error "FileReader% add! 'connectYtoY!: Contract violation expected two switches ID's, recieved: " id1 id2))
+                            (error "FileReader% add! 'connectYtoY!: Contract violation expected two symbols, recieved: " id1 id2))))
       )))
 
