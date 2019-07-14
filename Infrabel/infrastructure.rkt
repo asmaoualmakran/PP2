@@ -1,7 +1,5 @@
 #lang racket
 
-;TODO: alle functies checken en testen 
-
 (require racket/class)
 
 (provide Infrastructure%)

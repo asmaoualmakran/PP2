@@ -1,7 +1,9 @@
 #lang racket
 
+(require logger)
 (require "railwayManager.rkt")
 (require "railwaySystem.rkt")
+
 
 (provide Interface%)
 
@@ -27,6 +29,8 @@
     (define railwayManSym 'railwayManager)
     (define railwaySym 'railway)
 
+    (define path "railwaySetup\\hardware.txt")
+
     ;---------------------------------------------
     ; Function: initialise!
     ; Parameters: 
@@ -37,17 +41,7 @@
     ;----------------------------------------------
 
     (define/public (initialise! railwayMan railwaySys reader graph)
-      (display "start initialisation")
-      (newline)
-      (display "These are the arguments: ")
-      (display (object-name railwayMan))
-      (display " ")
-      (display (object-name railwaySys))
-      (display " ")
-      (display (object-name reader))
-      (display " ")
-      (display (object-name graph))
-      (newline)
+      
       (if (and (eq? railwayManObj (object-name railwayMan))
                (eq? railSysObj (object-name railwaySys))
                (eq? fileObj (object-name reader))
@@ -63,6 +57,14 @@
 
       (error "Interface% initialise!: Contract violation expected a railwayManager object, recieved: " railwayMan)))
   
+
+    (define/private (selectRailway rail)
+      (if (symbol? rail)
+        (cond ((eq? rail 'Hardware) (send fileReader loadRailway path))
+        
+        (else (info "Given railway is unkown please create and add before use, recieved: " rail)))
+      
+      (error "Interface% selectRailway: Contract violation expected a symbol, recived: " rail)))
     ;----------------------------------------------------
     ; Function: initialised? 
     ; Parameters: n/a 
@@ -299,16 +301,11 @@
                                                             (set! connection (send switch getConnection))
                                                             connection)))
 
-    (addFunction! railwayManSym 'startRailway (lambda (path)
-                                              (display path)
-                                              (newline)
-                                              (send fileReader loadRailway path)
-                                              (display "file read")
-                                              (newline)
-                                              (send railwayGraph generateGraph)
+    (addFunction! railwayManSym 'startRailway (lambda (railway)
+                                              (selectRailway railway)
+                                              (send railwayGraph generateGraph!)
                                               (send railwayManager setGraph! (send railwayGraph getGraph))
-                                              ; start the simulator
-                                              ))
+                                              (display (send railwayManager getAllTrackID))))
 
     ;Railway functions
 

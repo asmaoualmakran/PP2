@@ -1,4 +1,5 @@
 #lang racket
+
 (require graph)
 (require "track.rkt")
 (require "switch.rkt")
@@ -58,6 +59,7 @@
                 (setServer! server))
           (error "RailwayManager% initialise!: Contract violation expected graph, recieved:" graph)))
           
+  
     ;-----------------------------------------------------------------------
     ; Function: setServer!
     ; Parameters: 

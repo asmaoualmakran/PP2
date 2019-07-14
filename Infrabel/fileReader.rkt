@@ -7,9 +7,6 @@
 (require "railwayManager.rkt")
 
 
-(define manager (new RailwayManager%))
-
-
 (provide FileReader%)
 
 (define FileReader%
@@ -173,11 +170,11 @@
           (if (send railmanager containsRailway?)
               (begin
                 (send railmanager clearAllTables!)
-                (parseFile(openFile path))
+               (parseFile(openFile path))
                 (info "FileReader% loadRailway: The railway manager contained a railway, this has been deleted and replaced"))
               
               (parseFile (openFile path)))
-          
+        
           ((error "FileReader% loadRailway: Object is not initialised, please initialise before use."))))
       
     ;----------------------------------------------------------------------
@@ -326,7 +323,13 @@
               
               (and (or (send railmanager isSwitch? id2)
                        (send railmanager isTrack? id2))
-                   (eq? 'none id1)))))
+                   (eq? 'none id1))
+
+              (and (send railmanager isSwitch? id1)
+                   (send railmanager isSwitch? id2))
+
+              (and (send railmanager isTrack? id1)
+                   (send railmanager isTrack? id2)))))
                               
     ;----------------------------------------------------------------------
     ; Function: addBasicFunctions!
@@ -404,8 +407,8 @@
 
                                   (cond
                                     ((and (eq? obj1 'none)
-                                          (or (send railmanager isSwitch? id2))
-                                          (send railmanager isTrack? id2)) (send obj2 setConnection! id1))
+                                          (or (send railmanager isSwitch? id2)
+                                          (send railmanager isTrack? id2))) (send obj2 setConnection! id1))
 
                                     ((and (eq? obj2 'none)
                                           (or (send railmanager isSwitch? id1)
@@ -447,13 +450,13 @@
                                     [obj 'none])
                                     
                                     (when (send railmanager isMember? id)
-                                      (set! obj (send railmanager getObject id))))
+                                      (set! obj (send railmanager getObject id)))
                                     
                                     (if (eq? obj 'none)
                                       (send switch setYConnection! obj)
                                       (begin 
                                             (send switch setYConnection! id)
-                                             (send obj setConnection! switchID)))
+                                             (send obj setConnection! switchID))))
                                     
                             (error "FileReader% add! 'connectY!: No valid connection between the objects with given ID's: " switchID id))
                           (error "FileReader% add! 'connectY!: Contract violation expected a switch ID as parameter, recieved: " switchID))       

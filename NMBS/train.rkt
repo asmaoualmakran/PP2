@@ -23,7 +23,7 @@
       [traject            'uninitialised]
       [trajectID          'uninitialised]
       [active             'uninitialised]
-      [position    'uninitialised]
+      [position           'uninitialised]
       [direction          'uninitialised]
       [speed              'uninitialised])
 

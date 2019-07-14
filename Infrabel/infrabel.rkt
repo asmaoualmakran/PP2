@@ -33,7 +33,7 @@
 
 (provide server)
 (provide startInfrabel)
-(provide railwayManager)
+
 
 (define railwayManager (new RailwayManager%))
 (define fileReader (new FileReader%))
@@ -51,6 +51,5 @@
   (send securityProtocol initialise! railwayManager)
   (send server initialise! interface)
   (send interface initialise! railwayManager railwaySystem fileReader railwayGraph)
-
 )
 

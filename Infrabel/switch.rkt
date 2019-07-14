@@ -1,6 +1,7 @@
 #lang racket
 
 (require racket/class)
+(require logger)
 (require "infrastructure.rkt")
 
 (provide Switch%)
@@ -187,7 +188,7 @@
     ; Use: Set one of the connections of the switch on the splitted side.
     ;--------------------------------------------------------------------------------------------------------
   
-      (define/public (setYconnection! id)
+      (define/public (setYConnection! id)
         (if (initialised?)
           (if (symbol? id)
             (cond 
@@ -195,10 +196,8 @@
               ((isConnectionFree? (getSecondYConnection)) (set! y-connection (list (getFirstYConnection) id)))  ;set the second
               
               (else (info "Switch% setYconnection!: All Y-connections are set, please delete one first before adding.")))
-          (error "Switch% setYconnection!: Contract violation expected a symbol, recieved: " id)
-        (error "Switch% setYConnection!: Object is not initialised, please initialise before use."))
-      
-      )
+          (error "Switch% setYconnection!: Contract violation expected a symbol, recieved: " id))
+        (error "Switch% setYConnection!: Object is not initialised, please initialise before use.")))
 
     ;------------------------------------------------------------------------------------
     ; Function: completelyConnected?

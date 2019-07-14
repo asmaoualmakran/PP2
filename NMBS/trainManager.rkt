@@ -115,50 +115,25 @@
               (not(hash-has-key? railcarTable id)))
           (error "TrainManager% isUnique?: contract violation, expected symbol received" id)))
 
-    ;------------------------------------------------------------------------------------------
+    ;---------------------------------------------------------------------------------------------------
     ; Function: createTrain!
     ; Parameters:
     ;      id: symbol
     ;       Use: The identification of the train.
+    ;      pos: symbol
+    ;       Use: The location where the train needs to be placed. This must be at a detectable location.
+    ;      dir: symbol
+    ;       Use: 
     ; Output: n/a
     ; Use: Create a train with an unique identification and safe it in the correct hashtable.
-    ;------------------------------------------------------------------------------------------
+    ;----------------------------------------------------------------------------------------------------
     
-    (define/public (createTrain! id)   
+    (define/public (createTrain! id pos dir)   
       (if (isUnique? id)  ;check whether a id is already used.
           (let ([train (make-object Train%)])   ; If it's not in use, the train can be added.
-            (send train setID! id)
-            (hash-set! trainTable id train)
-            (initTrain id))
+            (send train initialise! id pos dir)
+            (hash-set! trainTable id train))
           (error "TrainManager% createTrain: ID is already in use, received" id)))
-
-    ;--------------------------------------------------------------------------------
-    ; Function: initTrain
-    ; Parameters:
-    ;     id: symbol
-    ;      Use: The identification of the train that needs to be initialised.
-    ; Use: Initialise the train.
-    ;-------------------------------------------------------------------------------
-    
-    (define/public (initTrain id)  
-      (if (isTrain? id)
-          (let ([train (getTrain id)])
-            (if (not(send train initialised?))
-                (begin
-                  (send train initBuild)
-                  (send train initActive)
-                  (send train setTraject! (make-vector 10))
-                  (send train setTrajectID! 'none)
-                  (send train setCurrentPosition! 'none)
-                  (send train initDirection! 'left)
-                  (send train setSpeed! 0)
-                  ;   (send train setcurrentNode! 'none)
-                  (send train setMasterLocomotiveID! 'none)
-                  (send train setRearLocomotiveID! 'none))
-                ;   (send train setLastPosition! 'none))
-                ;   (send train setNextNode! 'none))
-                (error "TrainManager initTrain%: Train is already initialised."id)))
-          (error "TrainManager% initTrain: id does not exist or is not from a train."id)))
 
     ;-------------------------------------------------------------
     ; Function: deleteTrain!
