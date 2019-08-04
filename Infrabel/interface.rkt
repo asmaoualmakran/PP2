@@ -60,11 +60,14 @@
 
     (define/private (selectRailway rail)
       (if (symbol? rail)
-        (cond ((eq? rail 'Hardware) (send fileReader loadRailway path))
+        (cond ((eq? rail 'Hardware) (send fileReader loadRailway path)
+                                    (display(send railwayManager getAllSwitchID)
+                                    ))
         
         (else (info "Given railway is unkown please create and add before use, recieved: " rail)))
       
       (error "Interface% selectRailway: Contract violation expected a symbol, recived: " rail)))
+
     ;----------------------------------------------------
     ; Function: initialised? 
     ; Parameters: n/a 
@@ -305,16 +308,18 @@
                                               (selectRailway railway)
                                               (send railwayGraph generateGraph!)
                                               (send railwayManager setGraph! (send railwayGraph getGraph))
-                                              (display (send railwayManager getAllTrackID))))
+                                              ))
 
     ;Railway functions
 
-    ;-----------------------------------------
+    ;----------------------------------------------------------------------------
     ; Function: n/a 
-    ; Parameters: n/a 
+    ; Parameters: 
+    ;       status: symbol
+    ;         Use: Symbol defining if the simulator or the Z21 library is used
     ; Output: n/a 
-
-    ;------------------------------------------
+    ; Use: Start the system and/or the simulator with the chosen setup
+    ;----------------------------------------------------------------------------
 
     (addFunction! railwaySym 'startSimulator (lambda (railway status)
                                                 (send railwaySystem setStatus! status)

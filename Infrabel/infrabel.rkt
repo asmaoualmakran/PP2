@@ -33,6 +33,7 @@
 
 (provide server)
 (provide startInfrabel)
+(provide railwayManager)
 
 
 (define railwayManager (new RailwayManager%))
