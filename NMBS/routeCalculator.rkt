@@ -25,10 +25,7 @@
 
     (define clientType 'object:Client%)
 
-    (define railwayManager 
-      (when (eq? (object-name TCPclient) clientType)
-        (when (send TCPclient initialised?)
-         (class-field-accessor TCPclient railwayManager))))
+    (define railwayManager 'railwayManager)
 
     ;------------------------------------------------------
     ; Function: initialised?
@@ -87,7 +84,7 @@
     (define/public (calculateRoute start end graph)
       (let ([route (calculate start end graph)])
         (let ([turnloc (uTurnNeeded? route)])
-          (when (turnloc)
+          (when turnloc
           (let ([calcTurns (calculateUturn turnloc graph)])
             (set! route (addUTurns route calcTurns))))
         )
@@ -199,8 +196,8 @@
             (for ([i route]
                   [idx (in-range (length route))])
                   
-                (when (send TCPclient TCPcall (list railwayManager 'isSwitch?))  ; when you have a switch, a u turn may be needed
-                  (let ([yConnection (send TCPclient TCPcall (list railwayManager 'getYConnection))] ; u turn is needed when the prev node and the next node are connected on the y part of the switch
+                (when (send TCPclient TCPcall (list railwayManager 'isSwitch? i))  ; when you have a switch, a u turn may be needed
+                  (let ([yConnection (send TCPclient TCPcall (list railwayManager 'getYConnection i))] ; u turn is needed when the prev node and the next node are connected on the y part of the switch
                         [con1 (list-ref route (- idx 1))]  
                         [con2 (list-ref route (+ idx 1))])
 
@@ -273,6 +270,19 @@
 ;              (error "RouteCalculator% uTurn: Contract violation expected a non empty list, recieved:" turnLoc))
 ;          (error "RouteCalculator% uTurn: Contract violation expected a list, recieved:" turnLoc)))
 
+    ;--------------------------------------------------------------------------------
+    ; Function: calculateUturn
+    ; parameters: 
+    ;       turnLoc: list<symbol>
+    ;         Use: The locations where a u-turn is needed
+    ;       graph: graph
+    ;         Use: The graph representing the railwaysystem. 
+    ; Output:
+    ;      uturn: list<symbol>
+    ;        Use: The routes for the u-turns
+    ; Use: Calculating routes between two points, that then can be used as uturns. 
+    ;---------------------------------------------------------------------------------
+
     (define/private (calculateUturn turnLoc graph)
       (if (list? turnLoc)
         (if (not (null? turnLoc))
@@ -307,18 +317,18 @@
         (error "RouteCalculator% calculateUturn: Contract violation expected a non empty list, recieved: " turnLoc))
       (error "RouteCalculator% calculateUturn: Contract violation expected a list, recieved: " turnLoc)))
 
-    ;------------------
+    ;----------------------------------------------------------------------------------
     ; Function: addUTurns
     ; Parameters: 
     ;       route: list<symbol>
-    ;         Use:
+    ;         Use: The calculated route that needs extending.
     ;       turnStack: stack<list<symbol>>
-    ;         Use: 
+    ;         Use: The points where turns need to be calculated between two points.
     ; Output:
     ;     resultRoute: list<symbol>
-    ;       Use: 
-    ; Use:
-    ;---------------------------------------
+    ;       Use: The extended route.
+    ; Use: Extending calculated routes with u-turns.
+    ;------------------------------------------------------------------------------------
 
     (define/private (addUTurns route turnStack)
       (if (list? route)

@@ -99,13 +99,14 @@
 
     (define/private (errorPop msg)
       (if (string? msg)
-      (let ((pop (new frame% [label "Error"])))
-        (let ((message (new message% 
-                (parent pop)
-                (label msg))))))
-      (error "GUI% errorPop: Expected a string as parameter, recieved: " msgs))
-    )
-
+      (let* ([pop (new frame% [label "Error"])]
+            [message (new message% 
+                        (parent pop)
+                        (label msg))])
+         (send pop show #t))
+          (error "GUI% errorPop: Expected a string as parameter, recieved: " msg))
+      )
+       
     ;--------------------------
     ; Function: startGUI
     ; Parameters: n/a 
@@ -188,6 +189,9 @@
                                         
                                   (send TCPclient TCPcall (list railway 'startSimulator trackSelection radioSelection))
                                   (send TCPclient TCPcall (list railwayManager 'startRailway trackSelection))
+                                  (send routeManager setGraph! (send TCPclient TCPcall (list railwayManager 'getGraphList)))
+                                  (display (send routeManager getGraph))
+                                  (newline)
                                   (set! running #t)
                                   ))]))
                                 
@@ -271,14 +275,16 @@
       (define createButton (new button% [parent bottom]
                                 [label "create"]
                                 [callback (lambda (button event)
-                                         ;  (when (initialised?)
-                                         ;   (send routeManager calculateRou (send trajectID get-value)))))
-                                         (let ((trajectid (send trajectID get-value)))
-                                            (cond ((eq? tracjectid "traject id")   ;there is no traject id filled in
-                                            
-                                            )
-                                         ))
+
+                                         (let ((trajectid (string->symbol (send trajectID get-value)))
+                                               (startDetect (string->symbol (send startDrop get-string-selection)))
+                                               (endDetect (string->symbol (send endDrop get-string-selection))))
+                                            (cond ((eq? trajectid '|traject id|) (errorPop "Please enter a traject id."))   ;there is no traject id filled in
+                                                  ((send routeManager isMember? trajectid) (errorPop "Given id already exists."))
+                                            (else (send routeManager calculateRoute trajectid startDetect endDetect))
+                                         )))
                                            ]))
+
       (define cancelButton (new button% [parent bottom]
                                 [label "cancel"]
                                 [callback (lambda (button event)

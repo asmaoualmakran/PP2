@@ -21,7 +21,8 @@
 
     (field
      [railwayManager 'uninitialised]
-     [railGraph 'uninitialised])
+     [railGraph 'uninitialised]
+     [railGraphList 'uninitialised])
 
     (define managerType 'object:RailwayManager%)
 
@@ -65,7 +66,20 @@
       (if (initialised?)
           railGraph
           (error "RailwayGraph% getGraph: RaiwayGraph% is not initialised, please initialise before use")))
+    
+    ;-----------------------------------------------------------
+    ; Function: getGraphList
+    ; Parameters: n/a 
+    ; Output: 
+    ;     graphList: list<symbol>
+    ;       Use: The list representation of the railwaysystem.
+    ; Use: Get the list representation of the railway graph.
+    ;-----------------------------------------------------------
 
+    (define/public (getGraphList)
+      (if (initialised?)
+        railGraphList
+        (error "RailwayGraph% getGraphList: RailwayGraph% is not initialised, please initialise before use")))
     ;--------------------------------------------------------------------
     ; Function: setRailManager!
     ; Parameters: 
@@ -97,10 +111,12 @@
           (let ([object (send railwayManager getObject obj)]
                 [convCon (convert obj)])
 
-            (set! adjList (append adjList convCon))))
+            (set! adjList (append adjList convCon))
+           ))
         
         (set! railGraph (unweighted-graph/directed adjList))
-        ))
+        (set! railGraphList adjList)))
+        
 
     ;---------------------------------------------------------------------------------
     ; Function: convert

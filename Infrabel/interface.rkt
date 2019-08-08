@@ -1,6 +1,7 @@
 #lang racket
 
 (require logger)
+(require graph)
 (require "railwayManager.rkt")
 (require "railwaySystem.rkt")
 
@@ -134,7 +135,7 @@
     ;------------------------------------------------------------------------
 
     (addFunction! railwayManSym 'isDetectionblock? (lambda (detectionID)
-                                                      (send railwayManager isDetectionBlock? detectionID)))
+                                                      (send railwayManager isDetectionblock? detectionID)))
 
     ;---------------------------------------------------------------
     ; Function: n/a 
@@ -309,6 +310,9 @@
                                               (send railwayGraph generateGraph!)
                                               (send railwayManager setGraph! (send railwayGraph getGraph))
                                               ))
+    
+    (addFunction! railwayManSym 'getGraphList (lambda ()
+                                            (send railwayGraph getGraphList)))
 
     ;Railway functions
 

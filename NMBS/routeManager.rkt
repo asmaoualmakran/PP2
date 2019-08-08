@@ -33,10 +33,7 @@
     (define trainsType 'object:TrainManager%)
     (define clientType 'object:Client%)
 
-    (define railwayManager 
-      (when (eq? (object-name TCPclient) clientType)
-        (when (send TCPclient initialised?)
-         (class-field-accessor TCPclient railwayManager))))
+    (define railwayManager 'railwayManager)
 
     ;----------------------------------------------------
     ; Function: initialised?
@@ -66,13 +63,9 @@
     ;-------------------------------------------------------------
     
     (define/public (initialise! client tmanager routeCalc)
-      (if (and  (eq? (object-name client) clientType)
-                (eq? (object-name tmanager) trainsType)
-                (eq? (object-name routeCalc) calcType))
-          (if (send tmanager initialised?)
-              (setTrainManager! tmanager)
-              (error "RouteManager% initialise!: Given train manager is not initialised, please use an initialised train manager:" tmanager))
-          (error "RouteManager% initialise!: Contract violation expected TrainManager% and RailwayGraph% received:" tmanager routeCalc)))
+     (setClient! client)
+     (setTrainManager! tmanager)
+     (setRouteCalculator! routeCalc))
 
     ;---------------------------------------------------------
     ; Function: isUnique?
@@ -199,7 +192,7 @@
 
     (define/public (getGraph)
       (if (initialised?)
-        (if (eq? graph 'uninitialised)
+        (if (not (eq? graph 'uninitialised))
         (get-vertices graph)
         (error "RouteManager% getGraph: There is no graph available."))
       (error "RouteManager% getGraph: Object is not initialised, please initailse before use.")))
@@ -391,17 +384,20 @@
                (symbol? start)
                (symbol? end))
         (if (and (send TCPclient TCPcall (list railwayManager 'isDetectionblock? start))
-               (send TCPclient TCPcall (list railwayManager 'isDetectionblock? end)))
+                 (send TCPclient TCPcall (list railwayManager 'isDetectionblock? end)))
                
                (let ([startTrack (send TCPclient TCPcall (list railwayManager 'getTrackID start))]
                      [endTrack (send TCPclient TCPcall (list railwayManager 'getTrackID end))]
                      [route (list )])
-               
+               (display "fetched")
+               (newline)
                 (set! route (send routeCalculator calculateRoute startTrack endTrack graph))
+                (display "route calculated: ")
+                (display route)
+                (newline)
                 (saveRoute! ID route))
             (error "RouteManager% calculateRoute: Contract violation expected two detectionblock ids, recieved: " start end))
         (error "RouteManager% calculateRoute: Contract violation expected three symbols, recieved: " ID start end))
       (error "RouteManager% calculateRoute: Object is not initialised, please initialise before use.")))
-   
-   
+  
     ))
