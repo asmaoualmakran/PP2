@@ -351,8 +351,20 @@
     ;         Use: The current location of the train.
     ;------------------------------------------------------------------
 
-   ; (addFunction! railwaySym 'createTrain (lambda (trainID dir loc)
-    ;                                        (add-loco dir loc)))
+    (addFunction! railwaySym 'createTrain (lambda (trainID loc dir)
+                                            (send railwaySystem addTrain! trainID dir loc)))
+
+    ;------------------------------------------------------------
+    ; Function: n/a 
+    ; Parameters: 
+    ;       trainID: symbol
+    ;         Use: The id of the train that needs to be deleted.
+    ; Output: n/a 
+    ; Use: Delete a created train.
+    ;-------------------------------------------------------------
+
+    (addFunction! railwaySym 'deleteTrain (lambda (trainID)
+                                            (send railwaySystem deleteTrain! trainID)))
 
     ;-----------------------------------------------------------
     ; Function: n/a 
@@ -365,8 +377,8 @@
     ; Use: Change the speed of the train.
     ;------------------------------------------------------------
 
-   ; (addFunction! railwaySym 'setSpeed! (lambda (trainID speed)
-   ;                                         (set-loco-speed! trainID speed)))
+    (addFunction! railwaySym 'setSpeed! (lambda (trainID speed)
+                                            (send railwaySystem setTrainSpeed! trainID speed)))
 
     ;---------------------------------------------
     ; Function: n/a 
@@ -473,7 +485,8 @@
                   (cond
                       ((empty? pm) ((getFunction obj func)))
                       ((= (length pm) 1) ((getFunction obj func) (first pm)))
-                      ((= (length pm) 2) ((getFunction obj func) (first pm) (second pm)))                     
+                      ((= (length pm) 2) ((getFunction obj func) (first pm) (second pm)))
+                      ((= (length pm) 3) ((getFunction obj func) (first pm) (second pm) (third pm)))                     
                       (else (error "Interface% callFunction: Parameters list is to long.")))
               
                 (error "Interface% callFunction: Contract violation expected symbols as object and function, recieved: " obj func)))

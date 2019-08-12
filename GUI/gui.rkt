@@ -106,6 +106,25 @@
          (send pop show #t))
           (error "GUI% errorPop: Expected a string as parameter, recieved: " msg))
       )
+
+    ;----------------------------------------------------------------------
+    ; Function: updateDropdown!
+    ; Parameters: 
+    ;       dropdown: object:choice%
+    ;         Use: The dropdown that needs updating
+    ;       elm: list<string>
+    ;         Use: The elements that need to be placed into the dropdown
+    ; Output: n/a 
+    ; Use: Update the dropdown by placing the updated elements in it
+    ;----------------------------------------------------------------------
+
+    (define/private (updateDropdown! dropdown elm)
+      (if (not (null? elm ))
+       (begin (send dropdown clear)
+        (for ([e elm])
+          (send dropdown append e)
+       ))
+      (error "GUI% updateDropdown: Expected a non empty list, recieved: " elm)))
        
     ;--------------------------
     ; Function: startGUI
@@ -281,7 +300,8 @@
                                                (endDetect (string->symbol (send endDrop get-string-selection))))
                                             (cond ((eq? trajectid '|traject id|) (errorPop "Please enter a traject id."))   ;there is no traject id filled in
                                                   ((send routeManager isMember? trajectid) (errorPop "Given id already exists."))
-                                            (else (send routeManager calculateRoute trajectid startDetect endDetect))
+                                            (else (send routeManager calculateRoute trajectid startDetect endDetect)
+                                                  (updateDropdown! trajectDopdown (updateGUI! 'trajects)))
                                          )))
                                            ]))
 
@@ -321,8 +341,16 @@
                                            (define setSpeed (new button% [parent bottom]
                                                                    [label "Set speed"]
                                                                    [callback (lambda (button event)
-                                                                               (display "speed set")
-                                                                               (newline))]))
+                                                                              (let ((train (string->symbol (send trainDropdown get-string-selection)))
+                                                                                    (speed (string->number (send trainSpeed get-value))))
+                                                                                  (if (number? speed )
+                                                                                  (begin
+                                                                                    (send trainManager setTrainSpeed! train speed)
+                                                                                    (send TCPclient TCPcall (list railway 'setSpeed! train speed)))
+                                                                                    (errorPop "Speed is not a number, please provide one"))
+                                                                                    ))]))
+
+
                                            (define cancel (new button% [parent bottom]
                                                                [label "cancel"]
                                                                [callback (lambda (button event)
@@ -332,8 +360,9 @@
     (define getSpeedButton (new button% [parent train-selector-right]
                                 [label "get speed"]
                                 [callback (lambda (button event)
-                                            (display "speed get")
-                                            (newline))]))
+                                            (let ((train (string->symbol(send trainDropdown get-string-selection))))
+                                            (errorPop (number->string (send trainManager getTrainSpeed train)))))
+                                            ]))
 
     (define trainDelete (new button% [parent train-selector-right]
                                [label "Delete train"]
@@ -355,89 +384,130 @@
                                             (define bottom (new horizontal-panel% [parent main]))
                                            
 
-                                            (define mainLoc (new choice%
-                                                                 (label "main locomotive")
-                                                                 (parent top)
-                                                                 (choices (list "loc1" "loc2"))))
+                          ;                  (define mainLoc (new choice%
+                          ;                                       (label "main locomotive")
+                          ;                                       (parent top)
+                          ;                                       (choices (list "loc1" "loc2"))))
                                             
-                                            (define railcar (new choice%    ;allow more choices
-                                                                 (label "railcars")
-                                                                 (parent top)
-                                                                 (choices (list "car1" "car2"))))
+                           ;                 (define railcar (new choice%    ;allow more choices
+                           ;                                      (label "railcars")
+                           ;                                      (parent top)
+                           ;                                      (choices (list ))))
+
+                                            
 
                                             (define id (new text-field%
                                                             (label "Train name")
                                                             (parent left)
                                                             (init-value "train name")))
+
+                                            (define location (new choice%
+                                                             [label "Location"]
+                                                             [parent left]
+                                                             [choices 
+                                                              (if running
+                                                              (map symbol->string (send TCPclient TCPcall (list railwayManager 'getAllDetectionID)))
+                                                              (list ))]
+                                                             [callback (lambda (choice event)
+                                                              (when running
+                                                                (let* ((loc (string->symbol (send location get-string-selection)))
+                                                                      (track (send TCPclient TCPcall (list railwayManager 'getTrackID loc)))
+                                                                      (dirs (send TCPclient TCPcall (list railwayManager 'getConnections track))))
+                                                                (updateDropdown! direction (map symbol->string dirs))))
+                                                             )]))
+                                
+                                            
+                                            (define direction (new choice%  
+                                                              [label "Direction"]
+                                                              [parent right]
+                                                              [choices 
+                                                              (if running
+                                                              (let* ((loc (string->symbol (send location get-string-selection)))
+                                                                    (track (send TCPclient TCPcall (list railwayManager 'getTrackID loc)))
+                                                                    (dirs (send TCPclient TCPcall (list railwayManager 'getConnections track))))
+                                                              
+                                                               (map symbol->string dirs))
+                                                               (list ))]))
                                             
                                             (define create (new button% [parent bottom]
                                                                 [label "create train"]
                                                                 (callback (lambda (button event)
-                                                                            (display "train created")))))
+                                                                  (let ((trainid (string->symbol (send id get-value)))
+                                                                        (loc (string->symbol (send location get-string-selection)))
+                                                                        (dir (string->symbol (send direction get-string-selection))))
+
+                                                                  (cond ((eq? trainid '|train name|) (errorPop "Please enter a train id."))  
+                                                                        ((not(send trainManager isUnique? trainid)) (errorPop "Given id already exists."))
+                                                                  (else (send trainManager createTrain! trainid loc dir)
+                                                                        (updateDropdown! trainDropdown (updateGUI! 'trains))
+                                                                        (send TCPclient TCPcall (list railway 'createTrain trainid loc dir))))))
+                                                                            )))
+
                                             (define cancel (new button% [parent bottom]
                                                                 [label "cancel"]
                                                                 (callback (lambda (button event)
                                                                             (send popframe show #f)))))
+                                            
                                             (send popframe show #t))]))
                                                  
 
-    (define newLocoButton (new button% [parent train-creator-left]
-                               [label "new locomotive"]
-                               [callback (lambda (button event)
-                                           
-                                           (define popframe (new frame% [label "create locomotive"]))
-                                           (define main (new vertical-panel% [parent popframe]))
-                                           (define top (new horizontal-panel% [parent main]))
-                                           (define middle (new horizontal-panel% [parent main]))
-                                           (define left (new vertical-panel% [parent middle]))
-                                           (define right (new vertical-panel% [parent middle]))
-                                           (define bottom (new horizontal-panel% [parent main]))
-
-                                           (define locoID (new text-field%
-                                                               [label "locomotive name"]
-                                                               [parent top]
-                                                               [init-value "name"]))
-
-                                           (define createLoco (new button% [parent bottom]
-                                                                   [label "create"]
-                                                                   [callback (lambda (button event)
-                                                                               (display "locmotive created")
-                                                                               (newline))]))
-                                           (define cancel (new button% [parent bottom]
-                                                               [label "cancel"]
-                                                               [callback (lambda (button event)
-                                                                           (send popframe show #f))]))
-                                           (send popframe show #t))]))
-
-    (define newRailcarButton (new button% [parent train-creator-left]
-                                  [label "new railcar"]
-                                  [callback (lambda (button event)
-                                              (define popframe (new frame% [label "create railcar"]))
-                                              (define main (new vertical-panel% [parent popframe]))
-                                              (define top (new horizontal-panel% [parent main]))
-                                              (define middle (new horizontal-panel% [parent main]))
-                                              (define left (new vertical-panel% [parent middle]))
-                                              (define right (new vertical-panel% [parent middle]))
-                                              (define bottom (new horizontal-panel% [parent main]))
-
-                                              (define railcarID (new text-field%
-                                                                     [label "Railcar name"]
-                                                                     [parent top]
-                                                                     [init-value "name"]))
-
-                                              (define create (new button%
-                                                                  [parent bottom]
-                                                                  [label "create"]
-                                                                  [callback (lambda (button event)
-                                                                              (display "railcar created")
-                                                                              (newline))]))
-
-                                              (define cancel (new button%
-                                                                  [parent bottom]
-                                                                  [label "cancel"]
-                                                                  [callback (lambda (button event)
-                                                                              (send popframe show #f))]))
-                                              (send popframe show #t))]))
+  ;  (define newLocoButton (new button% [parent train-creator-left]
+  ;                             [label "new locomotive"]
+  ;                             [callback (lambda (button event)
+  ;                                         
+  ;                                         (define popframe (new frame% [label "create locomotive"]))
+  ;                                         (define main (new vertical-panel% [parent popframe]))
+  ;                                         (define top (new horizontal-panel% [parent main]))
+  ;                                         (define middle (new horizontal-panel% [parent main]))
+  ;                                         (define left (new vertical-panel% [parent middle]))
+  ;                                         (define right (new vertical-panel% [parent middle]))
+  ;                                         (define bottom (new horizontal-panel% [parent main]))
+;
+  ;                                         (define locoID (new text-field%
+  ;                                                             [label "locomotive name"]
+  ;                                                             [parent top]
+  ;                                                             [init-value "name"]))
+;
+  ;                                         (define createLoco (new button% [parent bottom]
+  ;                                                                 [label "create"]
+  ;                                                                 [callback (lambda (button event)
+  ;                                                                             (display "locmotive created")
+  ;                                                                             (newline))]))
+  ;                                         (define cancel (new button% [parent bottom]
+  ;                                                             [label "cancel"]
+  ;                                                             [callback (lambda (button event)
+  ;                                                                         (send popframe show #f))]))
+  ;                                         (send popframe show #t))]))
+;
+  ;  (define newRailcarButton (new button% [parent train-creator-left]
+  ;                                [label "new railcar"]
+  ;                                [callback (lambda (button event)
+  ;                                            (define popframe (new frame% [label "create railcar"]))
+  ;                                            (define main (new vertical-panel% [parent popframe]))
+  ;                                            (define top (new horizontal-panel% [parent main]))
+  ;                                            (define middle (new horizontal-panel% [parent main]))
+  ;                                            (define left (new vertical-panel% [parent middle]))
+  ;                                            (define right (new vertical-panel% [parent middle]))
+  ;                                            (define bottom (new horizontal-panel% [parent main]))
+;
+  ;                                            (define railcarID (new text-field%
+  ;                                                                   [label "Railcar name"]
+  ;                                                                   [parent top]
+  ;                                                                   [init-value "name"]))
+;
+  ;                                            (define create (new button%
+  ;                                                                [parent bottom]
+  ;                                                                [label "create"]
+  ;                                                                [callback (lambda (button event)
+  ;                                                                            (display "railcar created")
+  ;                                                                            (newline))]))
+;
+  ;                                            (define cancel (new button%
+  ;                                                                [parent bottom]
+  ;                                                                [label "cancel"]
+  ;                                                                [callback (lambda (button event)
+  ;                                                                            (send popframe show #f))]))
+  ;                                            (send popframe show #t))]))
     
     (define setTraject (new button%
                             [parent traject-setter-right]

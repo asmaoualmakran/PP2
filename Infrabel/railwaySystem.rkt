@@ -19,15 +19,40 @@
 
   (field [status 'uninitialised])
 
+  ;-------------------------------------------------------
+  ; Function: initialised?
+  ; Parameters: n/a
+  ; Output: 
+  ;     boolean: boolean
+  ;       Use: Determine if the object is initialised.
+  ; Use: Determine if the object is initialised. 
+  ;-------------------------------------------------------
+
   (define/public (initialised?)
     (not (eq? status 'uninitialised)))
   
+  ;----------------------------------------------------------
+  ; Function: setStatus! 
+  ; Parameters: 
+  ;       stat: symbol
+  ;         Use: The status of which simulator is used. 
+  ; Output: n/a 
+  ; Use: Set the status of which simulator is used. 
+  ;----------------------------------------------------------
+
   (define/public (setStatus! stat)
     (if (or (eq? stat 'simulator)
             (eq? stat 'Z21))
         
         (set! status stat)
         (error "RailwaySystem% setStatus!: Recieved an unknown status, expected simulator or Z21, recieved: " stat)))
+
+  ;---------------------------------------------------------------------
+  ; Function: railway
+  ; Parameters: n/a 
+  ; Output: n/a 
+  ; Use: Startup the simulator with the correct railway and simulator.
+  ;---------------------------------------------------------------------
 
   (define/public (startSystem railway)
     (if (initialised?)
@@ -47,29 +72,56 @@
     (error "RailwaySysytem% startSystem: Object is not initalised, please initialise before use."))
   )
 
+  ;--------------------------------
+  ; Function: stopSystem
+  ; Parameters: n/a 
+  ; Output: n/a 
+  ; Use: Stop the simulator
+  ;--------------------------------
+
   (define/public (stopSystem)
     (if (initialised?)
       (if (eq? status 'simulator)
         (stop)
         (Z21:stop-simulator))
-    (error "RailwaySystem% stopSystem: Object is not initialised, please initialise before use."))
-  ) 
+    (error "RailwaySystem% stopSystem: Object is not initialised, please initialise before use."))) 
 
   (define/public (getTrainLocation id)
     'test
   )
 
-  (define/public (addTrain! id prevSeg currSeg)
-      'test
-  )
+  ;-----------------------------------------------------------------------------
+  ; Function: addTrain!
+  ; Parameters: 
+  ;       id: symbol
+  ;         Use: The id used for the new created train. 
+  ;       prevSeg: symbol
+  ;         Use: The segment lying behind the train, determining its direction. 
+  ;       currSeg: symbol
+  ;         Use: The location of the train, this must be a detectionblock. 
+  ; Ouput: n/a 
+  ; Use: Create a new train.
+  ;-----------------------------------------------------------------------------
 
-  (define/public (delteTrain! id)  ;does not exist in Z21
-      'test
-  )
+  (define/public (addTrain! id prevSeg currSeg)
+      (add-loco id prevSeg currSeg))
+
+  ;---------------------------------------------------------------
+  ; Function: deleteTrain!
+  ; Parameters: 
+  ;         id: symbol
+  ;           Use: The id of the train that needs to be deleted.
+  ; Output: n/a 
+  ; Use: Delete a excisting train. 
+  ;---------------------------------------------------------------
+
+  (define/public (deleteTrain! id)  ;does not exist in Z21
+      (remove-loco id))
 
   (define/public (setTrainSpeed! id speed)
-      'test
-  )
+      (if (eq? status 'simulator)
+          (set-loco-speed! id speed)
+          (Z21:set-loco-speed! id speed)))
 
   (define/public (getSwitchPosition id)
       'test

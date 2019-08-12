@@ -251,11 +251,9 @@
       ;------------------------------------------------
 
       (define/public (setDirection! dir)
-        (if (initialised?)
           (if (symbol? dir)
             (set! direction dir)
-          (error "Train% setDirection!: Contract violation expected a symbol, recieved: " dir))
-        (error "Train% setDirection!: Object is not initialised please initialise before use.")))
+          (error "Train% setDirection!: Contract violation expected a symbol, recieved: " dir)))
 
       ;-------------------------------------------------------------
       ; Function: getDirection
@@ -282,10 +280,9 @@
       ;-----------------------------------------
       
       (define/public (setSpeed! number)
-        (if (and(number? number)
-                (<= 0 number))
+        (if (number? number)
             (set! speed number)
-            (error "Train% setSpeed!: contract violation positive number expected received" number)))
+            (error "Train% setSpeed!: contract violation number expected received" number)))
 
       ;------------------------------------------
       ; Function: getSpeed

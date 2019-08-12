@@ -108,7 +108,7 @@
     ; Use: Check if a symbol is already in use.
     ;----------------------------------------------------------------------------
     
-    (define/private (isUnique? id)
+    (define/public (isUnique? id)
       (if (symbol? id)
           (and(not(hash-has-key? trainTable id))
               (not(hash-has-key? locomotiveTable id))
