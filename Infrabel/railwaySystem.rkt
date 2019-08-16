@@ -17,7 +17,8 @@
   (class object%
    (super-new)
 
-  (field [status 'uninitialised])
+  (field [status 'uninitialised]
+         [hardwareTrain 'T-3])
 
   ;-------------------------------------------------------
   ; Function: initialised?
@@ -86,10 +87,6 @@
         (Z21:stop-simulator))
     (error "RailwaySystem% stopSystem: Object is not initialised, please initialise before use."))) 
 
-  (define/public (getTrainLocation id)
-    'test
-  )
-
   ;-----------------------------------------------------------------------------
   ; Function: addTrain!
   ; Parameters: 
@@ -104,7 +101,9 @@
   ;-----------------------------------------------------------------------------
 
   (define/public (addTrain! id prevSeg currSeg)
-      (add-loco id prevSeg currSeg))
+      (if (eq? status 'simulator)
+          (add-loco id prevSeg currSeg)
+          (Z21:add-loco id prevSeg currSeg)))
 
   ;---------------------------------------------------------------
   ; Function: deleteTrain!
@@ -116,21 +115,80 @@
   ;---------------------------------------------------------------
 
   (define/public (deleteTrain! id)  ;does not exist in Z21
-      (remove-loco id))
+    (when (eq? status 'simulator)  
+      (remove-loco id)))
+
+  ;-------------------------------------------------------
+  ; Function: setTrainSpeed! 
+  ; Parameters: 
+  ;         id: symbol
+  ;           Use: The train identification. 
+  ;         speed: number
+  ;           Use: The speed that is going to be set. 
+  ; Output: n/a 
+  ; Use: Set the train speed of the selected train. 
+  ;-----------------------------------------------------
 
   (define/public (setTrainSpeed! id speed)
+
       (if (eq? status 'simulator)
           (set-loco-speed! id speed)
-          (Z21:set-loco-speed! id speed)))
+          (Z21:set-loco-speed! hardwareTrain speed)))
+
+  (define/public (getTrainSpeed id)
+    (if (eq? status 'simulator)
+        (get-loco-speed id)
+        (Z21:get-loco-speed hardwareTrain)
+    )
+  )
+
+  ;-----------------------------------------------------------------------------
+  ; Function: getTrainLocation
+  ; Parameters: 
+  ;       id: symbol
+  ;         Use: The id of the train of which the location needs to be known. 
+  ; Output: 
+  ;       occupied: list<symbol> || #f || symbol
+  ;         Use: The occupied detectionblocks. 
+  ; Use: Get the id's of the detectionblocks that are occupied.  
+  ;-----------------------------------------------------------------------------
+
+  (define/public (getTrainLocation id)
+    (if (eq? status 'simulator)
+       (get-loco-detection-block id)
+        (Z21:get-loco-detection-block hardwareTrain)))
+
+  ;------------------------------------------------------------------
+  ; Function: getSwitchPosition
+  ; Parameters: 
+  ;         id: symbol
+  ;           Use: The id of the switch who's position is needed. 
+  ; Output: 
+  ;     position: number
+  ;       Use: The position of the switch
+  ; Use: Get the position of the given switch. 
+  ;-------------------------------------------------------------------
 
   (define/public (getSwitchPosition id)
-      'test
-  )
+      (if (eq? status 'simulator)
+          (get-switch-position id)
+          (Z21:get-switch-position id)))
 
-  (define/public (setSwitchPosition! id)
-      'test
-  )
+  ;---------------------------------------------------------------------------
+  ; Function: setSwitchPosition!
+  ; Parameters: 
+  ;         id: symbol
+  ;          Use: The id of the switch who's position needs to be altered. 
+  ;         pos: number
+  ;           Use: The position of the switch where it needs to changed to. 
+  ; Use: Change the position of the switch. 
+  ;----------------------------------------------------------------------------
+  (define/public (setSwitchPosition! id pos) 
+      (if (eq? status 'simulator)
+          (set-switch-position! id pos)
+          (Z21:set-switch-position! id pos)))
 
-
+  
+  
 
 ))

@@ -48,7 +48,7 @@
     ;---------------------------------------
 
     (define/public (initialise!)
-      (setAvailable! 'none)
+      (setAvailable! #t)
       (setSpeedlimit! standardSpeed)
       (setDetectionblockID! 'none)
       (set! connections (list 'none 'none)))

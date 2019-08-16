@@ -325,7 +325,7 @@
           (if (and (isRoute? id)
                    (send trainManager isTrain? trainID))
               (begin
-                (send  (send trainManager getObject trainID) setTraject! (list->vector(getRoute id)))  ;activate the route and train, send the traject to the train
+                (send  (send trainManager getTrain trainID) setTraject! (getRoute id))  ;activate the route and train, send the traject to the train
                 (hash-set! activeRouteTable id (list id trainID)))
               (error "RouteManager% activateRoute!: Given id does not belong to a route" id))
           (error "RouteManager% activateRoute!: RouteManager% in not initialised, please initialise before use")))
@@ -389,12 +389,9 @@
                (let ([startTrack (send TCPclient TCPcall (list railwayManager 'getTrackID start))]
                      [endTrack (send TCPclient TCPcall (list railwayManager 'getTrackID end))]
                      [route (list )])
-               (display "fetched")
-               (newline)
+
                 (set! route (send routeCalculator calculateRoute startTrack endTrack graph))
-                (display "route calculated: ")
-                (display route)
-                (newline)
+
                 (saveRoute! ID route))
             (error "RouteManager% calculateRoute: Contract violation expected two detectionblock ids, recieved: " start end))
         (error "RouteManager% calculateRoute: Contract violation expected three symbols, recieved: " ID start end))

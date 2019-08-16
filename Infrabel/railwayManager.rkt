@@ -6,19 +6,20 @@
 (require "detectionBlock.rkt")
 
 
+
 (provide RailwayManager%)
 
 (define RailwayManager%
   (class object%
     (super-new)
-
-    ;TODO the all ID getters need to check is a member is initialised.
     
     ; The hashtables where the objects are saved.
     ; The keys are the id's and values, the objects.
     (define trackTable (make-hash))
     (define switchTable (make-hash))
     (define detectionblockTable (make-hash))
+    (define activeRoutesTable (make-hash))
+
 
     ; Definitions of the object types, enables easyer type checking
     (define trackType 'object:Track%)
@@ -26,9 +27,10 @@
     (define detectionblockType 'object:Detectionblock%)
     (define serverType  'object:Server%)
 
-
     (field [railGraph    'uninitialised]
-           [TCPserver    'uninitialised])
+           [TCPserver    'uninitialised]
+           [security     'uninitialised])
+
 
     ;-----------------------------------------------------
     ; Function: initialised?
@@ -48,6 +50,10 @@
     ; Parameters:
     ;      graph: graph
     ;        Use: The graph that contains a representation of the railway.
+    ;     server: TCP server
+    ;       Use: The server on which communication enters
+    ;     secure: object:SecurityProtocol%
+    ;       Use: The security protocol used to secure the railway. 
     ; Output: n/a
     ; Use: Initialise the object.
     ;----------------------------------------------------------------------
@@ -57,9 +63,9 @@
               (begin
                 (setGraph! graph)
                 (setServer! server))
+    
           (error "RailwayManager% initialise!: Contract violation expected graph, recieved:" graph)))
-          
-  
+
     ;-----------------------------------------------------------------------
     ; Function: setServer!
     ; Parameters: 
@@ -87,6 +93,87 @@
       (if (initialised?)
         TCPserver
         (error "RailwayManager% getServer: Object is not initialised.")))
+
+    ;-------------------------------------------
+    ; Function: setSecurity!
+    ; Parameters: 
+    ;     secure: object:SecurityProtocol%
+    ;       Use: The security protocol used. 
+    ; Output: n/a 
+    ; Use: Initialise the security field. 
+    ;-------------------------------------------
+
+    (define/public (setSecurity! secure)
+        (set! security secure))
+
+    ;----------------------------------
+    ; Function: startSecurity
+    ; Parameters: n/a 
+    ; Output: n/a 
+    ; Use: Startup the security loop. 
+    ;----------------------------------
+
+    (define/public (startSecurity)
+      (send security protocol))
+
+    ;---------------------------------------------------------
+    ; Function: activateRoute! 
+    ; Parameters: 
+    ;         data: list<symbol> 
+    ;           Use: The data needed to activate a route
+    ; Output: n/a 
+    ; Use: Activate a train and a route
+    ;---------------------------------------------------------
+
+    (define/public (activateRoute! data)
+      
+      (let ((train (car data))
+            (route (cadr data)))
+        (if (not (hash-has-key? activeRoutesTable train))
+            (hash-set! activeRoutesTable train route)
+          (error "RailwayManager% activateRoute!: Given train is already active."))))
+    
+    ;------------------------------------------------------------------
+    ; Function: deactivateRoute! 
+    ; Parameters: 
+    ;       train: symbol
+    ;         Use: The id of the train that needs to be deactivated. 
+    ; Output: n/a 
+    ; Use: Deactivate a route. 
+    ;------------------------------------------------------------------
+
+    (define/public (deactivateRoute! train)
+      (if (hash-has-key? activeRoutesTable train)
+        (hash-remove! activeRoutesTable train)
+        (error "RailwayManager% deactivateRoute!: Given train is not active.")))
+
+    ;--------------------------------------------------------------
+    ; Function: getActiveTrains
+    ; Parameters: n/a 
+    ; Output: 
+    ;     activeTrains: list<symbol> 
+    ;       Use: The trains that are active at the given moment. 
+    ; Use: Get all the active trains of that moment. 
+    ;---------------------------------------------------------------
+
+    (define/public (getActiveTrains)
+      (hash-keys activeRoutesTable))
+
+    ;--------------------------------------------------------------------
+    ; Function: getActiveRoute
+    ; Parameters: 
+    ;       trainID: symbol
+    ;         Use: An active trains who's route needs to be fetched. 
+    ; Output: 
+    ;       route: list<symbol> 
+    ;         Use: The route of the active train. 
+    ; Use: Get the route of an active train. 
+    ;--------------------------------------------------------------------
+
+    (define/public (getActiveRoute trainID)
+      (if (hash-has-key? activeRoutesTable trainID)
+          (hash-ref activeRoutesTable trainID)
+          (error "RailwayManager% getActiveRoute: Given trainID does not belong to an acitve train, recieved " trainID)))
 
     ;--------------------------------------------------------------
     ; Function: setGraph!
@@ -167,11 +254,31 @@
     (define/public (getRelatedObject id)
       (if (isMember? id)
           (if (isTrack? id)
-              (getDetectionblock(send (getTrack id) getDetectionblockID))
+            (when (hasRelatedObject? id)
+              (getDetectionblock(send (getTrack id) getDetectionblockID)))
               (if (isDetectionblock? id)
-                  (getTrack(send (getDetectionblock id) getTrackID))
+                (when (hasRelatedObject? id)
+                  (getTrack(send (getDetectionblock id) getTrackID)))
                   (error "RailwayManager% getRelatedObject?: object has no related object" id)))  
           (error "RailwayManager% getRelatedObject: Given id does not belong to railway object" id)))
+
+    ;----------------------------------------------------------------------------
+    ; Function: getRelatedID
+    ; Parameters: 
+    ;       id: symbol
+    ;        Use: The object who's related object's id needs to be fetched. 
+    ; Output: 
+    ;       id: symbol
+    ;         Use: The relateds object's id. 
+    ; Use: Fetch the id of a related object. 
+    ;----------------------------------------------------------------------------
+
+    (define/public (getRelatedID id)
+      (if (isMember? id)
+        (cond ((isDetectionblock? id)(send (getObject id) getTrackID))
+              ((isTrack? id)(send (getObject id) getDetectionblockID)))
+
+      (error "RailwayManager getRelatedID: Given ID does not belong to a member of the railway.")))
 
     ;------------------------------------------------------------------------------------
     ; Function: hasRelatedObject?
@@ -187,14 +294,47 @@
     (define/public (hasRelatedObject? id)
       (if (isMember? id)
           (if (isTrack? id)
-              (send (getTrack id) hasDetectionblock? )
+              (send (getTrack id)  hasDetectionblock? )
 
               (if (isDetectionblock? id)
                   (send (getDetectionblock id) hasTrack?)
 
                   (error "RailwayManager% hasRelatedObject?: Object has no related object" id)))
-          (error "RailwayManager$ hasRelatedObject?: Object id does not belong to a railway object" id)))
+          (error "RailwayManager% hasRelatedObject?: Object id does not belong to a railway object" id)))
  
+    ;--------------------------------------------------------------
+    ; Function: setStatus!
+    ; Parameters: 
+    ;         id: symbol
+    ;          Use: The object which status' needs to be changed. 
+    ;         status: symbol || #t     
+    ;           Use: The occupation level of the object. 
+    ; Output: n/a 
+    ; Use: Change the occupation status of the object. 
+    ;---------------------------------------------------------------
+
+    (define/public (setStatus! id status)
+    (if (or (symbol? status)
+            (eq? status #t))
+      (send (getObject id) setAvailable! id)
+      (error "RailwayManager% setStat!: Expected a symbol or #t, recieved: " status)))
+
+    ;----------------------------------------------------
+    ; Function: getStatus 
+    ; Parameters: 
+    ;         id: symbol
+    ;          Use: The object who's status is needed. 
+    ; Output: 
+    ;       status: symbol || boolean
+    ;         Use: The status of the railway object. 
+    ; Use: Get the status of the railway object. 
+    ;----------------------------------------------------
+
+    (define/public (getStatus id)
+      (if (symbol? id)
+          (send (getObject id) getAvailable)
+      (error "RailwayManager getStatus: Expected a symbol, recieved: " id)))
+
     ;------------------------------------------------------------------
     ; Function: isTrack?
     ; Parameters:
@@ -348,6 +488,7 @@
       (if (isSwitch? id)
           (hash-remove! switchTable id)
           (error "RailwayManager% deleteSwitch!: id is not a member of the switchtable, recieved" id)))
+
 
     ;--------------------------------------------------------------------------------
     ; Function: createDetectionblock!

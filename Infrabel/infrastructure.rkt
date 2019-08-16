@@ -74,8 +74,7 @@
               (not (pair? coordinate)))
           (error "Infrastructure% setLocation!: contract violation expected pair, given" coordinate ID)
           (begin (set! x (car coordinate))
-                 (set! y (cdr coordinate))
-                 (display "location set to" coordinate))))
+                 (set! y (cdr coordinate)))))
       
     ;-------------------------------------------------    
     ; Function: getLocation

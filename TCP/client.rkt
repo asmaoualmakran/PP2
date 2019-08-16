@@ -200,9 +200,6 @@
 
   (define/public (TCPcall data)
     (writeOutput data)
-    (display "TCP call made ")
-    (display data)
-    (newline)
     
     (let ([returnData 'none])
 

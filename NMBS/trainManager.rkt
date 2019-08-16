@@ -166,6 +166,38 @@
           (hash-ref trainTable id)
           (error "TrainManager% getTrain: train is not a member." id)))
 
+    ;-----------------------------------------------------
+    ; Function: getTrainLocation
+    ; Parameters: 
+    ;         id: symbol
+    ;           Use: The id of the train. 
+    ; Output: 
+    ;        location: symbol
+    ;         Use: The current location of the train. 
+    ; Use: Get the location of the train. 
+    ;------------------------------------------------------
+
+    (define/public (getTrainLocation id)
+      (if (isTrain? id)
+          (send (getTrain id) getPosition)
+          (error "TrainManager% getTrainLocation: Given id does not belong to an existing train, recieved: " id)))
+
+    ;--------------------------------------------------------------------------
+    ; Function: setTrainLocation!
+    ; Parameters: 
+    ;         trainID: symbol
+    ;           Use: The train who's location needs to be changed. 
+    ;         locID: symbol
+    ;           Use: The location where to the location needs to be changed. 
+    ; Output: n/a 
+    ; Use: Change the location of a train. 
+    ;--------------------------------------------------------------------------
+
+    (define/public (setTrainLocation! trainID locID)
+      (if (isTrain? trainID)
+          (send (getTrain trainID) setPosition! locID)
+          (error "TrainManager% setTrainLocation!: Given id does not belong to an existing train, recieved: " trainID)))
+
     ;---------------------------------------------------------------
     ; Function: getAllTrainID
     ; Parameters: n/a

@@ -12,13 +12,14 @@
   (class Infrastructure%
     (super-new)
 
-    (inherit-field ID)
-    (inherit setID! getID)
+    (inherit-field ID available)
+    (inherit setID! getID setAvailable! getAvailable)
 
     
     (field
 
      [trackID         'uninitialised]
+
      [reservations    'uninitialised]   ; functies voor schrijven
      [maxReservations 'uninitialised]   ;getters en setters voor schrijven
      [length          'uninitialised])
@@ -35,10 +36,13 @@
 
     (define/public (initialise!)
       (setTrackID! 'none)
+      (set! available #t)
       (setMaxReservations! 10)
       (initReservations!)
       (setLength! 0))
 
+
+  
     ;-------------------------------------------------------
     ; Function: initialised?
     ; Parameters: n/a

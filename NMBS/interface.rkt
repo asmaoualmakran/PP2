@@ -1,9 +1,5 @@
 #lang racket
 
-;elke trein weet welke route dat hij rijdt via daar de route opvragen
-;routes worden gecreeerd via GUI -> interne communicatie
-;ROUTEMANAGER IS NODIG!!!!!
-; ---> initialisatie van de graf!!!!!
 (provide Interface%)
 
 

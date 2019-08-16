@@ -23,7 +23,8 @@
      [state        'uninitialised]
      [direction    'uninitialised]
      [connection   'uninitialised]
-     [y-connection 'uninitialised])
+     [connection1  'uninitialised]
+     [connection2  'uninitialised])
 
     ;----------------------------------------------------
     ; Function: initialised?
@@ -41,8 +42,9 @@
            (not (eq? speedlimit 'uninitialised))
            (not (eq? state 'uninitialised))
            (not (eq? direction 'uninitialised))
-           (not (eq? connection 'uninitialised))
-           (not (eq? y-connection 'uninitialised))))
+           (not (eq? connection1 'uninitialised))
+           (not (eq? connection2 'uninitialised))
+           (not (eq? connection 'uninitialised))))
     
 
     ;---------------------------------------
@@ -55,8 +57,9 @@
     (define/public (initialise!)
       (setAvailable! #t)
       (set! state  'none)
+      (set! connection1 'none)
+      (set! connection2 'none)
       (set! connection 'none)
-      (set! y-connection (list 'none 'none))
       (setSpeedlimit! standardSpeed)
       (setDirection! 'none))
 
@@ -72,15 +75,14 @@
     (define/public (setState! ID)
       (if (symbol? ID)
           (if (initialised?)
-             (if (member y-connection ID)
+             (if (or (eq? connection1 ID)
+                     (eq? connection2 ID)
+                     (eq? ID 'none))
                   (set! state ID)
-                  (if (eq? 'none ID)
-                      (set! state ID)
-                      (error "Switch setState!: Given ID does not belong to on of the switch's connections and is not eq to 'none, recieved:" ID)))
-              (error "Switch% setState!: Object is not initialised please initialise before use."))
-          (error "Switch% setState!: Contract violation, expected a symbol, recieved:" ID)))
-    
-
+                (error "Switch setState!: Given ID does not belong to on of the switch's connections and is not eq to 'none, recieved:" ID))
+            (error "Switch% setState!: Object is not initialised please initialise before use."))
+        (error "Switch% setState!: Contract violation, expected a symbol, recieved:" ID)))
+  
     ;-----------------------------------------------------
     ; Function: Switch!
     ; Parameters: n/a
@@ -93,18 +95,20 @@
           (set! state (getOppositeYConnection state))
           (error "Switch% switch!: Switch is not connected please connect before use.")))
 
-    ;--------------------------------------
+    ;----------------------------------------------------
     ; Function: getState
     ; Parameters: n/a
     ; Output:
-    ;    state: symbol
+    ;    state: list<symbol, number>
     ;      Use: The state of the switch.
-    ; Use: Get the state of the switch.
-    ;--------------------------------------
+    ; Use: Get the state of the switch and its number.
+    ;----------------------------------------------------
     
     (define/public (getState)
       (if (initialised?)
-          state
+          (if (eq? state connection1)
+              (list state 1)
+              (list state 2))
           (error "Switch% initState!: State not initialised or given direction is not correct")))
 
     ;-------------------------------------------------------------------------------------
@@ -120,7 +124,8 @@
       (if (and (symbol? dirID)
                (or (eq? 'none dirID)
                    (eq? connection dirID)
-                   (member dirID y-connection)))
+                   (eq? connection1 dirID)
+                   (eq? connection2 dirID)))
           (set! direction dirID)
           (error "Switch% setDirection!: Given direction is not a symbol, not equal to 'none or not a connection of the switch, recieved:" dirID)))
                
@@ -157,8 +162,8 @@
                (symbol? conn3))
           (begin
             (setConnection! conn1)
-            (setYConnection! conn2)
-            (setYConnection! conn3))
+            (setYConnection! conn2 1)
+            (setYConnection! conn3 2))
           (error "Switch% setConnections!: Contract violation expected three symbols, recieved:" conn1 conn2 conn3)))
 
     ;------------------------------------------------------------------------------------------------
@@ -182,23 +187,26 @@
     ;--------------------------------------------------------------------------------------------------------
     ; Function: setYConnection!
     ; Parameters:
-    ;         conn1: symbol
+    ;         id: symbol
     ;          Use: ID of the rail or switch that is connected on one of the splitted parts of the switch.
+    ;         pos: number (1 || 2)
+    ;           Use: The position needed to reach the connection
     ; Output: n/a
     ; Use: Set one of the connections of the switch on the splitted side.
     ;--------------------------------------------------------------------------------------------------------
   
-      (define/public (setYConnection! id)
-        (if (initialised?)
-          (if (symbol? id)
-            (cond 
-              ((isConnectionFree? (getFirstYConnection))  (set! y-connection (list id (getSecondYConnection)))) ;set the first
-              ((isConnectionFree? (getSecondYConnection)) (set! y-connection (list (getFirstYConnection) id)))  ;set the second
-              
-              (else (info "Switch% setYconnection!: All Y-connections are set, please delete one first before adding.")))
-          (error "Switch% setYconnection!: Contract violation expected a symbol, recieved: " id))
-        (error "Switch% setYConnection!: Object is not initialised, please initialise before use.")))
-
+      (define/public (setYConnection! id pos)      
+        (if (symbol? id)
+                
+            (cond ((and (= pos 1)
+                        (or (eq? connection1 'none)
+                            (eq? connection1 'uninitialised))) (set! connection1 id))
+                  ((and (= pos 2)
+                        (or (eq? connection2 'none)
+                            (eq? connection2 'uninitialised))) (set! connection2 id))
+                  (else (error "Switch% setYConnection!: Recieved unknown position expected 1 or 2, recieved: " pos)))
+        (error "Switch% setYConnection!: Contract violation expected a symbol, recievd: " id)))
+    
     ;------------------------------------------------------------------------------------
     ; Function: completelyConnected?
     ; Parameters: n/a
@@ -223,8 +231,8 @@
 
     (define/public (y-connected?)
       (if (initialised?)
-          (or (not (isConnectionFree? (getFirstYConnection)))
-              (not (isConnectionFree? (getSecondYConnection))))
+          (or (not (isConnectionFree? connection1))
+              (not (isConnectionFree? connection2)))
           (error "Switch y-connected?: Object is not initialised please initialise before use.")))
     
     ;------------------------------------------------------------------------
@@ -239,8 +247,8 @@
     (define/public (connected?)
       (if (initialised?)
           (or (not(isConnectionFree? connection))   ; note abstractions for getConnection getFirstYConnection and getSecondYConnection are not used to prevent circular definition and endless loop
-              (not(isConnectionFree? (car y-connection)))
-              (not(isConnectionFree? (cadr y-connection))))
+              (not(isConnectionFree? connection1))
+              (not(isConnectionFree? connection2)))
           (error "Switch connected?: Object is not initialised please initialise before use.")))
 
     ;------------------------------------------------------------------------------
@@ -254,7 +262,7 @@
 
     (define/public (getConnections)
       (if (initialised?)
-          (list connection (getFirstYConnection) (getSecondYConnection))
+          (list connection connection1 connection2)
           (error "Switch getConnections: Object is not initialised please initialise before use.")))
 
     ;--------------------------------------------------------------------------------------
@@ -275,14 +283,14 @@
     ; Function: getYConnection
     ; Parameters: n/a
     ; Output:
-    ;      yConnection: pair<symbol>
+    ;      yConnection: list<symbol>
     ;       Use: The ID's of the objects that are connected to the switch.
     ; Use: Get the ID's of the railway objects that are connected on the splitted part of the switch.
     ;----------------------------------------------------------------------------------------------------
     
     (define/public (getYConnection)
       (if (initialised?)
-          y-connection
+          (list connection1 connection2)
           (error "Switch% getYConnection: Object is not initialised please initialise before use.")))
 
     ;-----------------------------------------------------------------------------------------
@@ -298,8 +306,8 @@
     
     (define/private (hasOppositeYConnection? connID)
       (if (initialised?)
-          (and (member connID y-connection)
-               (not (member 'none y-connection)))
+          (cond ((eq? connID connection1) (not(or (eq? connection2 'none))))
+                ((eq? connID connection2) (nor (or (eq? connection1 'none)))))
           (error "Switch% hasOppositeYConnection?: Object is not initialised please initialise before use.")))
 
     ;----------------------------------------------------------------------------------------
@@ -316,9 +324,9 @@
     (define/public (getOppositeYConnection connID)
       (if (initialised?)
           (when (hasOppositeYConnection? connID)
-            (if (eq? connID (getFirstYConnection))
-                (getSecondYConnection)
-                (getFirstYConnection)))
+            (if (eq? connID connection1)
+                connection2
+                connection1))
           (error "Switch% getOppositeYConnection: Object is not initialised please initialise before use.")))
 
     ;------------------------------------------------------------
@@ -332,7 +340,7 @@
     
     (define/public (getFirstYConnection)
       (if (initialised?)
-          (car (getYConnection))
+          connection1
           (error "Switch% getFirstYConnection: Object is not initialised, please initialise before use.")))
 
     ;------------------------------------------------------------
@@ -346,7 +354,7 @@
 
     (define/public(getSecondYConnection)
       (if (initialised?)
-          (cadr (getYConnection))
+          connection2
           (error "Switch% getSecondYConnection: Object is not initialised, please initialise before use.")))
 
     ;------------------------------------------------------------------------

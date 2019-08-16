@@ -53,17 +53,14 @@
           (set! railwaySystem railwaySys)
           (set! fileReader  reader)
           (set! railwayGraph graph)
-          (addBasicFunctions!)
-          (display "Functions added"))
+          (addBasicFunctions!))
 
       (error "Interface% initialise!: Contract violation expected a railwayManager object, recieved: " railwayMan)))
   
 
     (define/private (selectRailway rail)
       (if (symbol? rail)
-        (cond ((eq? rail 'Hardware) (send fileReader loadRailway path)
-                                    (display(send railwayManager getAllSwitchID)
-                                    ))
+        (cond ((eq? rail 'Hardware) (send fileReader loadRailway path))
         
         (else (info "Given railway is unkown please create and add before use, recieved: " rail)))
       
@@ -103,10 +100,10 @@
           (if (and (not (hash-has-key? railwayManFunc key))
                    (not (hash-has-key? railwayFunc key)))
                 
-                (cond ((eq? dest railwayManSym) (hash-set! railwayManFunc key function)
-                                                (display "Function added: ") (display "manager ") (display key) (newline))
-                      ((eq? dest railwaySym) (hash-set! railwayFunc key function)
-                                              (display "Function added: ") (display "railway ") (display key) (newline))
+                (cond ((eq? dest railwayManSym) (hash-set! railwayManFunc key function))
+                                                
+                      ((eq? dest railwaySym) (hash-set! railwayFunc key function))
+                                            
                 (else (error "Interface! addFunction!: Destiantion is unknown, recieved: " dest)))
 
                 (error "Interface% addFunction!: Key is not unique, function already exists, recieved: " key))
@@ -305,15 +302,45 @@
                                                             (set! connection (send switch getConnection))
                                                             connection)))
 
+    ;-----------------------------------------------------------
+    ; Function: n/a 
+    ; Parameters: 
+    ;         railway: symbol
+    ;           Use: The name of the railway that is selected. 
+    ; Output: n/a 
+    ; Use: Start a railway selected by the user. 
+    ;-----------------------------------------------------------
+
     (addFunction! railwayManSym 'startRailway (lambda (railway)
                                               (selectRailway railway)
                                               (send railwayGraph generateGraph!)
                                               (send railwayManager setGraph! (send railwayGraph getGraph))
+                                           
                                               ))
     
-    (addFunction! railwayManSym 'getGraphList (lambda ()
-                                            (send railwayGraph getGraphList)))
+    ;-----------------------------------------------------------
+    ; Function: n/a 
+    ; Parameters: n/a 
+    ; Output: 
+    ;     graphList: list<symbol>
+    ;       Use: The list representation of the used graph. 
+    ; Use: Get the list representation of the used graph. 
+    ;-----------------------------------------------------------
 
+    (addFunction! railwayManSym 'getGraphList (lambda ()
+                                              (send railwayGraph getGraphList)))
+
+    ;-----------------------------------------------------------------
+    ; Function: n/a 
+    ; Parameters: 
+    ;         data: list<symbol> 
+    ;           Use: Information about the to be activated route. 
+    ; Output: n/a 
+    ; Use: Activate a given route. 
+    ;-----------------------------------------------------------------
+
+    (addFunction! railwayManSym 'activateRoute! (lambda (data)
+                                                (send railwayManager activateRoute! data)))
     ;Railway functions
 
     ;----------------------------------------------------------------------------
@@ -327,7 +354,9 @@
 
     (addFunction! railwaySym 'startSimulator (lambda (railway status)
                                                 (send railwaySystem setStatus! status)
-                                                (send railwaySystem startSystem railway)))
+                                                (send railwaySystem startSystem railway)
+                                                
+                                                ))
 
     ;----------------------------------------
     ; Function: n/a 
@@ -363,7 +392,7 @@
     ; Use: Delete a created train.
     ;-------------------------------------------------------------
 
-    (addFunction! railwaySym 'deleteTrain (lambda (trainID)
+    (addFunction! railwaySym 'deleteTrain! (lambda (trainID)
                                             (send railwaySystem deleteTrain! trainID)))
 
     ;-----------------------------------------------------------
@@ -379,6 +408,9 @@
 
     (addFunction! railwaySym 'setSpeed! (lambda (trainID speed)
                                             (send railwaySystem setTrainSpeed! trainID speed)))
+
+    (addFunction! railwaySym 'getSpeed (lambda (trainID)
+                                        (send railwaySystem getTrainSpeed trainID)))
 
     ;---------------------------------------------
     ; Function: n/a 

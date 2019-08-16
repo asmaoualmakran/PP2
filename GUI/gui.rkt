@@ -209,8 +209,6 @@
                                   (send TCPclient TCPcall (list railway 'startSimulator trackSelection radioSelection))
                                   (send TCPclient TCPcall (list railwayManager 'startRailway trackSelection))
                                   (send routeManager setGraph! (send TCPclient TCPcall (list railwayManager 'getGraphList)))
-                                  (display (send routeManager getGraph))
-                                  (newline)
                                   (set! running #t)
                                   ))]))
                                 
@@ -308,7 +306,6 @@
       (define cancelButton (new button% [parent bottom]
                                 [label "cancel"]
                                 [callback (lambda (button event)
-                                            (display "trajcet canceled")
                                             (send frame show #f))]))
                          
       (send frame show #t))
@@ -361,13 +358,14 @@
                                 [label "get speed"]
                                 [callback (lambda (button event)
                                             (let ((train (string->symbol(send trainDropdown get-string-selection))))
-                                            (errorPop (number->string (send trainManager getTrainSpeed train)))))
+                                            (errorPop (number->string (send TCPclient TCPcall (list railway 'getSpeed train))))))
                                             ]))
 
     (define trainDelete (new button% [parent train-selector-right]
                                [label "Delete train"]
                                [callback (lambda (button event)
-                                           (display "train selected"))]))
+                                          (send trainManager deleteTrain! (string->symbol (send trainDropdown get-string-selection)))
+                                          (send TCPclient TCPcall (list railway 'deleteTrain! (string->symbol (send trainDropdown get-string-selection)))))]))
                                       
     ; Train creator items
 
@@ -525,18 +523,29 @@
                                         (define trajectDrop (new choice%
                                                                  [label "traject"]
                                                                  [parent top]
-                                                                 [choices (list "traject1" "traject2")]))
+                                                                 [choices (map symbol->string (send routeManager getAllRouteID))]))
 
                                         (define trainDrop (new choice%
                                                                [label "train" ]
                                                                [parent top]
-                                                               [choices (list "train1" "train2")]))
+                                                               [choices (map symbol->string (send trainManager getAllTrainID))]))
 
                                         (define assign (new button%
                                                             [label "set traject"]
                                                             [parent bottom]
                                                             [callback (lambda (button event)
-                                                                        (display "assigned"))]))
+                                                                        (let* ((trajectID (string->symbol (send trajectDrop get-string-selection)))
+                                                                               (traject (send routeManager getRoute trajectID))  ;exists of only tracks and switches
+                                                                               (train   (string->symbol (send trainDrop get-string-selection)))
+                                                                               (trainStart (send trainManager getTrainLocation train))  ;it is always an detectionblock
+                                                                               (railloc (send TCPclient TCPcall (list railwayManager 'getTrackID trainStart))))
+
+                                                                            (if (eq? railloc (car traject))
+                                                                               (begin 
+                                                                                 (send routeManager activateRoute! trajectID train)
+                                                                                 (send TCPclient TCPcall (list railwayManager 'activateRoute! (list train traject))))
+                                                                             (errorPop "Given route does not start on the train's location")))
+                                                                        )]))
 
                                         (define cancel (new button%
                                                             [label "cancel"]

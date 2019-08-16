@@ -168,10 +168,9 @@
             (if (not (getActive))
                 (begin
                   (set! traject traj)
-                  (switchActive!)
-                  (setDirection! (cadr traj)))
+                  (switchActive!))
                 (error "Train% setTraject: Train is already activated, cannot drive another traject."))
-            (error "Train% setTraject: contract violation, expected vector received" traj)))
+            (error "Train% setTraject: contract violation, expected list received" traj)))
 
       ;-------------------------------------------------------------------------
       ; Function: deleteTraject!

@@ -293,7 +293,7 @@
         (let ([serData (serialize data)])
           (write serData output)
           (flush-output output))
-      (error "server% writeOutput: The given data is "))
+      (error "server% writeOutput: The given data is " data))
     (error "Server% writeOutput: There is no connection active.")))
 
   ;------------------------------------------
@@ -338,8 +338,4 @@
               recievedData)
           recievedData))
           (recieveTCP))
-
-    ;(define/public (startServer)
-    ;  recieveTCP)
-    
   ))

@@ -19,7 +19,8 @@
   (class object%
     (super-new)
 
-    (field [TCPclient 'uninitialised])
+    (field [TCPclient 'uninitialised]
+           [deadEnd   'S-16])
 
     ; Variables to enable type checking
 
@@ -68,27 +69,43 @@
     ; Use: Calculate a path between two nodes in the graph
     ;--------------------------------------------------------------
 
- ;   (define/public (calculateRoute start end graph)
- ;     (if (and (send railManager isDetectionblock? start)
- ;              (send railManager isDetectionblock? end))
-
-  ;        (let ([route (list )]
-  ;              [s (send (send railManager getObject start) getTrackID)]
-  ;              [e (send (send railManager getObject end) getTrackID)])
-
-  ;          (let-values ([(costs path) (dijkstra graph e)])  ;hashtable and a list returned als result
-
- ;            (set! route  (constructPath (hash->list path) s e)))
- ;            route)
- ;         (error "RouteCalculator% calculateRoute: Start and ending node are not detectionblocks, route cannot be calculated: " start end)))
-    (define/public (calculateRoute start end graph)
-      (let ([route (calculate start end graph)])
-        (let ([turnloc (uTurnNeeded? route)])
-          (when turnloc
-          (let ([calcTurns (calculateUturn turnloc graph)])
-            (set! route (addUTurns route calcTurns))))
-        )
-      route))
+      (define/public (calculateRoute start end graph)
+        (let* ([route (calculate start end graph)]
+               [turnLoc (uTurnNeeded? route)]
+               [turns (when turnLoc (calculateUturn turnLoc graph))])  ; turns only calculated when there are u turns needed
+          
+          (display "Calculated route is ")          ;display used to show the calculated path
+          (display route)
+          (newline)
+          (display "Uturns calculated are: ")
+          (display turnLoc)
+          (newline)
+          (display "turns created are: ")
+          (display (when (not (void? turns)) (stack->list turns)))
+          (newline)
+          (display "Turns added: ")
+          (display (when (not (void? turns))(addUTurns route turns)))
+          (newline)
+          
+          (if turnLoc              ; if there are u turns needed you add them to the route
+            (addUTurns route turns)
+            route)                  ; no u turns needed
+        ))
+    
+    ;--------------------------------------------------------------------------
+    ; Function: calculate 
+    ; Parameters: 
+    ;         start: symbol 
+    ;           Use: The dectionblock where the route starts. 
+    ;         end: symbol
+    ;           Use: The dectionblock where the route ends. 
+    ;         graph: graph
+    ;           Use: The graph representing the railwaysystem. 
+    ; Output: 
+    ;     route: list<symbol>
+    ;       Use: The calculated route. 
+    ; Use: Calculating a route from a start to an endpoint useing dijkstra. 
+    ;-------------------------------------------------------------------------
 
     (define/private (calculate start end graph)
       (if (and (symbol? start)
@@ -98,6 +115,7 @@
             (let ([route (list )])
                 (let-values ([(costs path) (dijkstra graph end)])  ;hashtable and a list returned als result
                  (set! route  (constructPath (hash->list path) start end))) ;
+
              route) 
             (error "RouteCalculator% calculate: Given start and end vertex are not a member of the graph, recieved: " start end))
         (error "RouteCalculator% calculate: Contract violation, given start and end are not symbols, recieved: " start end)))
@@ -170,45 +188,34 @@
     ; Use: Determine the locations where u turns are needed and returning them.
     ;----------------------------------------------------------------------------------------
 
-  ;  (define/private (uTurnNeeded? route)
-  ;    (if (list? route)
-  ;        (if (not (null? route))
-  ;            (let ([uTurns '()])
-  ;              (for ([i route]
-  ;                    [idx (in-range (length route))])
-  ;                (let ([object (send railManager i)])
-  ;                  (when (send railManager isSwitch? object)  ; when you have a switch you need to check if the path goes for y connection to y connection.
-  ;                    (let ([Con1 (list-ref route (- idx 1))] ; Switch is sandwitched between 2 connections.
-  ;                          [Con2 (list-ref route (+ idx 1))])
-  ;                      (when (and (member Con1 (send object getYConnection))
-  ;                                 (member Con2 (send object getYConnection)))
-  ;                        (append uTurns (cons i Con2)))))))  ; pairs contain the switchID and where to needs to be turned ID (destination)
-  ;              (if (not (null? uTurns))
-  ;                  uTurns
-  ;                  #f))
-  ;            (error "RouteCalculator% uTurnNeeded?: Contract violation expected a non empty list, recieved:" route))
-  ;        (error "RouteCalculator% uTurnNeeded?: Contract violation expected a list, recieved:" route)))
-
     (define/private (uTurnNeeded? route)
       (if (list? route)
         (if (not (null? route))
-          (let ([uTurnLoc '()])
-            (for ([i route]
-                  [idx (in-range (length route))])
-                  
-                (when (send TCPclient TCPcall (list railwayManager 'isSwitch? i))  ; when you have a switch, a u turn may be needed
-                  (let ([yConnection (send TCPclient TCPcall (list railwayManager 'getYConnection i))] ; u turn is needed when the prev node and the next node are connected on the y part of the switch
-                        [con1 (list-ref route (- idx 1))]  
-                        [con2 (list-ref route (+ idx 1))])
+          (let ([turnLoc (list )])
+            (for ([i route])
+              (let ((isSwitch? (send TCPclient TCPcall (list railwayManager 'isSwitch? i))))
+                (when isSwitch?
+                  (let* ((yConnection (send TCPclient TCPcall (list railwayManager 'getYConnection i)))
+                         (idx (index-of route i))
+                         (prev (- idx 1))
+                         (next (+ idx 1)))   ;issue occurs when prev en next are part of the same y connection
 
-                      (append uTurnLoc (list (cons i con2)))))) ; The two pairs need to stay together
+                      (when (and (>= prev 0)
+                                 (<= next (- (length route) 1)))
+                        (when (and (member (list-ref route prev) yConnection)
+                                   (member (list-ref route next) yConnection))
 
-          (if (not (null? uTurnLoc))
-              uTurnLoc
-              #f))
+                        (set! turnLoc (append turnLoc (list (cons i (list-ref route next)))))  ;when the next is part of the splitted connection --> add pair to turn location
+                      ))))))
 
+            (if (null? turnLoc)
+                #f
+                turnLoc))
+          
         (error "RouteCalculator% uTurnNeeded?: Contract violation expected a non empty list, recieved: " route))
-      (error "RouteCalculator% uTurnNeeded?: Contract violation expected a list, recieved: " route)))
+      (error "RouteCalculator% uTurnNeeded?: Contract violation expected a non empty list, recieved: " route)))
+
+    
     ;----------------------------------------------------------------------------------------------
     ; Function: <=?
     ; Parameters:
@@ -229,47 +236,6 @@
           (error "RouteCalculator% <=?: Contract violation expected listst recieved:" x y)))
 
 
-
-    ;----------------------------------------------------------------------------------------
-    ; Function: uTurn
-    ; Parameters:
-    ;        list: list<pair>
-    ;         Use: List containing the locations where u-turns are needed.
-    ; Output:
-    ;       results: stack<list>
-    ;        Use: Stack containing the u-turn routes.
-    ; Use: Calculating the u-turns using the location where it's needed and the destination.
-    ;----------------------------------------------------------------------------------------
-
- ;   (define/private (uTurn turnLoc)
- ;     (if (list? turnLoc)
- ;         (if (not (null? turnLoc))
- ;             (if (andmap pair? turnLoc)
- ;                 (let ([detectionBlocks (send railManager getAllDetectionblockID)]
- ;                       [results (make-stack)])
- ;                   (for ([i list])
-;
-;                      (let ([subResults (make-heap <=?)]
-;                            [switchID (car i)]
-;                            [connID (cdr i)])
-;
-;                        (let ([oppositeID (send(send railManager getSwitch switchID) getOppositeConnection connID)])
-
-;                        (for ([block detectionBlocks])
-;                          (let ([trackID (send (send railManager getDetectionblock block) getTrackID)])
-;                            (let ([currentPath (calculateRoute switchID trackID)])
-;                              (when (and (not (member currentPath oppositeID)
-;                                         (not (uTurnNeeded? currentPath))))
-;                                (heap-add! subResults (set! currentPath (append currentPath (calculateRoute trackID oppositeID))))
-;                          ))))
-;                          (push! results (heap-min results))
-;                          (set! subResults (make-heap <=?));
-;
-;                          ))))
-;                  (error "RouteCalculator% uTurn: Contract violation expected a list of pairs, recieved:" turnLoc))
-;              (error "RouteCalculator% uTurn: Contract violation expected a non empty list, recieved:" turnLoc))
-;          (error "RouteCalculator% uTurn: Contract violation expected a list, recieved:" turnLoc)))
-
     ;--------------------------------------------------------------------------------
     ; Function: calculateUturn
     ; parameters: 
@@ -283,39 +249,40 @@
     ; Use: Calculating routes between two points, that then can be used as uturns. 
     ;---------------------------------------------------------------------------------
 
-    (define/private (calculateUturn turnLoc graph)
-      (if (list? turnLoc)
-        (if (not (null? turnLoc))
-          (if (andmap pair? turnLoc)
-
-            (let ([detectionblocks (send TCPclient TCPcall (list railwayManager 'getAllDetectionID))]
-                  [results (make-stack)])
-
-              (for ([i turnLoc])
-                (let ([switchID (car i)]
-                      [connID (cdr i)]
-                      [subResults (make-heap <=?)])
-
-                  (let ([oppositeConn (send TCPclient TCPcall (list railwayManager 'getOppositeYConnection switchID connID))])    
-                      (for ([block detectionblocks])
-                      
-                        (let ([trackID (send TCPclient TCPcall (list railwayManager 'getTrackID block))])
-                          (let ([switch-track (calculate switchID trackID graph)]
-                                [track-conn   (calculate trackID connID graph)])
-                                
-                                (when (and (not (member connID switch-track))
-                                           (not (uTurnNeeded? switch-track))  ; prevent recursion in the path claculation
-                                           (not (uTurnNeeded? track-conn)))
-                                           
-                                      (heap-add! (append switch-track track-conn))))))
-                  
-                  (push! results (heap-min subResults))
-                  (set! subResults (make-heap <=?)))))
-                  results) ; return the calculated u turns
+    (define/private (calculateUturn turnloc graph)
+      (if (list? turnloc)
+        (if (graph? graph)
+          (if (not (null? turnloc))
           
-          (error "RouteCalculator% calculateUturn: Contract violation expected a list of pairs, recieved: " turnLoc))
-        (error "RouteCalculator% calculateUturn: Contract violation expected a non empty list, recieved: " turnLoc))
-      (error "RouteCalculator% calculateUturn: Contract violation expected a list, recieved: " turnLoc)))
+            (let ([detectionblocks (send TCPclient TCPcall (list railwayManager 'getAllDetectionID))]  ;retrieve all detectionblocks 
+                  [results (make-stack)])
+              (for ([i turnloc])
+                (let ([switchID (car i)]
+                      [connID (cdr i)]  
+                      [subResults (make-heap <=?)])
+                  (for ([d detectionblocks])
+                    (let* ([trackID (send TCPclient TCPcall (list railwayManager 'getTrackID d))]
+                           [switch-track (calculate switchID trackID graph)]
+                           [track-conn (calculate trackID connID graph)])
+
+                      (when (and (not (member connID switch-track))
+                                 (not (uTurnNeeded? switch-track))
+                                 (not (uTurnNeeded? track-conn)))
+                            (if (or (member deadEnd switch-track)
+                                    (member deadEnd track-conn))
+                                    #f
+                            (heap-add! subResults (append switch-track (cdr track-conn)))) ; cdr is needed otherwise you have 2 times the connecting object       
+                      )))
+                (when (> (heap-count subResults) 0)
+                  (push! results (heap-min subResults))
+                  (set! subResults (make-heap <=?)))))  ;reset the heap
+
+                results)
+                
+        
+          (error "RouteCalculator% calculateUturn: Contract violation expected a non empty list, recieved: " turnloc))   
+        (error "RouteCalculator% calculateUturn: Contract violation expected a graph, recieved: " graph))
+      (error "RouteCalculator% calculateUturn: Contract violation expected a non empty list, recieved: " turnloc)))
 
     ;----------------------------------------------------------------------------------
     ; Function: addUTurns
@@ -334,34 +301,19 @@
       (if (list? route)
         (if (not (null? route))
           (if (stack? turnStack)
-          (let ([resultRoute route])
 
-            (while (not (stack-empty? turnStack))
-              (let ([turn (top turnStack)]
-                    [idx    'none]
-                    [left   'none]
-                    [right  'none])
-
-                (pop! turnStack)
-                (set! idx (index-of resultRoute (car turn)))
-                (if (= idx (length resultRoute))            ; if the idx = length of the list, the whole list is taken as "right"
-
-                    (begin
-                      (set! left (take resultRoute (- idx 1)))
-                      (set! resultRoute (append left turn)))
-
-                  (begin
-                  (set! left (take resultRoute idx))             ; split the route in two, and take the current switch out of consideration
-                  (set! right (take-right resultRoute (+ idx 1)))
-                  (set! resultRoute (append left turn))    ; add the turn at the end of the first part of the route
-                  (set! resultRoute (append resultRoute right))) ; add the last part of the route at the end of the result
-                  )))
-                  
-                  resultRoute) ; return the extended route
-          
+            (let ([result (list )]
+                  [stack turnStack])
+                (for ([i route])
+                  (when (not (stack-empty? stack))
+                    (if (eq? i (car (top stack)))
+                        (set! result (append result (top stack)))
+                        (set! result (append result (list i)))
+                    )))  
+                result)
           (error "RouteCalculator% addUTurns: Contract violation expected a stack, recieved: " turnStack))
-        (error "RouteCalculator% addUTurns: Contract violation expected a non empty list, recieved: " route))
-      (error "RouteCalculator% addUTurns: Contract violation expeted a list, recieved: " route)))
+        (error "RouteCalculator% addUTurns: Contract violation expected a nonempty list, recieved: " route))
+      (error "RouteCalculator% addUTurns: Contract violation expected a nonempty list, recieved: " route)))
 
 
     ))

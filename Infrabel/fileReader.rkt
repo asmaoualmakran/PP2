@@ -19,7 +19,7 @@
     (define managerType 'object:RailwayManager%)
 
     (field [railmanager 'none]
-           [maxCallLength 4])
+           [maxCallLength 6])
 
     ;-----------------------------------------------------------
     ; Function: initialise!
@@ -235,7 +235,7 @@
 
                     (for ([i lst]
                           [idx (in-range 0 (length lst))])
-
+                          
                       (let ([str (cadr i)])  ; string->symbol str
 
                         (if (= idx 0)    
@@ -274,7 +274,9 @@
               (if (not (null? args))
                   (let ([connections (car args)])
                     (cond ((=(length connections)1) ((getFunc func) objname (car connections)))
-                          ((= (length connections)2) ((getFunc func) objname (car connections)(cadr connections)))))
+                          ((= (length connections)2) ((getFunc func) objname (car connections)(cadr connections)))
+                          ((= (length connections)3) ((getFunc func) objname (first connections)(second connections)(third connections)))
+                          ((= (length connections)4) ((getFunc func) objname (first connections)(second connections)(third connections)(fourth connections)))))
                     ((getFunc func) objname))
                   (error "FileReader callFunction: Contract violation expected two symbols and a list, recieved:" func objname args))
               (error "FileReader callFunction: Conctract violation, optional argument list is to long maximum length is:" (- maxCallLength 2))))
@@ -433,13 +435,15 @@
       ;           Use: The identification of the switch.
       ;         id: symbol
       ;          Use: The identification of the railway object that needs to be connected or the symbol none.
+      ;         pos: number
+      ;           Use: The position needed to reach the connected object. 
       ; Output: n/a
       ; Use: Connecting two railway objects to the splitted connection of the switch, or create a dead end.
       ; Note: When connecting two switches, id will be connected to the y-connection of the switch
       ;       and the switch will be connected to the straight connection of id
       ;----------------------------------------------------------------------------------------------------------
       
-      (add! 'connectY! (lambda (switchID id)
+      (add! 'connectY! (lambda (switchID id pos)
                         (if (and (symbol? switchID)
                                  (symbol? id))
 
@@ -453,9 +457,9 @@
                                       (set! obj (send railmanager getObject id)))
                                     
                                     (if (eq? obj 'none)
-                                      (send switch setYConnection! obj)
+                                      (send switch setYConnection! obj pos)
                                       (begin 
-                                            (send switch setYConnection! id)
+                                            (send switch setYConnection! id pos)
                                              (send obj setConnection! switchID))))
                                     
                             (error "FileReader% add! 'connectY!: No valid connection between the objects with given ID's: " switchID id))
@@ -470,11 +474,15 @@
       ;         Use: The switch that needs to be connected. 
       ;       id2: object:Switch%
       ;         Use: The switch that needs to be connected. 
+      ;       pos1: number
+      ;         Use: The position to reach id2 from id1
+      ;       pos2: number: 
+      ;         Use: The position to reach id1 from id2
       ; Output: n/a 
       ; Use: Connect Y-connections of two switches to each other. 
       ;------------------------------------------------------------
 
-      (add! 'connectYtoY! (lambda (id1 id2)
+      (add! 'connectYtoY! (lambda (id1 id2 pos1 pos2)
                             (if (and (symbol? id1)
                                      (symbol? id2))
 
@@ -484,8 +492,8 @@
                                 (let ([switch1 (send railmanager getSwitch id1)]
                                       [switch2 (send railmanager getSwitch id2)])
                                       
-                                      (send switch1 setYConnection! id2)
-                                      (send switch2 setYConnection! id1))
+                                      (send switch1 setYConnection! id2 pos1)
+                                      (send switch2 setYConnection! id1 pos2))
                                   
                               (error "FileReader% add! 'connectYtoY!: Contract violation expected two switches ID's, recieved: " id1 id2))
                             (error "FileReader% add! 'connectYtoY!: Contract violation expected two symbols, recieved: " id1 id2))))
