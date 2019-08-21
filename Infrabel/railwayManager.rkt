@@ -316,7 +316,7 @@
     (define/public (setStatus! id status)
     (if (or (symbol? status)
             (eq? status #t))
-      (send (getObject id) setAvailable! id)
+      (send (getObject id) setAvailable! status)
       (error "RailwayManager% setStat!: Expected a symbol or #t, recieved: " status)))
 
     ;----------------------------------------------------

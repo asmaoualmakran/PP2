@@ -127,25 +127,7 @@
     (define/private (getSimulatorStance switchID)
       (if (send railwayController isSwitch? switchID)
           (cadr(send railwayController getSwitchStance switchID))
-      (error "SecurityProtocol% getHardwareStance: Given id does not belong to a switch, recieved" switchID)))
-    
-    ;--------------------------------------------------------------
-    ; Function: startTraject 
-    ; Parameters: 
-    ;       trainID: symbol
-    ;         Use: The train that needs to drive the traject. 
-    ; Output: n/a 
-    ; Use: Start a traject for the given train. 
-    ;--------------------------------------------------------------
-
-    (define/private (startTraject trainID)
-     ; (let ((route (send railwayController getActiveRoute trainID)))
-     ;   (for ([i route])
-     ;     (when (send railwayController isSwitch? i)                           
-     ;       (when (send railwayController memberYConnection? i (getNext i route))
-     ;             (send railwayController setStance! i (getNext i route))
-     ;             (send railwaySystem setSwitchPosition! i (getSimulatorStance i))))))
-      (send railwaySystem setTrainSpeed! trainID drivingSpeed))    ;afther setting the correct switch stances, let the train drive
+      (error "SecurityProtocol% getHardwareStance: Given id does not belong to a switch, recieved" switchID)))    
 
     ;----------------------------------------------------------------------------------------
     ; Function: endLocation? 
@@ -196,7 +178,7 @@
 
     (define/private (endTraject! trainID)
       (when (endLocation? trainID)
-            (send railwaySystem setTrainSpeed! stoppingSpeed)
+            (send railwaySystem setTrainSpeed! trainID stoppingSpeed)
             (send railwayController deactivateRoute! trainID)))
 
     ;----------------------------------------------------------------------
@@ -216,18 +198,23 @@
                   (not (null? section)))
 
           (for ([i section])
-            (display "elm of section ")
-            (display i)
-            (newline)
+
              (if (send railwayController isTrack? i)
-                (cond ((send railwayController hasDetectionblock? i)  (display "has detectionblock ")
-                                                                      (newline)
+                (cond ((send railwayController hasDetectionblock? i)  
                                                                       (send railwayController reserve! i trainID)
                                                                      (send railwayController reserve! (send railwayController getBlock i) trainID))
-                (else (display "has no detectionblock") (newline) (send railwayController reserve! i trainID)))
-              (begin (display "it is a switch")(newline) (send railwayController reserve! i trainID)) ))
+                (else  (send railwayController reserve! i trainID)))
+             (send railwayController reserve! i trainID)) )
         (error "SecurityProtocol% reserveSection!: Contract violation expected a non empty list, recieved: " section))
-      (error "SecurityProtocol% reserveSection!: Contract violation expected a symbol, recieved: " trainID)))
+      (error "SecurityProtocol% reserveSection!: Contract violation expected a symbol, recieved: " trainID))
+      
+              (display "section reserved ")
+              (display section)
+              (display " ")
+              (display (car section))
+              (display "-")
+              (display (send railwayController getReservation (car section))) 
+              (newline))
 
     ;----------------------------------------------------------------------------------
     ; Function: releaseSection! 
@@ -244,15 +231,27 @@
       (if (symbol? trainID)
         (if (and (list? section)
                  (not (null? section)))
+
         (for ([i section])
               (cond ((send railwayController isTrack? i )(if (send railwayController hasDetectionblock? i)
                                       (begin 
                                         (send railwayController release! i trainID)
                                         (send railwayController release! (send railwayController getBlock i) trainID))
                                       (send railwayController release! i trainID)))
-              (else (send railwayController reserve! i trainID))))       
+              (else (send railwayController reserve! i trainID))))
+      
         (error "SecurityProtocol% releaseSection!: Contract violation expected a non empty list, recieved: " section))
-      (error "SecurtiyProtocol% releaseSection!: Contract violation expected a symbol, recieved: " trainID)))
+      (error "SecurtiyProtocol% releaseSection!: Contract violation expected a symbol, recieved: " trainID))
+                      (display "train ")
+        (display trainID)
+        (newline)
+              (display "section released ")
+              (display section)
+              (display " ")
+              (display (car section))
+              (display "-")
+              (display (send railwayController getReservation (car section)))
+              (newline) )
 
     ;-----------------------------------------------------------------------
     ; Function: setSwitchesSection!
@@ -316,7 +315,9 @@
                       ((endLocation? t) (send railwaySystem setTrainSpeed! t stoppingSpeed)
                                         (endTraject! t)                       ; the train has reached it's end location
                                         (releaseSection! t reserved)
-                                        (send railwayController reserve! t trainLoc)
+
+                                        (send railwayController reserve! trainLoc t)
+
                                         (hash-remove! reservedSections t))
 
                      ((endSegment? t reserved) (set! segment (takeSegment trainLoc route))
@@ -329,11 +330,11 @@
                                               (begin
                                                 (send railwaySystem setTrainSpeed! t stoppingSpeed)
                                                 (releaseSection! t reserved)
-                                                (send railwayController reserve! t trainLoc))))))
+
+                                                (send railwayController reserve! trainLoc t))))))
 
               (unless (hash-has-key? reservedSections t) ; there is no reserved segments for the train
-                (display "segement calculated ")
-                (newline)
+
                 (set! segment (takeSegment trainLoc route))
  
                 (when (sectionAvailable? segment)

@@ -268,7 +268,11 @@
       (if (and (symbol? trainID)
                (symbol? objID))
           (when (eq? #t (getReservation objID))           ; you cannot reserve a reserved object
-            (send railwayManager setStatus! objID trainID))
+                   
+            (send railwayManager setStatus! objID trainID)
+            (display "status set ")
+            (display (send railwayManager getStatus objID))
+            (newline))
       (error "RailwayController% reserve!: Contract violation expected two symbols, recieved: " objID trainID)))
 
     ;----------------------------------------------------------
@@ -286,7 +290,10 @@
       (if (and (symbol? objID)
                (symbol? trainID))
           (when (eq? trainID (getReservation objID))
-                (send railwayManager setStatus! objID #t))
+                (send railwayManager setStatus! objID #t)
+                (display "released ")
+                (display (send railwayManager getStatus objID))
+                (newline))
       (error "RailwayController% release!: Contract violation expected a symbol, recieved: " objID)))
 
     ;------------------------------------------------------------------------------------------------

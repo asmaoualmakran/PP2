@@ -193,7 +193,7 @@
     (define trackDropdown (new choice%
                                (label "Tracks")
                                (parent track-selector-left)
-                               (choices (list "Hardware" "Straight""Straight-with-switch" "Loop")))) 
+                               (choices (list "Hardware" "Straight")))) 
     
     ; Start button for the simulator
     
@@ -236,7 +236,8 @@
     (define trajectDelete (new button% [parent traject-selector-right]
                                [label "Delete traject"]
                                [callback (lambda (button event)
-                                           (send routeManager deleteRoute! (string->symbol (send trajectDopdown get-string-selection))))]))
+                                           (send routeManager deleteRoute! (string->symbol (send trajectDopdown get-string-selection))
+                                           (updateGUI! 'trajects)))]))
   
 
     ; Traject creator items

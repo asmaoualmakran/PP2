@@ -20,7 +20,9 @@
     (super-new)
 
     (field [TCPclient 'uninitialised]
-           [deadEnd   'S-16])
+           [deadEndBlock   '2-8]
+           [deadEndtrack   'T-2-8]
+           [deadEnd        'S-16])
 
     ; Variables to enable type checking
 
@@ -71,8 +73,12 @@
 
       (define/public (calculateRoute start end graph)
         (let* ([route (calculate start end graph)]
-               [turnLoc (uTurnNeeded? route)]
-               [turns (when turnLoc (calculateUturn turnLoc graph))])  ; turns only calculated when there are u turns needed
+               [turnLoc (if (not (empty? route))
+                            (uTurnNeeded? route)
+                            '())]
+               [turns (if (and turnLoc (not (empty? route))) ; turns only calculated when there are u turns needed
+                          (calculateUturn turnLoc graph)
+                          '())])  
           
           (display "Calculated route is ")          ;display used to show the calculated path
           (display route)
@@ -81,14 +87,15 @@
           (display turnLoc)
           (newline)
           (display "turns created are: ")
-          (display (when (not (void? turns)) (stack->list turns)))
+          (display (when (not (empty? turns)) (stack->list turns)))
           (newline)
           (display "Turns added: ")
-          (display (when (not (void? turns))(addUTurns route turns)))
+          (display (when (not (empty? turns))(addUTurns route turns)))
           (newline)
           
-          (if turnLoc              ; if there are u turns needed you add them to the route
-            (addUTurns route turns)
+          (if (and (not (empty? turnLoc))              ; if there are u turns needed you add them to the route
+                    (not (empty? turns)))
+          (addUTurns route turns)
             route)                  ; no u turns needed
         ))
     
@@ -112,11 +119,13 @@
                (symbol? end))
         (if (and (has-vertex? graph start)
                  (has-vertex? graph end))
+            (if (not (eq? end deadEndtrack))
             (let ([route (list )])
                 (let-values ([(costs path) (dijkstra graph end)])  ;hashtable and a list returned als result
                  (set! route  (constructPath (hash->list path) start end))) ;
 
              route) 
+             '())
             (error "RouteCalculator% calculate: Given start and end vertex are not a member of the graph, recieved: " start end))
         (error "RouteCalculator% calculate: Contract violation, given start and end are not symbols, recieved: " start end)))
 
@@ -189,6 +198,7 @@
     ;----------------------------------------------------------------------------------------
 
     (define/private (uTurnNeeded? route)
+
       (if (list? route)
         (if (not (null? route))
           (let ([turnLoc (list )])
@@ -212,7 +222,7 @@
                 #f
                 turnLoc))
           
-        (error "RouteCalculator% uTurnNeeded?: Contract violation expected a non empty list, recieved: " route))
+        #f)     ;an empty route has no uTurns
       (error "RouteCalculator% uTurnNeeded?: Contract violation expected a non empty list, recieved: " route)))
 
     
@@ -244,7 +254,7 @@
     ;       graph: graph
     ;         Use: The graph representing the railwaysystem. 
     ; Output:
-    ;      uturn: list<symbol>
+    ;      uturn: stack<list<symbol>>
     ;        Use: The routes for the u-turns
     ; Use: Calculating routes between two points, that then can be used as uturns. 
     ;---------------------------------------------------------------------------------
@@ -297,23 +307,36 @@
     ; Use: Extending calculated routes with u-turns.
     ;------------------------------------------------------------------------------------
 
-    (define/private (addUTurns route turnStack)
+
+  (define/private (addUTurns route turnStack)
       (if (list? route)
         (if (not (null? route))
           (if (stack? turnStack)
+            (let ([result route]
+                  [left (list )]
+                  [right (list )]
+                  
+                  [idx 0])
 
-            (let ([result (list )]
-                  [stack turnStack])
-                (for ([i route])
-                  (when (not (stack-empty? stack))
-                    (if (eq? i (car (top stack)))
-                        (set! result (append result (top stack)))
-                        (set! result (append result (list i)))
-                    )))  
-                result)
+             (while (not (stack-empty? turnStack))
+
+               (set! idx (index-of result (car (top turnStack))))
+               (set! left (take result idx))
+              
+               (if (= (+ idx 1) (- (length route) 1))           ; take right works circular, preventing wrong right splitting
+                  (set! right (list ))
+                  (set! right (take-right result (- (length route) (+ idx 1)))))   ; move one to the left to remove possible doubles
+
+               (when (and (not (null? right)) 
+                     (eq? (last (top turnStack)) (first right))) ; possible double needs to be removed
+                 (set! right (remove (first right) right)))      ; remove the first occurence of the double
+
+               (set! result (append (append left (top turnStack))right))
+               (pop! turnStack))
+           result)
+
           (error "RouteCalculator% addUTurns: Contract violation expected a stack, recieved: " turnStack))
         (error "RouteCalculator% addUTurns: Contract violation expected a nonempty list, recieved: " route))
       (error "RouteCalculator% addUTurns: Contract violation expected a nonempty list, recieved: " route)))
-
 
     ))

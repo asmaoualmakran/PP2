@@ -31,6 +31,7 @@
     (define railwaySym 'railway)
 
     (define path "railwaySetup\\hardware.txt")
+    (define straight "railwaySetup\\straight.txt")
 
     ;---------------------------------------------
     ; Function: initialise!
@@ -61,6 +62,7 @@
     (define/private (selectRailway rail)
       (if (symbol? rail)
         (cond ((eq? rail 'Hardware) (send fileReader loadRailway path))
+              ((eq? rail 'Straight)(send fileReader loadRailway straight))
         
         (else (info "Given railway is unkown please create and add before use, recieved: " rail)))
       
@@ -410,64 +412,7 @@
                                             (send railwaySystem setTrainSpeed! trainID speed)))
 
     (addFunction! railwaySym 'getSpeed (lambda (trainID)
-                                        (send railwaySystem getTrainSpeed trainID)))
-
-    ;---------------------------------------------
-    ; Function: n/a 
-    ; Parameters: 
-    ;       trainID: symbol
-    ;        Use: The ID of the train.
-    ; Output: 
-    ;      speed: number
-    ;       Use: The current speed of the train.
-    ; Use: Get the speed of the train.
-    ;----------------------------------------------
-
- ;   (addFunction! railwaySym 'getSpeed (lambda (trainID)
- ;                                         (get-loco-speed trainID)))
-
-    ;-------------------------------------------------------------
-    ; Function: n/a 
-    ; Parameters: 
-    ;         trainID: symbol
-    ;           Use: The ID of the train.
-    ; Output: 
-    ;     detectionblock: symbol
-    ;       Use: The detectionblock where the train is located.
-    ; Use: Get the location (detectionblock) of the train.
-    ;--------------------------------------------------------------
-
-  ;  (addFunction! railwaySym 'getLocationTrain (lambda (trainID)
-  ;                                                (get-loco-detection-block trainID)))
-
-    ;-------------------------------------------
-    ; Function: n/a 
-    ; Parameters: 
-    ;       switchID: symbol
-    ;         Use: The ID of the switch.
-    ; Output: 
-    ;     position: number
-    ;       Use: The position of the switch
-    ; Use: Get the position of the switch.
-    ;--------------------------------------------
-
-  ;  (addFunction! railwaySym 'getSwitchPos (lambda (switchID)
-  ;                                            (get-switch-position switchID)))
-
-    ;-----------------------------------------------
-    ; Function: n/a 
-    ; Parameters: 
-    ;       switchID: symbol
-    ;         Use: The ID of the switch.
-    ;       pos: number
-    ;         Use: The new position of the switch.
-    ; Output: n/a 
-    ; Use: Setting the switch position.
-    ;-----------------------------------------------
-
-;    (addFunction! railwaySym 'setSwitchPos (lambda (switchID pos)
- ;                                             (set-switch-position! switchID pos)))
-    )
+                                        (send railwaySystem getTrainSpeed trainID))))
 
     ;----------------------------------------------------
     ; Function: getFunction
